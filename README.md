@@ -12,9 +12,9 @@ This is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) web applicati
 - Daily, weekly, and monthly reporting
 
 ## Developed by:
-
-- I.M.P. Idusara – SC/2021/12129  
-- P.N. Rathnayaka – SC/2021/12106  
+  
+- P.N. Rathnayaka – SC/2021/12106 
+- I.M.P. Idusara – SC/2021/12129 
 - K.A.K. Sanjana – SC/2021/12124  
 - G.C.L. Siriwardhana – SC/2021/12173  
 - S.M.H.U.D. De Silva – SC/2021/12186  
