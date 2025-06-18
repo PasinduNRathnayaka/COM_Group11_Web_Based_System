@@ -1,12 +1,22 @@
-# React + Vite
+# Kamal Motor Sales & Employee Management System (Group 11)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) web application developed by Group 11 for Kamal Motor. The system streamlines sales, inventory, and employee management processes while allowing customers to place online orders. It supports multiple user roles (Owner, Employee, Customer) and includes QR code-based attendance tracking, automated salary generation, real-time reporting, and low-stock notifications.
 
-Currently, two official plugins are available:
+## Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Real-time inventory and stock alerts
+- QR code attendance system
+- Automated salary calculations
+- Online customer order placement
+- Multi-branch support
+- Daily, weekly, and monthly reporting
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Developed by:
+  
+- P.N. Rathnayaka – SC/2021/12106 
+- I.M.P. Idusara – SC/2021/12129 
+- K.A.K. Sanjana – SC/2021/12124  
+- G.C.L. Siriwardhana – SC/2021/12173  
+- S.M.H.U.D. De Silva – SC/2021/12186  
+- A.C.M. Ariyathilaka – SC/2021/12151  
+- T.A. Rajapaksha – SC/2021/12144
