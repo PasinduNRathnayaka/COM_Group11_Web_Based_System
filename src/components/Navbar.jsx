@@ -1,11 +1,15 @@
 import React from 'react'
+import logo from "../assets/kamal-logo.png";
 
 const Navbar = () => {const [open, setOpen] = React.useState(false)
   return (
-    <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all">
+    <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-1 border-b border-gray-300 bg-blue-900 relative transition-all text-white">
 
-            <a href="#">
-                <img className="h-9" src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/dummyLogo/dummyLogoColored.svg" alt="dummyLogoColored" />
+            <a href='/'> 
+                <div className="flex items-center gap-2">
+                <img className="h-10" src={logo} alt="logo" />
+                <h1 className="text-lg font-bold text-white">Kamal Auto Parts</h1>
+                </div>
             </a>
 
             {/* Desktop Menu */}
@@ -26,10 +30,10 @@ const Navbar = () => {const [open, setOpen] = React.useState(false)
                     <svg width="18" height="18" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M.583.583h2.333l1.564 7.81a1.17 1.17 0 0 0 1.166.94h5.67a1.17 1.17 0 0 0 1.167-.94l.933-4.893H3.5m2.333 8.75a.583.583 0 1 1-1.167 0 .583.583 0 0 1 1.167 0m6.417 0a.583.583 0 1 1-1.167 0 .583.583 0 0 1 1.167 0" stroke="#615fff" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">3</button>
+                    <button className="absolute -top-2 -right-3 text-xs text-white bg-blue-800 w-[18px] h-[18px] rounded-full">3</button>
                 </div>
 
-                <button className="cursor-pointer px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full">
+                <button className="cursor-pointer px-6 py-1 bg-blue-400 hover:bg-blue-400 hover:bg-indigo-600 transition  text-slate-900 rounded-full">
                     Login
                 </button>
             </div>
