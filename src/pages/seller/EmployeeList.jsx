@@ -37,8 +37,8 @@ const EmployeeList = () => {
 
   return (
     <div className="p-8">
-      <h2 className="text-xl font-bold mb-4">Employee ID Cards</h2>
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+      <h2 className="text-xl font-bold mb-4 text-center">Employee ID Cards</h2>
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 ">
         {employees.map((emp) => (
           <div key={emp.id} className="border p-4 rounded shadow-md w-80 bg-white">
             <img
