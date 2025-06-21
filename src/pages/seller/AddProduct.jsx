@@ -2,8 +2,9 @@ import React from 'react'
 
 const Addproduct = () => {
   return (
-     <div className="py-10 flex flex-col justify-between bg-white">
-            <form className="md:p-10 p-4 space-y-5 max-w-lg">
+     <div className="max-h-screen flex items-center justify-center bg-white">
+            <form className="md:p-10 p-4 space-y-5 max-w-xl w-full rounded-lg shadow-xl border border-blue-500">
+                    <h2 className="text-xl font-bold mb-4 text-center">Add New Product</h2>
                 <div>
                     <p className="text-base font-medium">Product Image</p>
                     <div className="flex flex-wrap items-center gap-3 mt-2">
