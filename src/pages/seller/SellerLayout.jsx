@@ -1,6 +1,6 @@
-// SellerLayout.jsx
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
+import logo from "../../assets/kamal-logo.png";
 
 // 🔧 Replace with real icons or SVGs as needed
 const dashboardicon = "📦";
@@ -28,17 +28,16 @@ const SellerLayout = () => {
   return (
     <>
       {/* Top Navbar */}
-      <div className="flex items-center justify-between px-4 md:px-8 border-b border-gray-300 py-3 bg-white">
-        <a href="/">
-          <img
-            className="h-9"
-            src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/dummyLogo/dummyLogoColored.svg"
-            alt="dummyLogo"
-          />
+      <div className="flex items-center justify-between px-4 md:px-8 border-b border-gray-300 py-1 bg-blue-900 text-white">
+        <a href='/'> 
+        <div className="flex items-center gap-2">
+        <img className="h-10" src={logo} alt="logo" />
+         <h1 className="text-lg font-bold text-white">Kamal Auto Parts</h1>
+        </div>
         </a>
-        <div className="flex items-center gap-5 text-gray-500">
+        <div className="flex items-center gap-5 text-gray-100">
           <p>Hi! Admin</p>
-          <button onClick={handleLogout} className="border rounded-full text-sm px-4 py-1">
+          <button onClick={handleLogout} className="border rounded-full text-sm px-4 py-1 bg-blue-800 text-blue-100" >
             Logout
           </button>
         </div>
@@ -46,7 +45,7 @@ const SellerLayout = () => {
 
       {/* Sidebar + Main Content */}
       <div className="flex">
-        <div className="md:w-64 w-16 border-r h-screen text-base border-gray-300 pt-4 flex flex-col">
+        <div className="md:w-64 w-16 border-r h-screen text-base border-blue-400 pt-4 flex flex-col bg-blue-100">
           {sidebarLinks.map((item) => (
             <NavLink
               to={item.path}
