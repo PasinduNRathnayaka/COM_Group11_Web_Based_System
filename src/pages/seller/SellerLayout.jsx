@@ -1,7 +1,8 @@
+// SellerLayout.jsx
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
-import { useNavigate } from "react-router-dom";
 
-// 🔧 Example placeholder icons – replace with real icons or SVGs
+// 🔧 Replace with real icons or SVGs as needed
 const dashboardicon = "📦";
 const overviewicon = "📋";
 const chaticon = "👥";
@@ -16,12 +17,12 @@ const SellerLayout = () => {
   };
 
   const sidebarLinks = [
-    { name: "Add product", path: "/seller", icon: dashboardicon },
+    { name: "Add Product", path: "/seller", icon: dashboardicon },
     { name: "Product List", path: "/seller/product-list", icon: overviewicon },
-    { name: "Add Employee", path: "/seller/Add-Employee", icon: chaticon },
-    { name: "Employee List", path: "/seller/Employee-List", icon: chaticon },
-    { name: "Employee Attendance", path: "/seller/Employee-Attendance", icon: chaticon },
-    { name: "Orders", path: "/seller/Orders", icon: chaticon },
+    { name: "Add Employee", path: "/seller/add-employee", icon: chaticon },
+    { name: "Employee List", path: "/seller/employee-list", icon: chaticon },
+    { name: "Mark Attendence", path: "/seller/mark-attendence", icon: chaticon },
+    { name: "Orders", path: "/seller/orders", icon: chaticon },
   ];
 
   return (
@@ -43,22 +44,32 @@ const SellerLayout = () => {
         </div>
       </div>
 
-      {/* Sidebar */}
-      <div className="md:w-64 w-16 border-r h-screen text-base border-gray-300 pt-4 flex flex-col">
-        {sidebarLinks.map((item, index) => (
-          <a
-            href={item.path}
-            key={index}
-            className={`flex items-center py-3 px-4 gap-3 
-              ${index === 0
-                ? "border-r-4 md:border-r-[6px] bg-indigo-500/10 border-indigo-500 text-indigo-500"
-                : "hover:bg-gray-100/90 border-white text-gray-700"
-              }`}
-          >
-            {item.icon}
-            <p className="md:block hidden text-center">{item.name}</p>
-          </a>
-        ))}
+      {/* Sidebar + Main Content */}
+      <div className="flex">
+        <div className="md:w-64 w-16 border-r h-screen text-base border-gray-300 pt-4 flex flex-col">
+          {sidebarLinks.map((item) => (
+            <NavLink
+              to={item.path}
+              key={item.name}
+              end={item.path === "/seller"}
+              className={({ isActive }) =>
+                `flex items-center py-3 px-4 gap-3 ${
+                  isActive
+                    ? "border-r-4 md:border-r-[6px] bg-primary/10 border-primary text-primary"
+                    : "hover:bg-gray-100/90 border-white text-gray-700"
+                }`
+              }
+            >
+              <span className="text-lg">{item.icon}</span>
+              <p className="md:block hidden text-center">{item.name}</p>
+            </NavLink>
+          ))}
+        </div>
+
+        {/* Main Outlet for nested routes */}
+        <div className="flex-1 p-4">
+          <Outlet />
+        </div>
       </div>
     </>
   );
