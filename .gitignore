@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 cliend/node_modules/
 cliend/.vite/
+cliend/.vite/deps/
+server/node_modules/
