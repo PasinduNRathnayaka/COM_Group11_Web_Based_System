@@ -1,6 +1,13 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
 import logo from "../../assets/kamal-logo.png"; // Make sure this path is correct
+import addProductIcon from "../../assets/add-product.png";
+import productListIcon from "../../assets/product-list.png";
+import addEmployeeIcon from "../../assets/add-employee.png";
+import employeeListIcon from "../../assets/employee-list.png";
+import attendanceIcon from "../../assets/attendance.png";
+import ordersIcon from "../../assets/orders.png";
+
 
 // 🔧 Replace with real icons or use emoji as placeholders
 const dashboardicon = "📦";
@@ -17,13 +24,14 @@ const SellerLayout = () => {
   };
 
   const sidebarLinks = [
-    { name: "Add Product", path: "/seller", icon: dashboardicon },
-    { name: "Product List", path: "/seller/product-list", icon: overviewicon },
-    { name: "Add Employee", path: "/seller/add-employee", icon: chaticon },
-    { name: "Employee List", path: "/seller/employee-list", icon: chaticon },
-    { name: "Mark Attendance", path: "/seller/mark-attendence", icon: chaticon },
-    { name: "Orders", path: "/seller/orders", icon: chaticon },
-  ];
+    { name: "Add Product", path: "/seller", icon: addProductIcon },
+    { name: "Product List", path: "/seller/product-list", icon: productListIcon },
+    { name: "Add Employee", path: "/seller/add-employee", icon: addEmployeeIcon },
+    { name: "Employee List", path: "/seller/employee-list", icon: employeeListIcon },
+    { name: "Mark Attendance", path: "/seller/mark-attendence", icon: attendanceIcon },
+    { name: "Orders", path: "/seller/orders", icon: ordersIcon },
+];
+
 
   return (
     <>
@@ -64,9 +72,9 @@ const SellerLayout = () => {
                 }`
               }
             >
-              <span className="text-xl">{item.icon}</span>
+              <img src={item.icon} alt={item.name} className="w-6 h-6" />
               <p className="md:block hidden">{item.name}</p>
-            </NavLink>
+          </NavLink>
           ))}
         </div>
 
