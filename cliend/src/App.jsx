@@ -5,6 +5,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { useAppContext } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
 
+
 import Home from './pages/User/Home' //new
 import LoginModal from './components/LoginModel' //new
 import SignUp from './pages/User/SignUp' //new
