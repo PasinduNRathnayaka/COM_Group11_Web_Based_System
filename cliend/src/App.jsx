@@ -18,7 +18,7 @@ import ProductList from './pages/seller/ProductList';
 import AddEmployee from './pages/seller/AddEmployee';
 import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
-import MarkAttendance from './pages/seller/MarkAttendence';
+import MarkAttendance from './pages/seller/MarkAttendence'; 
 
 const App = () => {
   const location = useLocation();
