@@ -9,6 +9,11 @@ import Home from './pages/User/Home' //new
 import LoginModal from './components/LoginModel' //new
 import SignUp from './pages/User/SignUp' //new
 
+//import MyOrders from './pages/User/MyOrders'
+//import OrderHistory from './pages/User/OrderHistory'
+import Profile from './pages/User/Profile'
+
+
 import SellerLogin from './pages/seller/SellerLogin';
 import SellerLayout from './pages/seller/SellerLayout';
 
@@ -41,6 +46,9 @@ const handleSignInClick = () => {
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/signup' element={<SignUp />} /> 
+
+           <Route path='/profile' element={<Profile />} />
+
         </Routes>
       </div>
 {/* new  */}
@@ -63,6 +71,7 @@ const handleSignInClick = () => {
             <Route path="employee-list" element={<EmployeeList />} />
             <Route path="orders" element={<Orders />} />
             <Route path="mark-attendence" element={<MarkAttendance />} />
+         
           </Route>
         </Routes>
       </div>
