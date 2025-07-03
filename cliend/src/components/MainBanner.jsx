@@ -19,7 +19,7 @@ const MainBanner = () => {
       </div>
 
       {/* Content Below the Banner */}
-      <div className="flex flex-col items-center justify-center text-center px-4 mt-8 mb-12">
+      <div className="flex flex-col items-center justify-center text-left px-4 mt-8 mb-12">
         <h1 className='text-2xl md:text-4xl font-bold mb-6'>
           Explore Genuine Auto Parts at the Best Prices
         </h1>
@@ -51,8 +51,16 @@ const MainBanner = () => {
 
         </div>
       </div>
+
+      <div>
+
+        <h1 className='text-left text-xl md:text-2xl font-bold mb-6'>
+        Main Categories
+        </h1>
+
+      </div>
     </>
   )
 }
 
-export default MainBanner
+export default MainBanner;
