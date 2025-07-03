@@ -52,13 +52,38 @@ const MainBanner = () => {
         </div>
       </div>
 
-      <div>
+     {/* ✅ MAIN CATEGORIES Section */}
+<div className="px-4 mt-12 mb-16">
+  <h1 className="text-left text-xl md:text-2xl font-bold mb-6">
+    Main Categories
+  </h1>
 
-        <h1 className='text-left text-xl md:text-2xl font-bold mb-6'>
-        Main Categories
-        </h1>
-
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+    {[
+      { name: 'Engine', image: assets.Bugatti_Chiron_Engine },
+      { name: 'Brakes', image: assets.brakes_suspension },
+      { name: 'Tires', image: assets.Tires_and_Wheels },
+      { name: 'Exterior', image: assets.Exterior_and_Body_parts },
+      { name: 'Interior', image: assets.Interior },
+      { name: 'Filters', image: assets.Filters },
+      { name: 'Lights', image: assets.lights },
+      { name: 'Exhaust', image: assets.exhaust },
+    ].map((cat, i) => (
+      <div
+        key={i}
+        className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer"
+      >
+        <img
+          src={cat.image}
+          alt={cat.name}
+          className="w-16 h-16 mx-auto mb-2 object-contain"
+        />
+        <p className="text-sm font-medium">{cat.name}</p>
       </div>
+    ))}
+  </div>
+</div>
+
     </>
   )
 }
