@@ -84,6 +84,56 @@ const MainBanner = () => {
   </div>
 </div>
 
+{/* ✅ RELATED PRODUCTS Section */}
+<div className="px-4 mt-16 mb-20">
+  <div className="flex items-center justify-between mb-6">
+    <h1 className="text-left text-xl md:text-2xl font-bold">Related Products</h1>
+    
+  </div>
+
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+    {[
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+      { name: 'Airfilter', price: 'Rs 2500', image: assets.Airfilter },
+    ].map((prod, i) => (
+      <div
+        key={i}
+        className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer"
+      >
+        <img
+          src={prod.image}
+          alt={prod.name}
+          className="w-24 h-24 mx-auto mb-3 object-contain"
+        />
+        <p className="font-medium text-sm">{prod.name}</p>
+        <p className="text-sm text-gray-600 mt-1">{prod.price}</p>
+      </div>
+    ))}
+  </div>
+
+     {/* ✅ View More at Bottom */}
+  <div className="flex justify-end mt-6">
+    <Link
+      to="/products"
+      className="text-sm text-primary hover:underline font-semibold"
+    >
+      View More →
+    </Link>
+  </div>
+
+</div>
+
+
     </>
   )
 }
