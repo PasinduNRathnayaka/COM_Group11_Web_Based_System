@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../../context/AppContext'; // ✅ NEW
+import { useNavigate } from 'react-router-dom'; // ✅ NEW
+import { assets } from '../../assets/assets'; // ✅ NEW
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +11,9 @@ const SignUp = () => {
     email: '',
     password: '',
   });
+
+  const { setUser } = useAppContext(); // ✅ Use global context
+  const navigate = useNavigate(); // ✅ Redirect after signup
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -20,6 +26,14 @@ const SignUp = () => {
     e.preventDefault();
     // TODO: send data to backend or show success message
     alert('Account created successfully!');
+
+    setUser({
+      name: `${formData.firstName} ${formData.lastName}`,
+      profilePic: assets.profile2,
+    });
+
+    navigate('/'); // ✅ Redirect to homepage
+
   };
 
   return (
