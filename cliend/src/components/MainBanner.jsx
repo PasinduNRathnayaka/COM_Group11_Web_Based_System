@@ -133,6 +133,48 @@ const MainBanner = () => {
 
 </div>
 
+{/* ✅ Happy Customers Section */}
+<div className="px-4 mt-16 mb-20">
+  <h1 className="text-left text-xl md:text-2xl font-bold mb-6">
+    Our Happy Customers
+  </h1>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    {[
+      {
+        name: "Sarah M.",
+        review: "I'm blown away by the quality and style of the car accessories I received. Great service!",
+      },
+      {
+        name: "Alex K.",
+        review: "Shipping was fast, the staff was helpful, and I love the variety! Highly recommend.",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+    ].map((cust, i) => (
+      <div key={i} className="bg-white shadow rounded-xl p-4">
+        <p className="text-yellow-500 mb-2">★★★★★</p>
+        <p className="text-sm italic mb-2">"{cust.review}"</p>
+        <p className="text-sm font-semibold">{cust.name}</p>
+      </div>
+    ))}
+  </div>
+</div>
+
 
     </>
   )
