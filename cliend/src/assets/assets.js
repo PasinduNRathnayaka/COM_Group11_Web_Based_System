@@ -19,6 +19,8 @@ import Bugatti_Chiron_Engine from "./User/Bugatti+Chiron+Engine.jpg";
 import brakes_suspension from "./User/brakes-suspension.png";
 import Exterior_and_Body_parts from "./User/Exterior and Body parts.webp";
 import Airfilter from "./User/Airfilter.jpg";
+import wharehouse from "./User/wharehouse.jpg";
+
 
 export const assets = {
     logo,
@@ -42,4 +44,5 @@ export const assets = {
     brakes_suspension,
     Exterior_and_Body_parts,
     Airfilter,
+    wharehouse,
 };

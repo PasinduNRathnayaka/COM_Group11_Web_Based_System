@@ -175,6 +175,22 @@ const MainBanner = () => {
   </div>
 </div>
 
+{/* ✅ About Kamal Auto Parts */}
+<div className="flex flex-col md:flex-row items-center gap-6 px-4 mt-20 mb-20">
+  <img
+    src={assets.wharehouse} 
+    alt="warehouse"
+    className="h-28 md:h-44 w-full md:w-[40%] object-cover rounded-tr-[80px] rounded-br-[80px]"
+
+  />
+  <p className="text-sm md:text-base font-medium leading-relaxed text-justify">
+    <strong>Kamal Auto Parts</strong> is your trusted online destination for high-quality auto parts, car accessories,
+    and vehicle care products in Sri Lanka. We are dedicated to providing a wide range of genuine and imported products
+    to vehicle owners, garages, and car enthusiasts across the island. Whether you’re upgrading, maintaining, or
+    repairing – Kamal Auto Parts is here to deliver reliability, performance, and value, all in one place.
+  </p>
+</div>
+
 
     </>
   )
