@@ -133,6 +133,48 @@ const MainBanner = () => {
 
 </div>
 
+{/* ✅ Happy Customers Section */}
+<div className="px-4 mt-16 mb-20">
+  <h1 className="text-left text-xl md:text-2xl font-bold mb-6">
+    Our Happy Customers
+  </h1>
+
+  <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 pb-2">
+    {[
+      {
+        name: "Sarah M.",
+        review: "I'm blown away by the quality and style of the car accessories I received. Great service!",
+      },
+      {
+        name: "Alex K.",
+        review: "Shipping was fast, the staff was helpful, and I love the variety! Highly recommend.",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+    ].map((cust, i) => (
+      <div key={i} className="min-w-[250px] sm:min-w-[280px] bg-white shadow rounded-xl p-4">
+        <p className="text-yellow-500 mb-2">★★★★★</p>
+        <p className="text-sm italic mb-2">"{cust.review}"</p>
+        <p className="text-sm font-semibold">{cust.name}</p>
+      </div>
+    ))}
+  </div>
+</div>
+
 
     </>
   )
