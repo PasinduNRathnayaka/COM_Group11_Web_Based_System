@@ -9,6 +9,8 @@ import { Toaster } from 'react-hot-toast';
 import Home from './pages/User/Home' //new
 import LoginModal from './components/LoginModel' //new
 import SignUp from './pages/User/SignUp' //new
+import Footer from './components/Footer';
+
 
 //import MyOrders from './pages/User/MyOrders'
 //import OrderHistory from './pages/User/OrderHistory'
@@ -77,7 +79,7 @@ const handleSignInClick = () => {
         </Routes>
       </div>
 
-      {!isSellerPath && <footer />}
+      {!isSellerPath && <Footer />}
     </div>
   );
 };
