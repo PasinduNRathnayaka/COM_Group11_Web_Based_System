@@ -139,7 +139,7 @@ const MainBanner = () => {
     Our Happy Customers
   </h1>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 pb-2">
     {[
       {
         name: "Sarah M.",
@@ -166,7 +166,7 @@ const MainBanner = () => {
         review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
       },
     ].map((cust, i) => (
-      <div key={i} className="bg-white shadow rounded-xl p-4">
+      <div key={i} className="min-w-[250px] sm:min-w-[280px] bg-white shadow rounded-xl p-4">
         <p className="text-yellow-500 mb-2">★★★★★</p>
         <p className="text-sm italic mb-2">"{cust.review}"</p>
         <p className="text-sm font-semibold">{cust.name}</p>
