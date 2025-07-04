@@ -29,7 +29,8 @@ const { user } = useAppContext();
           Explore Genuine Auto Parts at the Best Prices
         </h1>
 
-        <div className="flex flex-col md:flex-row gap-4">
+        {user && ( 
+          <div className="flex flex-col md:flex-row gap-4">
           <Link 
             to="/products" 
             className='group flex items-center gap-2 px-7 md:px-9 py-3 bg-primary hover:bg-primary-dull transition rounded text-white cursor-pointer'
@@ -55,6 +56,7 @@ const { user } = useAppContext();
        </Link>
 
         </div>
+        )}
       </div>
 
      {/* ✅ SHOW THIS ONLY FOR GUEST USERS (NOT LOGGED IN) */}
