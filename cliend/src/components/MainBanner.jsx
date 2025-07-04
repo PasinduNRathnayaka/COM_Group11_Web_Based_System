@@ -133,6 +133,64 @@ const MainBanner = () => {
 
 </div>
 
+{/* ✅ Happy Customers Section */}
+<div className="px-4 mt-16 mb-20">
+  <h1 className="text-left text-xl md:text-2xl font-bold mb-6">
+    Our Happy Customers
+  </h1>
+
+  <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 pb-2">
+    {[
+      {
+        name: "Sarah M.",
+        review: "I'm blown away by the quality and style of the car accessories I received. Great service!",
+      },
+      {
+        name: "Alex K.",
+        review: "Shipping was fast, the staff was helpful, and I love the variety! Highly recommend.",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+      {
+        name: "James L.",
+        review: "Perfect experience from start to finish. Top brands, great pricing. Will shop again!",
+      },
+    ].map((cust, i) => (
+      <div key={i} className="min-w-[250px] sm:min-w-[280px] bg-white shadow rounded-xl p-4">
+        <p className="text-yellow-500 mb-2">★★★★★</p>
+        <p className="text-sm italic mb-2">"{cust.review}"</p>
+        <p className="text-sm font-semibold">{cust.name}</p>
+      </div>
+    ))}
+  </div>
+</div>
+
+{/* ✅ About Kamal Auto Parts */}
+<div className="flex flex-col md:flex-row items-center gap-6 px-4 mt-20 mb-20">
+  <img
+    src={assets.wharehouse} 
+    alt="warehouse"
+    className="h-28 md:h-44 w-full md:w-[40%] object-cover rounded-tr-[80px] rounded-br-[80px]"
+
+  />
+  <p className="text-sm md:text-base font-medium leading-relaxed text-justify">
+    <strong>Kamal Auto Parts</strong> is your trusted online destination for high-quality auto parts, car accessories,
+    and vehicle care products in Sri Lanka. We are dedicated to providing a wide range of genuine and imported products
+    to vehicle owners, garages, and car enthusiasts across the island. Whether you’re upgrading, maintaining, or
+    repairing – Kamal Auto Parts is here to deliver reliability, performance, and value, all in one place.
+  </p>
+</div>
+
 
     </>
   )
