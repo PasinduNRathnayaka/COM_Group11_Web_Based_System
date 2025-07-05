@@ -10,6 +10,7 @@ import Home from './pages/User/Home' //new
 import LoginModal from './components/LoginModel' //new
 import SignUp from './pages/User/SignUp' //new
 import Footer from './components/Footer';
+import Cart from './pages/User/Cart';
 
 
 //import MyOrders from './pages/User/MyOrders'
@@ -52,6 +53,8 @@ const handleSignInClick = () => {
 
            <Route path='/profile' element={<Profile />} />
 
+           <Route path="/cart" element={<Cart />} />
+
         </Routes>
       </div>
 {/* new  */}
@@ -74,6 +77,7 @@ const handleSignInClick = () => {
             <Route path="employee-list" element={<EmployeeList />} />
             <Route path="orders" element={<Orders />} />
             <Route path="mark-attendence" element={<MarkAttendance />} />
+
          
           </Route>
         </Routes>
