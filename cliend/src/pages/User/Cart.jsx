@@ -1,5 +1,4 @@
-// src/pages/User/Cart.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { assets } from '../../assets/assets';
 import { Link, Navigate } from 'react-router-dom';
@@ -8,8 +7,41 @@ import { Trash } from 'lucide-react';
 const Cart = () => {
   const { user } = useAppContext();
 
-  // If user is not logged in, redirect to login
+  // Sample cart data (you can later fetch from context or backend)
+  const [cartItems, setCartItems] = useState([
+    { id: 1, name: 'BMW i8 Air Filter', desc: 'Lifan 200-250cc', price: 145, quantity: 1 },
+    { id: 2, name: 'Ignition Coil', desc: 'Toyota Vitz', price: 180, quantity: 2 },
+    { id: 3, name: 'Fuel Filter', desc: 'Nissan Sunny', price: 120, quantity: 1 },
+  ]);
+
+  const handleIncrease = (id) => {
+    setCartItems((prevItems) =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    );
+  };
+
+  const handleDecrease = (id) => {
+    setCartItems((prevItems) =>
+      prevItems.map(item =>
+        item.id === id && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+
+  const handleRemove = (id) => {
+    setCartItems((prevItems) => prevItems.filter(item => item.id !== id));
+  };
+
   if (!user) return <Navigate to="/" replace />;
+
+  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const discount = 15;
+  const delivery = 15;
+  const total = subtotal - discount + delivery;
 
   return (
     <div className="px-4 md:px-10 py-10">
@@ -18,31 +50,49 @@ const Cart = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="md:col-span-2 bg-white shadow rounded-lg p-6">
-          {[1, 2, 3].map((_, i) => (
-            <div key={i} className="flex items-center justify-between border-b py-4">
-              <div className="flex items-center gap-4">
-                <img src={assets.Airfilter} alt="item" className="w-16 h-16 object-contain" />
-                <div>
-                  <p className="font-semibold text-sm">BMW i8 Air Filter</p>
-                  <p className="text-xs text-gray-500">Lifan 200-250cc</p>
-                  <p className="mt-1 text-sm font-bold text-primary">$145</p>
+          {cartItems.length === 0 ? (
+            <p className="text-gray-500">Your cart is empty.</p>
+          ) : (
+            cartItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between border-b py-4">
+                <div className="flex items-center gap-4">
+                  <img src={assets.Airfilter} alt="item" className="w-16 h-16 object-contain" />
+                  <div>
+                    <p className="font-semibold text-sm">{item.name}</p>
+                    <p className="text-xs text-gray-500">{item.desc}</p>
+                    <p className="mt-1 text-sm font-bold text-primary">${item.price}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="bg-gray-200 px-2 py-1 rounded">-</button>
-                <span className="px-2">1</span>
-                <button className="bg-gray-200 px-2 py-1 rounded">+</button>
-               <button
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleDecrease(item.id)}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      -
+                    </button>
+
+                    <span className="min-w-[24px] text-center">{item.quantity}</span>
+
+                    <button
+                      onClick={() => handleIncrease(item.id)}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
                     onClick={() => handleRemove(item.id)}
                     className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm"
                     title="Delete"
-                >
-                <Trash size={18} />
-                 
-                </button>
+                  >
+                    <Trash size={18} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Order Summary */}
@@ -50,19 +100,19 @@ const Cart = () => {
           <h2 className="text-lg font-bold mb-4">Order Summary</h2>
           <div className="text-sm text-gray-700 mb-2 flex justify-between">
             <span>Subtotal</span>
-            <span>$605</span>
+            <span>${subtotal}</span>
           </div>
           <div className="text-sm text-gray-700 mb-2 flex justify-between">
             <span>Discount</span>
-            <span className="text-red-500">-$15</span>
+            <span className="text-red-500">-${discount}</span>
           </div>
           <div className="text-sm text-gray-700 mb-2 flex justify-between">
             <span>Delivery Fee</span>
-            <span>$15</span>
+            <span>${delivery}</span>
           </div>
           <div className="text-md font-bold flex justify-between mt-4">
             <span>Total</span>
-            <span>$467</span>
+            <span>${total}</span>
           </div>
           <button className="w-full mt-6 bg-black text-white py-2 rounded hover:bg-gray-900 transition">
             Go to Checkout →
@@ -94,3 +144,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
