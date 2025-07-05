@@ -3,9 +3,12 @@ import { useAppContext } from '../../context/AppContext';
 import { assets } from '../../assets/assets';
 import { Link, Navigate } from 'react-router-dom';
 import { Trash } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const { user } = useAppContext();
+
+  const navigate = useNavigate();
 
   // Sample cart data (you can later fetch from context or backend)
   const [cartItems, setCartItems] = useState([
@@ -114,9 +117,13 @@ const Cart = () => {
             <span>Total</span>
             <span>${total}</span>
           </div>
-          <button className="w-full mt-6 bg-black text-white py-2 rounded hover:bg-gray-900 transition">
+          <button
+            className="w-full mt-6 bg-black text-white py-2 rounded hover:bg-gray-900 transition"
+            onClick={() => navigate('/checkout')}
+            >
             Go to Checkout →
-          </button>
+            </button>
+
         </div>
       </div>
 
