@@ -2,10 +2,24 @@ import { assets } from '../assets/assets'
 import { Link } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
 
+import RateUsPopup from '../components/RateUsPopup'; 
+import { useState } from 'react';
+
+import { useEffect } from 'react';
+
+
 
 const MainBanner = () => {
 
 const { user } = useAppContext();
+
+const [showRatePopup, setShowRatePopup] = useState(false);
+
+useEffect(() => {
+  if (user) {
+    setShowRatePopup(false);
+  }
+}, [user]);
 
   return (
     <>
@@ -23,6 +37,18 @@ const { user } = useAppContext();
         />
       </div>
 
+    {/* Show "Rate Us" only for logged-in users */}
+      {user && (
+        <div className="w-full flex justify-end pr-6 mt-6">
+          <button
+            className="text-sm text-primary hover:underline font-semibold"
+            onClick={() => setShowRatePopup(true)}
+          >
+            We’d love your feedback! Rate us & help us improve →
+          </button>
+        </div>
+      )}
+
       {/* Content Below the Banner */}
       <div className="flex flex-col items-center justify-center text-left px-4 mt-8 mb-12">
         <h1 className='text-2xl md:text-4xl font-bold mb-6'>
@@ -30,6 +56,8 @@ const { user } = useAppContext();
         </h1>
 
         {user && ( 
+          <>
+         
           <div className="flex flex-col md:flex-row gap-4">
           <Link 
             to="/products" 
@@ -56,6 +84,10 @@ const { user } = useAppContext();
        </Link>
 
         </div>
+
+           {showRatePopup && <RateUsPopup onClose={() => setShowRatePopup(false)} />}
+
+        </>
         )}
       </div>
 
@@ -245,7 +277,6 @@ const { user } = useAppContext();
 </>
 
 )}
-
 
   </>
   )
