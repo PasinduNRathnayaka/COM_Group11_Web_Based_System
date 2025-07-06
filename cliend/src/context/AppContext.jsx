@@ -1,22 +1,52 @@
+// src/context/AppContext.jsx
 import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const AppContext = createContext();
 
-export const AppContextProvider = ({children})=>{
+export const AppContextProvider = ({ children }) => {
+  const navigate = useNavigate();
 
-    const navigate = useNavigate();
-    const [user,setUser] = useState(null)
-    const [isSeller,setIsSeller] = useState(false)
-    const [showUserLogin, setShowUserLogin] = useState(false)
+  const [user, setUser] = useState(null);
+  const [isSeller, setIsSeller] = useState(false);
+  const [showUserLogin, setShowUserLogin] = useState(false);
 
-    const value = {navigate, user, setUser, setIsSeller,isSeller,showUserLogin,setShowUserLogin}
+  const [cartItems, setCartItems] = useState([]);
 
-    return <AppContext.Provider value={value}>
-       {children}
+  const addToCart = (product, quantity) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      } else {
+        return [...prev, { ...product, quantity }];
+      }
+    });
+  };
+
+  return (
+    <AppContext.Provider
+      value={{
+        navigate,
+        user,
+        setUser,
+        isSeller,
+        setIsSeller,
+        showUserLogin,
+        setShowUserLogin,
+        cartItems,
+        setCartItems,
+        addToCart,
+      }}
+    >
+      {children}
     </AppContext.Provider>
-}
+  );
+};
 
-export const useAppContext = ()=>{
-    return useContext(AppContext)
-}
+export const useAppContext = () => useContext(AppContext);
+
