@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Addproduct = () => {
+const AddProduct = () => {
   return (
      <div className="max-h-screen flex items-center justify-center bg-white">
             <form className="md:p-10 p-4 space-y-5 max-w-xl w-full rounded-lg shadow-xl border border-blue-500">
@@ -49,4 +49,4 @@ const Addproduct = () => {
   )
 }
 
-export default Addproduct
+export default AddProduct
