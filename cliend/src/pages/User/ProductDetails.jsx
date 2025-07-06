@@ -3,10 +3,15 @@ import { useParams } from 'react-router-dom';
 import { assets } from '../../assets/assets';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
+import OrderSummaryPopup from '../../components/OrderSummaryPopup';
+
 
 const ProductDetails = () => {
   const { id } = useParams();
   const { addToCart, user } = useAppContext();
+
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+
 
   // Mock product info (later replace this with backend data)
   const product = {
@@ -41,8 +46,18 @@ const ProductDetails = () => {
     toast.success('Added to cart!');
   };
 
+  const handleBuyNow = () => {
+  if (!user) {
+    toast.error("Please log in to continue");
+    return;
+  }
+  setShowOrderSummary(true);
+};
+
+
   
   return (
+    <>
     <div className="px-4 md:px-10 py-10">
       {/* Top Section */}
       <div className="flex flex-col md:flex-row gap-10">
@@ -85,9 +100,13 @@ const ProductDetails = () => {
             >
               Add to Cart
             </button>
-            <button className="px-6 py-2 border border-black text-black rounded hover:bg-gray-100">
+            <button
+              className="px-6 py-2 border border-black text-black rounded hover:bg-gray-100"
+              onClick={handleBuyNow}
+            >
               Buy Now
             </button>
+
           </div>
         </div>
       </div>
@@ -138,6 +157,16 @@ const ProductDetails = () => {
         </div>
       </div>
     </div>
+
+    {showOrderSummary && (
+  <OrderSummaryPopup
+    product={product}
+    quantity={quantity}
+    onClose={() => setShowOrderSummary(false)}
+  />
+)}
+</>      
+
   );
 };
 
