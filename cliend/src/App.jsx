@@ -12,6 +12,8 @@ import SignUp from './pages/User/SignUp' //new
 import Footer from './components/Footer';
 import Cart from './pages/User/Cart';
 import Checkout from './pages/User/Checkout';
+import ProductDetails from './pages/User/ProductDetails';
+
 
 
 //import MyOrders from './pages/User/MyOrders'
@@ -57,6 +59,9 @@ const handleSignInClick = () => {
            <Route path="/cart" element={<Cart />} />
 
            <Route path="/checkout" element={<Checkout />} />
+
+           <Route path="/product/:id" element={<ProductDetails />} />
+
 
         </Routes>
       </div>

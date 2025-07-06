@@ -133,10 +133,17 @@ const Cart = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {Array(8).fill(0).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-lg shadow text-center">
+              
+              <Link to="/product/airfilter">
+
+              
               <img src={assets.Airfilter} alt="BMW i8 Air Filter" className="w-20 h-20 mx-auto mb-3 object-contain" />
               <p className="text-sm font-semibold">BMW i8 Air Filter</p>
               <p className="text-sm text-gray-600">Rs.4500</p>
               <p className="text-yellow-500 text-sm">★★★★☆</p>
+
+            </Link>
+
             </div>
           ))}
         </div>

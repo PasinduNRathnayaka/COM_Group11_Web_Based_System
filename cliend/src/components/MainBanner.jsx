@@ -140,6 +140,10 @@ useEffect(() => {
             key={i}
             className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer"
           >
+
+          <Link to="/product/Airfilter">
+
+
             <img
               src={assets.Airfilter}
               alt="Airfilter"
@@ -147,6 +151,9 @@ useEffect(() => {
             />
             <p className="font-medium text-sm">Airfilter</p>
             <p className="text-sm text-gray-600 mt-1">Rs 2500</p>
+
+          </Link>
+
           </div>
         ))}
       </div>
@@ -254,6 +261,10 @@ useEffect(() => {
             key={i}
             className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer"
           >
+
+          <Link to="/product/airfilter">
+
+
             <img
               src={assets.Airfilter}
               alt="Airfilter"
@@ -261,6 +272,9 @@ useEffect(() => {
             />
             <p className="font-medium text-sm">Airfilter</p>
             <p className="text-sm text-gray-600 mt-1">Rs 2500</p>
+
+          </Link>
+
           </div>
         ))}
       </div>
