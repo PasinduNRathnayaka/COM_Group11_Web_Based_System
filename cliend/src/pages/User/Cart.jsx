@@ -11,11 +11,11 @@ const Cart = () => {
   const navigate = useNavigate();
 
   // Sample cart data (you can later fetch from context or backend)
-  const [cartItems, setCartItems] = useState([
+  const { cartItems, setCartItems } = useAppContext(
     { id: 1, name: 'BMW i8 Air Filter', desc: 'Lifan 200-250cc', price: 145, quantity: 1 },
     { id: 2, name: 'Ignition Coil', desc: 'Toyota Vitz', price: 180, quantity: 2 },
     { id: 3, name: 'Fuel Filter', desc: 'Nissan Sunny', price: 120, quantity: 1 },
-  ]);
+  );
 
   const handleIncrease = (id) => {
     setCartItems((prevItems) =>

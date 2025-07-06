@@ -31,10 +31,17 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
+
+    if (!user) {
+    toast.error("Please log in to add items to cart");
+    return;
+  }
+
     addToCart(product, quantity);
     toast.success('Added to cart!');
   };
 
+  
   return (
     <div className="px-4 md:px-10 py-10">
       {/* Top Section */}
@@ -121,9 +128,11 @@ const ProductDetails = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {Array(4).fill(0).map((_, i) => (
             <div key={i} className="bg-white shadow rounded p-3 text-center">
+
               <img src={assets.Airfilter} className="w-24 h-24 mx-auto mb-2" alt="suggested" />
               <p className="text-sm font-medium">Airfilter</p>
               <p className="text-sm text-gray-600">Rs 2500</p>
+
             </div>
           ))}
         </div>
@@ -133,4 +142,5 @@ const ProductDetails = () => {
 };
 
 export default ProductDetails;
+
 
