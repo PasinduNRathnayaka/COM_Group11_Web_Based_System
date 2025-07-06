@@ -24,7 +24,8 @@ import Profile from './pages/User/Profile'
 import SellerLogin from './pages/seller/SellerLogin';
 import SellerLayout from './pages/seller/SellerLayout';
 
-import Addproduct from './pages/seller/Addproduct';
+import Dashboard from './pages/seller/Dashboard';
+import AddProduct from './pages/seller/AddProduct';
 import ProductList from './pages/seller/ProductList';
 import AddEmployee from './pages/seller/AddEmployee';
 import EmployeeList from './pages/seller/EmployeeList';
@@ -79,7 +80,8 @@ const handleSignInClick = () => {
         <Routes>
           {/* Login if not seller, else show layout with nested routes */}
           <Route path="/seller" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
-            <Route index element={<Addproduct />} />
+            <Route index element={<AddProduct />} />
+            <Route path="Dashboard" element={<Dashboard />} />
             <Route path="product-list" element={<ProductList />} />
             <Route path="add-employee" element={<AddEmployee />} />
             <Route path="employee-list" element={<EmployeeList />} />
