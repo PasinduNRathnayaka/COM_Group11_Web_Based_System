@@ -24,6 +24,7 @@ const SellerLayout = () => {
   };
 
   const sidebarLinks = [
+    { name: "Dashboard", path: "/seller/dashboard", icon: addProductIcon },
     { name: "Add Product", path: "/seller", icon: addProductIcon },
     { name: "Product List", path: "/seller/product-list", icon: productListIcon },
     { name: "Add Employee", path: "/seller/add-employee", icon: addEmployeeIcon },
