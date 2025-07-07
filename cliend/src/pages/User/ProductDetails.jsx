@@ -14,8 +14,9 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
 
-  const product = {
-    id,
+ const allProducts = {
+  'bmw-wheel': {
+    id: 'bmw-wheel',
     name: 'BMW Alloy Wheels',
     brand: 'Bosch',
     price: 28000,
@@ -34,7 +35,35 @@ const ProductDetails = () => {
     faqs: [
       { question: 'Is this suitable for BMW i8?', answer: 'Yes, it is compatible with BMW i8 and other models.' },
     ],
-  };
+  },
+
+  'airfilter': {
+    id: 'airfilter',
+    name: 'BMW Air Filter',
+    brand: 'Bosch',
+    price: 2500,
+    discount: 200,
+    images: [assets.Airfilter,assets.Airfilter1,assets.Airfilter2],
+    description: 'High-performance air filter for BMW engines.',
+    specs: [
+      { key: 'Material', value: 'Synthetic Fiber' },
+      { key: 'Fitment', value: 'BMW i8, i3, and similar' },
+    ],
+    reviews: [
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
+    ],
+    faqs: [
+      { question: 'How often should I replace it?', answer: 'Recommended every 10,000 km.' },
+    ],
+  }
+};
+
+const product = allProducts[id];
+
+if (!product) {
+  return <div className="p-10 text-red-600">Product not found!</div>;
+}
+
 
   const handleAddToCart = () => {
     if (!user) {
