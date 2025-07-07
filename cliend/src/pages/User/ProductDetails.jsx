@@ -20,7 +20,7 @@ const ProductDetails = () => {
     brand: 'Bosch',
     price: 28000,
     discount: 3000,
-    images: [assets.wheel1, assets.wheel2, assets.wheel3, assets.wheel4],
+    images: [assets.wheel1, assets.wheel2, assets.wheel3],
     description: 'Stylish alloy wheels for BMW models. Lightweight and durable.',
     specs: [
       { key: 'Material', value: 'Aluminum' },
@@ -179,7 +179,7 @@ const ProductDetails = () => {
               onClick={() => navigate(`/product/${i}`)}
               className="min-w-[180px] border rounded-lg p-3 cursor-pointer hover:shadow"
             >
-              <img src={assets.wheel1} alt="suggested" className="w-full h-24 object-contain mb-2" />
+              <img src={assets.wheel5} alt="suggested" className="w-full h-24 object-contain mb-2" />
               <p className="text-sm font-medium">BMW Sport Wheel</p>
               <p className="text-sm text-gray-500">Rs 22,000</p>
             </div>
