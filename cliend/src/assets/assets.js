@@ -20,6 +20,14 @@ import brakes_suspension from "./User/brakes-suspension.png";
 import Exterior_and_Body_parts from "./User/Exterior and Body parts.webp";
 import Airfilter from "./User/Airfilter.jpg";
 import wharehouse from "./User/wharehouse.jpg";
+import wheel1 from "./User/wheel1.jpg";
+import wheel2 from "./User/wheel2.png";
+import wheel3 from "./User/wheel3.webp";
+import wheel5 from "./User/wheel5.jpg";
+import wheel6 from "./User/wheel6.jpg";
+import wheel7 from "./User/wheel7.jpg";
+import Airfilter1 from "./User/Airfilter1.jpeg";
+import Airfilter2 from "./User/Airfilter2.jpg";
 
 
 export const assets = {
@@ -45,4 +53,12 @@ export const assets = {
     Exterior_and_Body_parts,
     Airfilter,
     wharehouse,
+    wheel1,
+    wheel2,
+    wheel3,
+    wheel5,
+    wheel6,
+    wheel7,
+    Airfilter1,
+    Airfilter2,
 };

@@ -1,88 +1,140 @@
+// src/pages/User/ProductDetails.jsx
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { assets } from '../../assets/assets';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
-import OrderSummaryPopup from '../../components/OrderSummaryPopup';
-
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart, user } = useAppContext();
 
-  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('details');
 
-
-  // Mock product info (later replace this with backend data)
   const product = {
     id,
-    name: 'BMW i8 Air Filter',
+    name: 'BMW Alloy Wheels',
     brand: 'Bosch',
-    price: 2500,
-    discount: 200,
-    image: assets.Airfilter,
-    description: 'High-performance air filter compatible with BMW i8 and similar models.',
+    price: 28000,
+    discount: 3000,
+    images: [assets.wheel1, assets.wheel2, assets.wheel3],
+    description: 'Stylish alloy wheels for BMW models. Lightweight and durable.',
     specs: [
-      { key: 'Material', value: 'Synthetic Fiber' },
-      { key: 'Compatibility', value: 'BMW i8, Lifan 200-250cc' },
-      { key: 'Made in', value: 'Germany' },
+      { key: 'Material', value: 'Aluminum' },
+      { key: 'Size', value: '18 inch' },
+      { key: 'Color', value: 'Black & Silver' },
     ],
     reviews: [
-      { name: 'Pasindu', comment: 'Great quality!', rating: 5 },
-      { name: 'Alex', comment: 'Perfect fit.', rating: 4 },
+      { name: 'Samantha D', rating: 5, comment: 'Top-notch quality!', date: 'April 9, 2025' },
+      { name: 'Ethan M', rating: 4, comment: 'Great grip and stylish design.', date: 'April 12, 2025' },
+    ],
+    faqs: [
+      { question: 'Is this suitable for BMW i8?', answer: 'Yes, it is compatible with BMW i8 and other models.' },
     ],
   };
 
-  const [quantity, setQuantity] = useState(1);
-
   const handleAddToCart = () => {
-
     if (!user) {
-    toast.error("Please log in to add items to cart");
-    return;
-  }
-
+      toast.error('Please log in first.');
+      return;
+    }
     addToCart(product, quantity);
     toast.success('Added to cart!');
   };
 
-  const handleBuyNow = () => {
-  if (!user) {
-    toast.error("Please log in to continue");
-    return;
-  }
-  setShowOrderSummary(true);
-};
+  const relatedProducts = [
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+   {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+   {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+];
 
 
-  
   return (
-    <>
     <div className="px-4 md:px-10 py-10">
-      {/* Top Section */}
+      {/* Product Top Section */}
       <div className="flex flex-col md:flex-row gap-10">
-        {/* Left Image */}
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full md:w-[350px] h-[300px] object-contain border rounded-xl"
-        />
+        {/* Image Thumbnails */}
+        <div className="flex flex-col gap-3">
+          {product.images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt="thumbnail"
+              onClick={() => setSelectedImage(idx)}
+              className={`w-20 h-20 object-contain border rounded cursor-pointer ${selectedImage === idx ? 'border-primary' : ''}`}
+            />
+          ))}
+        </div>
+
+        {/* Main Image and Info */}
+        <div className="flex-1">
+          <img
+            src={product.images[selectedImage]}
+            alt={product.name}
+            className="w-full max-w-md object-contain border rounded-xl"
+          />
+        </div>
 
         {/* Product Info */}
         <div className="flex-1">
-          <h1 className="text-xl md:text-2xl font-bold mb-2">{product.name}</h1>
-          <p className="text-gray-600 text-sm mb-1">Brand: {product.brand}</p>
-          <p className="text-gray-600 text-sm mb-1">Product ID: {product.id}</p>
-
-          {/* Price */}
-          <div className="mt-4 mb-4">
-            <span className="text-2xl font-bold text-primary">Rs {product.price}</span>
-            <span className="ml-3 text-sm text-red-500 line-through">Rs {product.price + product.discount}</span>
+          <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
+          <p className="text-gray-600 mb-2">Brand: {product.brand}</p>
+          <div className="flex gap-2 items-center mb-4">
+            <span className="text-xl text-primary font-bold">Rs {product.price}</span>
+            <span className="line-through text-sm text-red-500">Rs {product.price + product.discount}</span>
           </div>
 
-          {/* Quantity */}
-          <div className="flex items-center gap-2 mb-6">
-            <label className="font-medium">Quantity:</label>
+          {/* Quantity Selector */}
+          <div className="mb-4 flex items-center gap-3">
+            <span className="font-medium">Qty:</span>
             <input
               type="number"
               min="1"
@@ -92,84 +144,105 @@ const ProductDetails = () => {
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-4">
-            <button
-              className="px-6 py-2 bg-black text-white rounded hover:bg-gray-900"
-              onClick={handleAddToCart}
-            >
+          <div className="flex gap-3">
+            <button onClick={handleAddToCart} className="bg-black text-white px-6 py-2 rounded hover:bg-gray-900">
               Add to Cart
             </button>
             <button
-              className="px-6 py-2 border border-black text-black rounded hover:bg-gray-100"
-              onClick={handleBuyNow}
+              className="border border-black px-6 py-2 rounded hover:bg-gray-100"
+              onClick={() => {
+                if (!user) return toast.error('Please log in');
+                navigate('/checkout');
+              }}
             >
               Buy Now
             </button>
-
           </div>
         </div>
       </div>
 
-      {/* Description */}
+      {/* Tabs */}
       <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-2">Product Description</h2>
-        <p className="text-gray-700">{product.description}</p>
-      </div>
+        <div className="flex gap-100 border-b mb-4">
 
-      {/* Specs */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-2">Specifications</h2>
-        <ul className="list-disc ml-5 text-gray-700">
-          {product.specs.map((spec, i) => (
-            <li key={i}>
-              <strong>{spec.key}:</strong> {spec.value}
-            </li>
-          ))}
-        </ul>
-      </div>
+          <button
+            onClick={() => setActiveTab('details')}
+            className={`pb-2 ${activeTab === 'details' ? 'border-b-2 border-primary font-semibold' : ''}`}
+          >
+            Product Details
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`pb-2 ${activeTab === 'reviews' ? 'border-b-2 border-primary font-semibold' : ''}`}
+          >
+            Ratings & Reviews
+          </button>
+          <button
+            onClick={() => setActiveTab('faq')}
+            className={`pb-2 ${activeTab === 'faq' ? 'border-b-2 border-primary font-semibold' : ''}`}
+          >
+            FAQs
+          </button>
+        </div>
 
-      {/* Reviews */}
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-4">Customer Reviews</h2>
-        {product.reviews.map((rev, i) => (
-          <div key={i} className="mb-3 border-b pb-2">
-            <p className="text-sm font-medium">{rev.name}</p>
-            <p className="text-yellow-500">{"★".repeat(rev.rating)}</p>
-            <p className="text-sm">{rev.comment}</p>
+        {/* Tab Content */}
+        {activeTab === 'details' && (
+          <div className="py-6">
+            <p>{product.description}</p>
+            <ul className="list-disc pl-6 mt-4">
+              {product.specs.map((s, i) => (
+                <li key={i}><strong>{s.key}:</strong> {s.value}</li>
+              ))}
+            </ul>
           </div>
-        ))}
+        )}
+
+        {activeTab === 'reviews' && (
+          <div className="py-6 space-y-4">
+            {product.reviews.map((r, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <p className="font-semibold">{r.name}</p>
+                <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
+                <p className="text-gray-700">{r.comment}</p>
+                <p className="text-xs text-gray-500">{r.date}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'faq' && (
+          <div className="py-6">
+            {product.faqs.map((f, i) => (
+              <div key={i} className="mb-3">
+                <p className="font-semibold">Q: {f.question}</p>
+                <p className="ml-4 text-gray-700">A: {f.answer}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* You Might Also Like */}
-      <div className="mt-16">
-        <h2 className="text-xl font-semibold mb-4">You Might Also Like</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {Array(4).fill(0).map((_, i) => (
-            <div key={i} className="bg-white shadow rounded p-3 text-center">
-
-              <img src={assets.Airfilter} className="w-24 h-24 mx-auto mb-2" alt="suggested" />
-              <p className="text-sm font-medium">Airfilter</p>
-              <p className="text-sm text-gray-600">Rs 2500</p>
-
-            </div>
-          ))}
-        </div>
+<div className="mt-16">
+  <h2 className="text-xl font-semibold mb-4">You Might Also Like</h2>
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {relatedProducts.map((item) => (
+      <div
+        key={item.id}
+        onClick={() => navigate(`/product/${item.id}`)}
+        className="cursor-pointer border rounded-lg p-3 hover:shadow-lg transition text-center" 
+      >
+        <img src={item.image} alt={item.name} className="w-full h-28 object-contain mb-2" />
+        <h3 className="text-sm font-semibold">{item.name}</h3>
+        <p className="text-sm text-gray-600">Rs {item.price}</p>
       </div>
+    ))}
+  </div>
+</div>
+
     </div>
-
-    {showOrderSummary && (
-  <OrderSummaryPopup
-    product={product}
-    quantity={quantity}
-    onClose={() => setShowOrderSummary(false)}
-  />
-)}
-</>      
-
   );
 };
 
 export default ProductDetails;
-
 
