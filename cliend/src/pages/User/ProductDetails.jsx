@@ -4,20 +4,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { assets } from '../../assets/assets';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
+import ProductReviewPopup from '../../components/ProductReviewPopup';
+
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, user } = useAppContext();
 
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('details');
-
-  const [showAllReviews, setShowAllReviews] = useState(false);
-
-
- const allProducts = {
+   const allProducts = {
   'bmw-wheel': {
     id: 'bmw-wheel',
     name: 'BMW Alloy Wheels',
@@ -67,12 +62,21 @@ const ProductDetails = () => {
   }
 };
 
-const product = allProducts[id];
+  const product = allProducts[id];
 
-if (!product) {
+  if (!product) {
   return <div className="p-10 text-red-600">Product not found!</div>;
 }
 
+
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('details');
+
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+  const [showReviewPopup, setShowReviewPopup] = useState(false);
+  const [reviews, setReviews] = useState(product.reviews); // local review state
 
   const handleAddToCart = () => {
     if (!user) {
@@ -237,7 +241,7 @@ if (!product) {
 
         {activeTab === 'reviews' && (
   <div className="py-6 space-y-4">
-    {(showAllReviews ? product.reviews : product.reviews.slice(0, 2)).map((r, i) => (
+    {(showAllReviews ? reviews : reviews.slice(0, 2)).map((r, i) => (
       <div key={i} className="border rounded-lg p-4">
         <p className="font-semibold">{r.name}</p>
         <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
@@ -259,15 +263,16 @@ if (!product) {
 
     {/* ✅ Leave a Review Button (only for logged in users) */}
     {user && (
-      <div className="text-right mt-4">
-        <button
-          onClick={() => alert('Open review form or popup here')}
-          className="text-sm font-semibold text-black border border-black px-4 py-2 rounded hover:bg-gray-100 transition"
-        >
-          Leave a Review
-        </button>
-      </div>
-    )}
+    <div className="text-right mt-4">
+    <button
+      onClick={() => setShowReviewPopup(true)}
+      className="text-sm font-semibold text-black border border-black px-4 py-2 rounded hover:bg-gray-100 transition"
+    >
+      Leave a Review
+    </button>
+    </div>
+)}
+
   </div>
 )}
 
@@ -302,6 +307,28 @@ if (!product) {
     ))}
   </div>
 </div>
+
+      {showReviewPopup && (
+        <ProductReviewPopup
+          onClose={() => setShowReviewPopup(false)}
+          onSubmit={(newReview) => {
+            const today = new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+            setReviews((prev) => [
+              ...prev,
+              {
+                name: user?.name || 'Anonymous',
+                ...newReview,
+                date: today,
+              },
+            ]);
+          }}
+        />
+      )}
+
 
     </div>
   );
