@@ -1,52 +1,73 @@
-import React from 'react'
+import React from "react";
 
-const ProductList = () => {
-  const products = [
-        { name: "Casual Shoes", category: "Shoes", offerPrice: 999, inStock: true, image: "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/card/productImage.png", },
-        { name: "Casual Shoes", category: "Shoes", offerPrice: 999, inStock: false, image: "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/card/productImage2.png", },
-        { name: "Casual Shoes", category: "Shoes", offerPrice: 999, inStock: true, image: "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/card/productImage3.png", },
-    ];
+const productData = Array.from({ length: 12 }).map((_, index) => ({
+  id: index,
+  name: "Lorem Ipsum",
+  type: "Battery",
+  price: "Rs:110.40",
+  sales: 1269,
+  remaining: 1269,
+  image: "/battery.png", // Replace with actual path if needed
+}));
 
-    return (
-        <div className=" max-h-screen flex items-center justify-center bg-white">
-            <div className="md:p-10 p-5 space-y-3 max-w-4xl w-full rounded-lg shadow-xl bg-white border border-blue-300">
-                <h2 className="text-xl font-bold mb-4 text-center">All Products</h2>
-                <div className="flex flex-col items-center max-w-4xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
-                    <table className="md:table-auto table-fixed w-full overflow-hidden">
-                        <thead className="text-gray-900 text-sm text-left">
-                            <tr>
-                                <th className="px-4 py-3 font-semibold truncate">Product</th>
-                                <th className="px-4 py-3 font-semibold truncate">Category</th>
-                                <th className="px-4 py-3 font-semibold truncate hidden md:block">Selling Price</th>
-                                <th className="px-4 py-3 font-semibold truncate">In Stock</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm text-gray-500">
-                            {products.map((product, index) => (
-                                <tr key={index} className="border-t border-gray-500/20">
-                                    <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
-                                        <div className="border border-gray-300 rounded p-2">
-                                            <img src={product.image} alt="Product" className="w-16" />
-                                        </div>
-                                        <span className="truncate max-sm:hidden w-full">{product.name}</span>
-                                    </td>
-                                    <td className="px-4 py-3">{product.category}</td>
-                                    <td className="px-4 py-3 max-sm:hidden">Rs:{product.offerPrice}</td>
-                                    <td className="px-4 py-3">
-                                        <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
-                                            <input type="checkbox" className="sr-only peer" defaultChecked={product.inStock} />
-                                            <div className="w-12 h-7 bg-slate-300 rounded-full peer peer-checked:bg-blue-600 transition-colors duration-200"></div>
-                                            <span className="dot absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+const ProductCard = ({ product }) => (
+  <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full">
+    <img src={product.image} alt={product.name} className="w-16 h-16 mx-auto" />
+    <h4 className="text-sm font-semibold text-center">{product.name}</h4>
+    <p className="text-xs text-center text-gray-500">{product.type}</p>
+    <p className="text-center font-bold text-sm">{product.price}</p>
+    <p className="text-xs text-center text-gray-500">Name</p>
+    <p className="text-xs text-center text-gray-400 mb-2">
+      Lorem Ipsum is placeholder text commonly used in the graphic.
+    </p>
+    <div className="text-xs flex justify-between px-2">
+      <span>
+        Sales <span className="text-orange-500">⬆</span> {product.sales}
+      </span>
+      <span>
+        Remaining Products <span className="text-orange-500">━</span> {product.remaining}
+      </span>
+    </div>
+    <button className="bg-blue-600 text-white text-xs rounded px-4 py-1 mt-2 self-center">
+      Edit
+    </button>
+  </div>
+);
+
+const ProductGrid = () => {
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold">All Products</h2>
+          <p className="text-sm text-gray-500">Home &gt; All Products</p>
         </div>
-  );
-}
+        <button className="bg-black text-white rounded px-4 py-2 text-sm font-semibold">
+          + Add New Product
+        </button>
+      </div>
 
-export default ProductList
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {productData.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+
+      <div className="flex justify-center mt-8 gap-2 text-sm">
+        {[1, 2, 3, 4].map((num) => (
+          <button
+            key={num}
+            className="px-3 py-1 border rounded hover:bg-gray-200"
+          >
+            {num}
+          </button>
+        ))}
+        <span className="px-2 py-1">...</span>
+        <button className="px-3 py-1 border rounded hover:bg-gray-200">10</button>
+        <button className="px-3 py-1 border rounded hover:bg-gray-200">Next &gt;</button>
+      </div>
+    </div>
+  );
+};
+
+export default ProductGrid;

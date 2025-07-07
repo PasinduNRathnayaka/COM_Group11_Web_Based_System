@@ -1,47 +1,117 @@
-import React from 'react'
+import React from "react";
 
-const Orders = () => {
-   const boxIcon = "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/e-commerce/boxIcon.svg"
+const orders = Array(10).fill({
+  product: "Lorem Ipsum",
+  orderId: "#25426",
+  date: "Nov 8th, 2023",
+  customer: "Kevin",
+  avatar: "/avatar.png", // Replace with actual image
+  status: "Delivered",
+  amount: "Rs:200.00",
+});
 
-    const orders = [
-        { id: 1, items: [{ product: { name: "Nike Air Max 270" }, quantity: 1 }], address: { firstName: "John", lastName: "Doe", street: "123 Main St", city: "New York", state: "NY", zipcode: "10001", country: "USA"}, amount: 320.0, paymentType: "Credit Card", orderDate: "10/10/2022", isPaid: true },
-        { id: 1, items: [{ product: { name: "Nike Air Max 270" }, quantity: 1 }], address: { firstName: "John", lastName: "Doe", street: "123 Main St", city: "New York", state: "NY", zipcode: "10001", country: "USA"}, amount: 320.0, paymentType: "Credit Card", orderDate: "10/10/2022", isPaid: true },
-        { id: 1, items: [{ product: { name: "Nike Air Max 270" }, quantity: 1 }], address: { firstName: "John", lastName: "Doe", street: "123 Main St", city: "New York", state: "NY", zipcode: "10001", country: "USA"}, amount: 320.0, paymentType: "Credit Card", orderDate: "10/10/2022", isPaid: true },
-    ];
-    return (
-        <div className="md:p-10 p-4 space-y-4">
-            <h2 className="text-xl font-bold mb-4 text-center">Orders List</h2>
-            {orders.map((order, index) => (
-                <div key={index} className="flex flex-col md:grid md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center gap-5 p-5 max-w-4xl rounded-md border border-gray-300 text-gray-800">
-                    <div className="flex gap-5">
-                        <img className="w-12 h-12 object-cover opacity-60" src={boxIcon} alt="boxIcon" />
-                        <>
-                            {order.items.map((item, index) => (
-                                <div key={index} className="flex flex-col justify-center">
-                                    <p className="font-medium">
-                                        {item.product.name} <span className={`text-indigo-500 ${item.quantity < 2 && "hidden"}`}>x {item.quantity}</span>
-                                    </p>
-                                </div>
-                            ))}
-                        </>
-                    </div>
-
-                    <div className="text-sm">
-                        <p className='font-medium mb-1'>{order.address.firstName} {order.address.lastName}</p>
-                        <p>{order.address.street}, {order.address.city}, {order.address.state},{order.address.zipcode}, {order.address.country}</p>
-                    </div>
-
-                    <p className="font-medium text-base my-auto text-black/70">${order.amount}</p>
-
-                    <div className="flex flex-col text-sm">
-                        <p>Method: {order.paymentType}</p>
-                        <p>Date: {order.orderDate}</p>
-                        <p>Payment: {order.isPaid ? "Paid" : "Pending"}</p>
-                    </div>
-                </div>
-            ))}
+const OrderListPage = () => {
+  return (
+    <div className="bg-[#f3f3f3] min-h-screen p-6">
+      {/* Title */}
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-xl font-bold">Orders List</h2>
+          <p className="text-sm text-gray-500">Home &gt; Order List</p>
         </div>
-    );
-}
+        {/* Date Filter */}
+        <div className="text-sm text-gray-700 flex items-center gap-2">
+          <span className="material-icons text-lg">calendar_today</span>
+          <span>Feb 16, 2025 - Feb 20, 2025</span>
+        </div>
+      </div>
 
-export default Orders
+      {/* Orders Table */}
+      <div className="bg-white rounded-xl p-6 shadow">
+        <h3 className="text-lg font-semibold mb-4">Recent Purchases</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto text-sm text-left">
+            <thead className="border-b font-semibold text-gray-600">
+              <tr>
+                <th className="py-2">
+                  <input type="checkbox" />
+                </th>
+                <th className="py-2">Product</th>
+                <th className="py-2">Order ID</th>
+                <th className="py-2">Date</th>
+                <th className="py-2">Customer Name</th>
+                <th className="py-2">Status</th>
+                <th className="py-2">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order, index) => (
+                <tr
+                  key={index}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
+                  <td className="py-2">
+                    <input type="checkbox" />
+                  </td>
+                  <td className="py-2">{order.product}</td>
+                  <td className="py-2">{order.orderId}</td>
+                  <td className="py-2">{order.date}</td>
+                  <td className="py-2 flex items-center gap-2">
+                    <img
+                      src={order.avatar}
+                      alt="avatar"
+                      className="w-6 h-6 rounded-full"
+                    />
+                    {order.customer}
+                  </td>
+                  <td className="py-2 text-green-600 flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-600 rounded-full"></span>
+                    {order.status}
+                  </td>
+                  <td className="py-2">{order.amount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <div></div>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map((n) => (
+              <button
+                key={n}
+                className={`w-8 h-8 rounded text-sm ${
+                  n === 1
+                    ? "bg-black text-white"
+                    : "border border-gray-300 bg-white"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <span className="px-2">...</span>
+            <button className="w-8 h-8 rounded border border-gray-300">
+              10
+            </button>
+            <button className="w-8 h-8 rounded border border-gray-300">
+              Next &gt;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-10 text-xs flex justify-between text-gray-500">
+        <span>© 2025 - Admin Dashboard</span>
+        <div className="flex gap-4">
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default OrderListPage;
