@@ -45,6 +45,58 @@ const ProductDetails = () => {
     toast.success('Added to cart!');
   };
 
+  const relatedProducts = [
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+   {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+   {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+  {
+    id: 'wheel-sport',
+    name: 'Sport Alloy Wheel',
+    price: 22000,
+    image: assets.wheel5,
+  },
+];
+
+
   return (
     <div className="px-4 md:px-10 py-10">
       {/* Product Top Section */}
@@ -111,7 +163,8 @@ const ProductDetails = () => {
 
       {/* Tabs */}
       <div className="mt-10">
-        <div className="flex gap-6 border-b">
+        <div className="flex gap-100 border-b mb-4">
+
           <button
             onClick={() => setActiveTab('details')}
             className={`pb-2 ${activeTab === 'details' ? 'border-b-2 border-primary font-semibold' : ''}`}
@@ -170,22 +223,23 @@ const ProductDetails = () => {
       </div>
 
       {/* You Might Also Like */}
-      <div className="mt-16">
-        <h2 className="text-xl font-semibold mb-4">You Might Also Like</h2>
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {Array(5).fill(0).map((_, i) => (
-            <div
-              key={i}
-              onClick={() => navigate(`/product/${i}`)}
-              className="min-w-[180px] border rounded-lg p-3 cursor-pointer hover:shadow"
-            >
-              <img src={assets.wheel5} alt="suggested" className="w-full h-24 object-contain mb-2" />
-              <p className="text-sm font-medium">BMW Sport Wheel</p>
-              <p className="text-sm text-gray-500">Rs 22,000</p>
-            </div>
-          ))}
-        </div>
+<div className="mt-16">
+  <h2 className="text-xl font-semibold mb-4">You Might Also Like</h2>
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {relatedProducts.map((item) => (
+      <div
+        key={item.id}
+        onClick={() => navigate(`/product/${item.id}`)}
+        className="cursor-pointer border rounded-lg p-3 hover:shadow-lg transition text-center" 
+      >
+        <img src={item.image} alt={item.name} className="w-full h-28 object-contain mb-2" />
+        <h3 className="text-sm font-semibold">{item.name}</h3>
+        <p className="text-sm text-gray-600">Rs {item.price}</p>
       </div>
+    ))}
+  </div>
+</div>
+
     </div>
   );
 };
