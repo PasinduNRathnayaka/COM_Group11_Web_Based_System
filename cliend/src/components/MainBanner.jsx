@@ -141,7 +141,7 @@ useEffect(() => {
             className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer"
           >
 
-          <Link to="/product/Airfilter">
+          <Link to="/product/airfilter">
 
 
             <img
@@ -151,6 +151,7 @@ useEffect(() => {
             />
             <p className="font-medium text-sm">Airfilter</p>
             <p className="text-sm text-gray-600 mt-1">Rs 2500</p>
+            <p className="text-yellow-500 text-sm">★★★★☆</p>
 
           </Link>
 
@@ -272,6 +273,7 @@ useEffect(() => {
             />
             <p className="font-medium text-sm">Airfilter</p>
             <p className="text-sm text-gray-600 mt-1">Rs 2500</p>
+            <p className="text-yellow-500 text-sm">★★★★☆</p>
 
           </Link>
 
