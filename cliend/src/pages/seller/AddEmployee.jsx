@@ -60,7 +60,8 @@ const AddEmployeeForm = () => {
 
   /* ───────────────────────────────── JSX ───────────────────────────────── */
   return (
-    <>
+    <div className="bg-[#f3f3f3] min-h-screen p-6">
+    
       <form onSubmit={handleSubmit} className="min-h-screen bg-gray-50 p-6 space-y-8">
          <div className="mb-6">
         <h2 className="text-xl font-bold">Add Employee Details</h2>
@@ -194,7 +195,14 @@ const AddEmployeeForm = () => {
           </div>
         </div>
       )}
-    </>
+      <footer className="mt-10 text-xs flex justify-between text-gray-500">
+        <span>© 2025 - Admin Dashboard</span>
+        <div className="flex gap-4">
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+        </div>
+      </footer>
+    </div>
   );
 };
 
