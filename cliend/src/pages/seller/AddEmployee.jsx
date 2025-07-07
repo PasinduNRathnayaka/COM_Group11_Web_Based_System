@@ -62,8 +62,10 @@ const AddEmployeeForm = () => {
   return (
     <>
       <form onSubmit={handleSubmit} className="min-h-screen bg-gray-50 p-6 space-y-8">
-        <h2 className="text-xl font-bold">Employee Details</h2>
-
+         <div className="mb-6">
+        <h2 className="text-xl font-bold">Add Employee Details</h2>
+        <p className="text-sm text-gray-500">Home &gt; Add Employee Details</p>
+        </div>
         <div className="grid md:grid-cols-2 gap-10">
           {/* left */}
           <div className="space-y-5">
