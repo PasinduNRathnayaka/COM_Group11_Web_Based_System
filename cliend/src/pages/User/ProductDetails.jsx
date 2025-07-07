@@ -236,28 +236,41 @@ if (!product) {
         )}
 
         {activeTab === 'reviews' && (
-            <div className="py-6 space-y-4">
-              {(showAllReviews ? product.reviews : product.reviews.slice(0, 2)).map((r, i) => (
-                <div key={i} className="border rounded-lg p-4">
-                  <p className="font-semibold">{r.name}</p>
-                  <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
-                  <p className="text-gray-700">{r.comment}</p>
-                  <p className="text-xs text-gray-500">{r.date}</p>
-                </div>
-              ))}
+  <div className="py-6 space-y-4">
+    {(showAllReviews ? product.reviews : product.reviews.slice(0, 2)).map((r, i) => (
+      <div key={i} className="border rounded-lg p-4">
+        <p className="font-semibold">{r.name}</p>
+        <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
+        <p className="text-gray-700">{r.comment}</p>
+        <p className="text-xs text-gray-500">{r.date}</p>
+      </div>
+    ))}
 
-              {product.reviews.length > 2 && (
-                <div className="text-right mt-4">
-                  <button
-                    onClick={() => setShowAllReviews((prev) => !prev)}
-                    className="text-sm font-semibold text-primary hover:underline"
-                  >
-                    {showAllReviews ? 'See Less' : 'See More'}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+    {product.reviews.length > 2 && (
+      <div className="text-right mt-4">
+        <button
+          onClick={() => setShowAllReviews((prev) => !prev)}
+          className="text-sm font-semibold text-primary hover:underline"
+        >
+          {showAllReviews ? 'See Less' : 'See More'}
+        </button>
+      </div>
+    )}
+
+    {/* ✅ Leave a Review Button (only for logged in users) */}
+    {user && (
+      <div className="text-right mt-4">
+        <button
+          onClick={() => alert('Open review form or popup here')}
+          className="text-sm font-semibold text-black border border-black px-4 py-2 rounded hover:bg-gray-100 transition"
+        >
+          Leave a Review
+        </button>
+      </div>
+    )}
+  </div>
+)}
+
 
 
         {activeTab === 'faq' && (
