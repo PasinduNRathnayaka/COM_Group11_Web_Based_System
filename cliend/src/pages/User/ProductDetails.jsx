@@ -14,6 +14,9 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
 
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+
  const allProducts = {
   'bmw-wheel': {
     id: 'bmw-wheel',
@@ -50,6 +53,12 @@ const ProductDetails = () => {
       { key: 'Fitment', value: 'BMW i8, i3, and similar' },
     ],
     reviews: [
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
+      { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
       { name: 'Ruwan J.', rating: 5, comment: 'Perfect fit and great airflow.', date: 'June 1, 2025' },
     ],
     faqs: [
@@ -227,17 +236,29 @@ if (!product) {
         )}
 
         {activeTab === 'reviews' && (
-          <div className="py-6 space-y-4">
-            {product.reviews.map((r, i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <p className="font-semibold">{r.name}</p>
-                <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
-                <p className="text-gray-700">{r.comment}</p>
-                <p className="text-xs text-gray-500">{r.date}</p>
-              </div>
-            ))}
-          </div>
-        )}
+            <div className="py-6 space-y-4">
+              {(showAllReviews ? product.reviews : product.reviews.slice(0, 2)).map((r, i) => (
+                <div key={i} className="border rounded-lg p-4">
+                  <p className="font-semibold">{r.name}</p>
+                  <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
+                  <p className="text-gray-700">{r.comment}</p>
+                  <p className="text-xs text-gray-500">{r.date}</p>
+                </div>
+              ))}
+
+              {product.reviews.length > 2 && (
+                <div className="text-right mt-4">
+                  <button
+                    onClick={() => setShowAllReviews((prev) => !prev)}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    {showAllReviews ? 'See Less' : 'See More'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
 
         {activeTab === 'faq' && (
           <div className="py-6">
