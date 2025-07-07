@@ -64,7 +64,7 @@ const AddProductForm = () => {
 
   /* ────────────────────────────────── JSX ─────────────────────────────────── */
   return (
-    <>
+    <div className="bg-[#f3f3f3] min-h-screen p-6">
       {/* ─────────────── form ─────────────── */}
       <form onSubmit={handleSubmit} className="min-h-screen bg-gray-50 p-6 space-y-8">
         <div className="mb-6">
@@ -237,7 +237,7 @@ const AddProductForm = () => {
           <a href="#">Contact</a>
         </div>
       </footer>
-    </>
+    </div>
   );
 };
 
