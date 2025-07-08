@@ -8,7 +8,7 @@ const sampleProducts = Array(20).fill({
   name: 'NGK Iridium Plug',
   price: 3200,
   rating: 4,
-  image: assets.sparkPlug, // replace with your correct asset
+  image: assets.NGK, // replace with your correct asset
 });
 
 const AllProducts = () => {
