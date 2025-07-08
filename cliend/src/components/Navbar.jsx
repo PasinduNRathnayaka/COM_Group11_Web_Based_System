@@ -3,6 +3,7 @@ import logo from "../assets/kamal-logo.png";
 import { NavLink } from 'react-router-dom';
 import { assets } from '../assets/assets';
 import { useAppContext } from '../context/AppContext';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [open, setOpen] = React.useState(false);
@@ -26,8 +27,11 @@ const Navbar = () => {
       {/* ✅ Desktop Menu */}
       <div className="hidden sm:flex items-center gap-8">
         <NavLink to='/'>Home</NavLink>
-        <NavLink to='/products'>All Products</NavLink>
-        <NavLink to='/'>Contact</NavLink>
+        <Link to="/product" className="font-medium">
+          All Products
+        </Link>
+        <NavLink to="/contact">Contact</NavLink>
+
 
         <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
           <input className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500" type="text" placeholder="Search products" />
@@ -74,9 +78,11 @@ const Navbar = () => {
       {open && (
         <div className="absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-2 px-5 text-sm md:hidden text-black">
           <NavLink to="/" onClick={() => setOpen(false)}>Home</NavLink>
-          <NavLink to="/products" onClick={() => setOpen(false)}>All Products</NavLink>
+          <NavLink to="/product" onClick={() => setOpen(false)}>All Products</NavLink>
+
           {user && <NavLink to="/my-orders" onClick={() => setOpen(false)}>My Orders</NavLink>}
-          <NavLink to="/" onClick={() => setOpen(false)}>Contact</NavLink>
+          <NavLink to="/contact" onClick={() => setOpen(false)}>Contact</NavLink>
+
 
           {/* ✅ Updated mobile login/logout/profile buttons */}
           {!user ? (

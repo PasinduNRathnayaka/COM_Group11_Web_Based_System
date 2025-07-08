@@ -13,8 +13,8 @@ import Footer from './components/Footer';
 import Cart from './pages/User/Cart';
 import Checkout from './pages/User/Checkout';
 import ProductDetails from './pages/User/ProductDetails';
-
-
+import AllProducts from './pages/User/AllProducts';
+import Contact from './pages/User/Contact';
 
 //import MyOrders from './pages/User/MyOrders'
 //import OrderHistory from './pages/User/OrderHistory'
@@ -62,6 +62,10 @@ const handleSignInClick = () => {
            <Route path="/checkout" element={<Checkout />} />
 
            <Route path="/product/:id" element={<ProductDetails />} />
+
+          <Route path="/product" element={<AllProducts />} />
+
+          <Route path="/contact" element={<Contact />} />
 
 
         </Routes>
