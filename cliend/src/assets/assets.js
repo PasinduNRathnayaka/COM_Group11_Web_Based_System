@@ -29,6 +29,8 @@ import wheel7 from "./User/wheel7.jpg";
 import Airfilter1 from "./User/Airfilter1.jpeg";
 import Airfilter2 from "./User/Airfilter2.jpg";
 import NGK from "./User/NGK.webp";
+import lap from "./User/lap.jpeg";
+
 
 export const assets = {
     logo,
@@ -62,4 +64,7 @@ export const assets = {
     Airfilter1,
     Airfilter2,
     NGK,
+
+    lap,
+
 };
