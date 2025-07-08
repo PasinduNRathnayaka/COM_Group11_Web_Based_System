@@ -31,7 +31,6 @@ import Airfilter2 from "./User/Airfilter2.jpg";
 import NGK from "./User/NGK.webp";
 import lap from "./User/lap.jpeg";
 
-
 export const assets = {
     logo,
     logo2,
@@ -64,7 +63,6 @@ export const assets = {
     Airfilter1,
     Airfilter2,
     NGK,
-
     lap,
 
 };
