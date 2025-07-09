@@ -102,14 +102,7 @@ const OrderListPage = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-10 text-xs flex justify-between text-gray-500">
-        <span>© 2025 - Admin Dashboard</span>
-        <div className="flex gap-4">
-          <a href="#">About</a>
-          <a href="#">Contact</a>
-        </div>
-      </footer>
+      
     </div>
   );
 };
