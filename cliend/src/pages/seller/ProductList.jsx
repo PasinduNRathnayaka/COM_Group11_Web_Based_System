@@ -66,13 +66,7 @@ const ProductGrid = () => {
         <button className="px-3 py-1 border rounded hover:bg-gray-200">10</button>
         <button className="px-3 py-1 border rounded hover:bg-gray-200">Next &gt;</button>
       </div>
-      <footer className="mt-10 text-xs flex justify-between text-gray-500">
-        <span>© 2025 - Admin Dashboard</span>
-        <div className="flex gap-4">
-          <a href="#">About</a>
-          <a href="#">Contact</a>
-        </div>
-      </footer>
+      
     </div>
   );
 };
