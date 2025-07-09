@@ -104,13 +104,8 @@ const EmployeeLayout = () => {
   }, []);
 
   const sidebarLinks = [
-    { name: "Dashboard", path: "/seller/dashboard", icon: addProductIcon },
-    { name: "Add Product", path: "/seller", icon: addProductIcon },
-    { name: "Product List", path: "/seller/product-list", icon: productListIcon },
-    { name: "Add Employee", path: "/seller/add-employee", icon: addEmployeeIcon },
-    { name: "Employee List", path: "/seller/employee-list", icon: employeeListIcon },
-    { name: "Mark Attendance", path: "/seller/mark-attendence", icon: attendanceIcon },
-    { name: "Orders", path: "/seller/orders", icon: ordersIcon },
+    { name: "Dashboard", path: "/employee", icon: addProductIcon },
+     { name: "Attendance", path: "/employee/Attendance", icon: addEmployeeIcon },
   ];
 
   return (
