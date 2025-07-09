@@ -97,6 +97,26 @@ const handleSignInClick = () => {
         </Routes>
       </div>
 
+      {/* new Employee */}
+      <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+        <Routes>
+          {/* Login if not seller, else show layout with nested routes */}
+          <Route path="/employee" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
+            <Route index element={<AddProduct />} />
+            <Route path="Dashboard" element={<Dashboard />} />
+            <Route path="product-list" element={<ProductList />} />
+            <Route path="add-employee" element={<AddEmployee />} />
+            <Route path="employee-list" element={<EmployeeList />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="mark-attendence" element={<MarkAttendance />} />
+
+         
+          </Route>
+        </Routes>
+      </div>
+
+      {/* new Employee */}
+
       {!isSellerPath && <Footer />}
     </div>
   );
