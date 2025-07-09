@@ -10,11 +10,8 @@ import addEmployeeIcon from "../../assets/add-employee.png";
 import employeeListIcon from "../../assets/employee-list.png";
 import attendanceIcon from "../../assets/attendance.png";
 import ordersIcon from "../../assets/orders.png";
-
-// Import NotificationPopup
 import NotificationPopup from "../../components/seller/NotificationPopup";
 
-/* ------------------------ EditProfileModal (Unchanged) ------------------------ */
 const EditProfileModal = ({ open, onClose }) => {
   if (!open) return null;
 
@@ -69,7 +66,6 @@ const EditProfileModal = ({ open, onClose }) => {
   );
 };
 
-/* ------------------------------ SellerLayout ------------------------------ */
 const SellerLayout = () => {
   const { setIsSeller } = useAppContext();
   const navigate = useNavigate();
@@ -115,17 +111,15 @@ const SellerLayout = () => {
 
   return (
     <>
-      {/* ---------------------------- Top Navbar ---------------------------- */}
+      {/* Top Navbar */}
       <div className="flex items-center justify-between px-4 md:px-8 py-2 bg-blue-900 text-white relative">
-        {/* brand */}
         <a href="/seller/dashboard" className="flex items-center gap-3">
           <img className="h-10" src={logo} alt="logo" />
           <h1 className="hidden sm:block text-lg font-bold">Kamal Auto Parts</h1>
         </a>
 
-        {/* actions */}
         <div className="flex items-center gap-4">
-          {/* search */}
+          {/* Search */}
           <div className="relative">
             <button
               onClick={() => setShowSearch((p) => !p)}
@@ -144,7 +138,7 @@ const SellerLayout = () => {
             )}
           </div>
 
-          {/* bell */}
+          {/* Notifications */}
           <div className="relative" ref={bellRef}>
             <button
               onClick={() => setShowNotifications((prev) => !prev)}
@@ -159,7 +153,7 @@ const SellerLayout = () => {
             />
           </div>
 
-          {/* admin dropdown */}
+          {/* Admin Dropdown */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu((p) => !p)}
@@ -192,9 +186,10 @@ const SellerLayout = () => {
         </div>
       </div>
 
-      {/* ----------------------- Sidebar + Main Content ---------------------- */}
-      <div className="flex">
-        <div className="md:w-64 w-16 border-r h-screen text-base border-blue-400 pt-4 flex flex-col bg-indigo-100">
+      {/* Layout: Sidebar + Content */}
+      <div className="flex min-h-screen">
+        {/* Sidebar */}
+        <div className="md:w-64 w-16 border-r border-blue-400 bg-indigo-100 flex flex-col pt-4 overflow-y-auto">
           {sidebarLinks.map((item) => (
             <NavLink
               to={item.path}
@@ -202,9 +197,9 @@ const SellerLayout = () => {
               end={item.path === "/seller"}
               className={({ isActive }) =>
                 `flex items-center py-3 px-4 gap-3 font-medium transition-all
-                 ${isActive
-                   ? "bg-blue-700 text-white border-r-4 border-blue-900"
-                   : "text-gray-700 hover:bg-blue-200 hover:text-blue-900"}`
+                ${isActive
+                  ? "bg-blue-700 text-white border-r-4 border-blue-900"
+                  : "text-gray-700 hover:bg-blue-200 hover:text-blue-900"}`
               }
             >
               <img src={item.icon} alt={item.name} className="w-6 h-6" />
@@ -213,12 +208,22 @@ const SellerLayout = () => {
           ))}
         </div>
 
-        <div className="flex-1 p-4 bg-gray-50 min-h-screen">
-          <Outlet />
+        {/* Main Content + Footer */}
+        <div className="flex-1 flex flex-col bg-gray-50">
+          <main className="flex-1 p-4">
+            <Outlet />
+          </main>
+          <footer className="mt-10 text-xs flex justify-between text-gray-500 border-t pt-4 px-4">
+            <span>© 2025 - Admin Dashboard</span>
+            <div className="flex gap-4">
+              <a href="#">About</a>
+              <a href="#">Contact</a>
+            </div>
+          </footer>
         </div>
       </div>
 
-      {/* --------------------------- Edit Profile Modal ---------------------- */}
+      {/* Edit Profile Modal */}
       <EditProfileModal
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
