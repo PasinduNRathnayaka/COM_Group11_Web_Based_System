@@ -34,7 +34,7 @@ import MarkAttendance from './pages/seller/MarkAttendence';
 
 const App = () => {
   const location = useLocation();
-  const isSellerPath = location.pathname.startsWith("/seller");
+  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee");
   const { isSeller, showUserLogin, navigate, setShowUserLogin } = useAppContext(); //new
 //new
 const handleSignInClick = () => {     
@@ -98,7 +98,8 @@ const handleSignInClick = () => {
       </div>
 
       {/* new Employee */}
-      <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+
+        <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           {/* Login if not seller, else show layout with nested routes */}
           <Route path="/employee" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
