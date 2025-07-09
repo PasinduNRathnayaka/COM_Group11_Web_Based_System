@@ -21,7 +21,7 @@ const EditProfileModal = ({ open, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white w-[90%] max-w-md rounded-lg shadow-lg p-6 relative">
-        <h2 className="font-semibold text-lg mb-4">ADMIN &gt; EDIT PROFILE</h2>
+        <h2 className="font-semibold text-lg mb-4">EMPLOYEE &gt; EDIT PROFILE</h2>
 
         <div className="flex items-center gap-4 mb-6">
           <img
@@ -160,12 +160,12 @@ const EmployeeLayout = () => {
               onClick={() => setShowMenu((p) => !p)}
               className="flex items-center gap-1 bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded text-sm font-semibold"
             >
-              ADMIN <FiChevronDown size={14} />
+              EMPLOYEE <FiChevronDown size={14} />
             </button>
 
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-20">
-                <div className="px-4 py-3 font-semibold border-b">Admin</div>
+                <div className="px-4 py-3 font-semibold border-b">EMPLOYEE</div>
                 <button
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                   onClick={() => {
