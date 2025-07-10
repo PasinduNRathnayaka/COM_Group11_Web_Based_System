@@ -100,8 +100,8 @@ const SellerLayout = () => {
   }, []);
 
   const sidebarLinks = [
-    { name: "Dashboard", path: "/seller/dashboard", icon: addProductIcon },
-    { name: "Add Product", path: "/seller", icon: addProductIcon },
+    { name: "Dashboard", path: "/seller", icon: addProductIcon },
+    { name: "Add Product", path: "/seller/add-product", icon: addProductIcon },
     { name: "Product List", path: "/seller/product-list", icon: productListIcon },
     { name: "Add Employee", path: "/seller/add-employee", icon: addEmployeeIcon },
     { name: "Employee List", path: "/seller/employee-list", icon: employeeListIcon },

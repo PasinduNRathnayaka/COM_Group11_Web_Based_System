@@ -86,9 +86,9 @@ const handleSignInClick = () => {
       <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           {/* Login if not seller, else show layout with nested routes */}
-          <Route path="/seller" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
-            <Route index element={<AddProduct />} />
-            <Route path="Dashboard" element={<Dashboard />} />
+          <Route path="/seller" element={<SellerLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="add-product" element={<AddProduct />} />
             <Route path="product-list" element={<ProductList />} />
             <Route path="add-employee" element={<AddEmployee />} />
             <Route path="employee-list" element={<EmployeeList />} />
