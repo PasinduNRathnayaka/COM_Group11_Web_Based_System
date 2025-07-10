@@ -1,9 +1,17 @@
-import mongoose from "mongoose";
+import User from './User.js';
+// models/User.js
+import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
+const options = { discriminatorKey: 'role', timestamps: true };
 
-},{minimize: false})
+const baseUserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+}, options);
 
-const User = mongoose.models.user || mongoose.model('user',userSchema)
+const User = mongoose.model('User', baseUserSchema);
 
-export default User
+const Customer = User.discriminator('customer', new mongoose.Schema({
+  address: String,
+}));
+export default User;
