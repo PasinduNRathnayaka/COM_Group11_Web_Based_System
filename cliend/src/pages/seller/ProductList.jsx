@@ -1,29 +1,43 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ProductCard = ({ product }) => (
-  <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full">
-    <img src={product.image || "/battery.png"} alt={product.productName} className="w-16 h-16 mx-auto" />
-    <h4 className="text-sm font-semibold text-center">{product.productName}</h4>
-    <p className="text-xs text-center text-gray-500">{product.category}</p>
-    <p className="text-center font-bold text-sm">Rs:{product.salePrice || product.regularPrice}</p>
-    <p className="text-xs text-center text-gray-500">{product.brand}</p>
-    <p className="text-xs text-center text-gray-400 mb-2">
-      {product.description || "No description provided."}
-    </p>
-    <div className="text-xs flex justify-between px-2">
-      <span>
-        Code: <span className="text-orange-500">{product.code}</span>
-      </span>
-      <span>
-        Stock: <span className="text-orange-500">{product.stock}</span>
-      </span>
+const ProductCard = ({ product }) => {
+  const imageUrl = product.image
+    ? `http://localhost:4000${product.image}`
+    : "/placeholder.png"; // fallback image
+
+  return (
+    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full">
+      <img
+        src={imageUrl}
+        alt={product.productName}
+        className="w-full h-40 object-contain rounded"
+      />
+      <h4 className="text-sm font-semibold text-center">
+        {product.productName}
+      </h4>
+      <p className="text-xs text-center text-gray-500">{product.category}</p>
+      <p className="text-center font-bold text-sm text-green-600">
+        Rs: {product.salePrice || product.regularPrice}
+      </p>
+      <p className="text-xs text-center text-gray-500">{product.brand}</p>
+      <p className="text-xs text-center text-gray-400 mb-2">
+        {product.description || "No description provided."}
+      </p>
+      <div className="text-xs flex justify-between px-2">
+        <span>
+          Code: <span className="text-orange-500">{product.code}</span>
+        </span>
+        <span>
+          Stock: <span className="text-orange-500">{product.stock}</span>
+        </span>
+      </div>
+      <button className="bg-blue-600 text-white text-xs rounded px-4 py-1 mt-2 self-center">
+        Edit
+      </button>
     </div>
-    <button className="bg-blue-600 text-white text-xs rounded px-4 py-1 mt-2 self-center">
-      Edit
-    </button>
-  </div>
-);
+  );
+};
 
 const ProductGrid = () => {
   const [products, setProducts] = useState([]);
@@ -32,12 +46,10 @@ const ProductGrid = () => {
   useEffect(() => {
     fetch("http://localhost:4000/api/products")
       .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-      })
-      .catch((err) => {
-        console.error("❌ Error fetching products:", err);
-      });
+      .then((data) => setProducts(data))
+      .catch((err) =>
+        console.error("❌ Error fetching products:", err.message)
+      );
   }, []);
 
   return (
