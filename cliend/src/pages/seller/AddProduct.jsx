@@ -56,11 +56,63 @@ const AddProductForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Product submitted", form);
-    // TODO: backend integration
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Prepare product object from form state
+  const productData = {
+    productId: form.productId,
+    productName: form.productName,
+    description: form.description,
+    category: form.category,
+    brand: form.brand,
+    code: form.code,
+    stock: Number(form.stock),
+    regularPrice: Number(form.regularPrice),
+    salePrice: Number(form.salePrice),
+    tags: form.tags,
+    image: form.imagePreview || "", // you can later replace with real URL after file upload
+    gallery: form.gallery.map((file) => file.name), // placeholder; replace if you implement file upload
   };
+
+  try {
+    const res = await fetch("http://localhost:4000/api/products", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(productData)
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to add product");
+    }
+
+    const result = await res.json();
+    console.log("✅ Product added:", result);
+    alert("Product saved successfully!");
+
+    // Clear form
+    setForm((prev) => ({
+      ...prev,
+      productId: `PRD-${Math.floor(100000 + Math.random() * 900000)}`,
+      productName: "",
+      description: "",
+      category: "",
+      brand: "",
+      code: "",
+      stock: "",
+      regularPrice: "",
+      salePrice: "",
+      tags: "",
+      imagePreview: null,
+      gallery: [],
+    }));
+  } catch (err) {
+    console.error("❌ Error saving product:", err.message);
+    alert("Failed to save product");
+  }
+};
 
   /* ────────────────────────────────── JSX ─────────────────────────────────── */
   return (
