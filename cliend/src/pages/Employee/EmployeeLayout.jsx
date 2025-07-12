@@ -10,15 +10,18 @@ import addEmployeeIcon from "../../assets/add-employee.png";
 import employeeListIcon from "../../assets/employee-list.png";
 import attendanceIcon from "../../assets/attendance.png";
 import ordersIcon from "../../assets/orders.png";
+
+// Import NotificationPopup
 import NotificationPopup from "../../components/seller/NotificationPopup";
 
+/* ------------------------ EditProfileModal (Unchanged) ------------------------ */
 const EditProfileModal = ({ open, onClose }) => {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white w-[90%] max-w-md rounded-lg shadow-lg p-6 relative">
-        <h2 className="font-semibold text-lg mb-4">ADMIN &gt; EDIT PROFILE</h2>
+        <h2 className="font-semibold text-lg mb-4">EMPLOYEE &gt; EDIT PROFILE</h2>
 
         <div className="flex items-center gap-4 mb-6">
           <img
@@ -66,7 +69,8 @@ const EditProfileModal = ({ open, onClose }) => {
   );
 };
 
-const SellerLayout = () => {
+/* ------------------------------ SellerLayout ------------------------------ */
+const EmployeeLayout = () => {
   const { setIsSeller } = useAppContext();
   const navigate = useNavigate();
 
@@ -100,26 +104,23 @@ const SellerLayout = () => {
   }, []);
 
   const sidebarLinks = [
-    { name: "Dashboard", path: "/seller", icon: addProductIcon },
-    { name: "Add Product", path: "/seller/add-product", icon: addProductIcon },
-    { name: "Product List", path: "/seller/product-list", icon: productListIcon },
-    { name: "Add Employee", path: "/seller/add-employee", icon: addEmployeeIcon },
-    { name: "Employee List", path: "/seller/employee-list", icon: employeeListIcon },
-    { name: "Mark Attendance", path: "/seller/mark-attendence", icon: attendanceIcon },
-    { name: "Orders", path: "/seller/orders", icon: ordersIcon },
+    { name: "Dashboard", path: "/employee", icon: addProductIcon },
+     { name: "Attendance", path: "/employee/Attendance", icon: addEmployeeIcon },
   ];
 
   return (
     <>
-      {/* Top Navbar */}
+      {/* ---------------------------- Top Navbar ---------------------------- */}
       <div className="flex items-center justify-between px-4 md:px-8 py-2 bg-blue-900 text-white relative">
+        {/* brand */}
         <a href="/seller/dashboard" className="flex items-center gap-3">
           <img className="h-10" src={logo} alt="logo" />
           <h1 className="hidden sm:block text-lg font-bold">Kamal Auto Parts</h1>
         </a>
 
+        {/* actions */}
         <div className="flex items-center gap-4">
-          {/* Search */}
+          {/* search */}
           <div className="relative">
             <button
               onClick={() => setShowSearch((p) => !p)}
@@ -138,7 +139,7 @@ const SellerLayout = () => {
             )}
           </div>
 
-          {/* Notifications */}
+          {/* bell */}
           <div className="relative" ref={bellRef}>
             <button
               onClick={() => setShowNotifications((prev) => !prev)}
@@ -153,18 +154,18 @@ const SellerLayout = () => {
             />
           </div>
 
-          {/* Admin Dropdown */}
+          {/* admin dropdown */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu((p) => !p)}
               className="flex items-center gap-1 bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded text-sm font-semibold"
             >
-              ADMIN <FiChevronDown size={14} />
+              EMPLOYEE <FiChevronDown size={14} />
             </button>
 
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-20">
-                <div className="px-4 py-3 font-semibold border-b">Admin</div>
+                <div className="px-4 py-3 font-semibold border-b">EMPLOYEE</div>
                 <button
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                   onClick={() => {
@@ -186,10 +187,9 @@ const SellerLayout = () => {
         </div>
       </div>
 
-      {/* Layout: Sidebar + Content */}
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <div className="md:w-64 w-16 border-r border-blue-400 bg-indigo-100 flex flex-col pt-4 overflow-y-auto">
+      {/* ----------------------- Sidebar + Main Content ---------------------- */}
+      <div className="flex">
+        <div className="md:w-64 w-16 border-r h-screen text-base border-blue-400 pt-4 flex flex-col bg-indigo-100">
           {sidebarLinks.map((item) => (
             <NavLink
               to={item.path}
@@ -197,9 +197,9 @@ const SellerLayout = () => {
               end={item.path === "/seller"}
               className={({ isActive }) =>
                 `flex items-center py-3 px-4 gap-3 font-medium transition-all
-                ${isActive
-                  ? "bg-blue-700 text-white border-r-4 border-blue-900"
-                  : "text-gray-700 hover:bg-blue-200 hover:text-blue-900"}`
+                 ${isActive
+                   ? "bg-blue-700 text-white border-r-4 border-blue-900"
+                   : "text-gray-700 hover:bg-blue-200 hover:text-blue-900"}`
               }
             >
               <img src={item.icon} alt={item.name} className="w-6 h-6" />
@@ -208,22 +208,12 @@ const SellerLayout = () => {
           ))}
         </div>
 
-        {/* Main Content + Footer */}
-        <div className="flex-1 flex flex-col bg-gray-50">
-          <main className="flex-1 p-4">
-            <Outlet />
-          </main>
-          <footer className="mt-10 text-xs flex justify-between text-gray-500 border-t pt-4 px-4">
-            <span>© 2025 - Admin Dashboard</span>
-            <div className="flex gap-4">
-              <a href="#">About</a>
-              <a href="#">Contact</a>
-            </div>
-          </footer>
+        <div className="flex-1 p-4 bg-gray-50 min-h-screen">
+          <Outlet />
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
+      {/* --------------------------- Edit Profile Modal ---------------------- */}
       <EditProfileModal
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
@@ -232,4 +222,4 @@ const SellerLayout = () => {
   );
 };
 
-export default SellerLayout;
+export default EmployeeLayout;

@@ -13,8 +13,8 @@ import Footer from './components/Footer';
 import Cart from './pages/User/Cart';
 import Checkout from './pages/User/Checkout';
 import ProductDetails from './pages/User/ProductDetails';
-
-
+import AllProducts from './pages/User/AllProducts';
+import Contact from './pages/User/Contact';
 
 //import MyOrders from './pages/User/MyOrders'
 //import OrderHistory from './pages/User/OrderHistory'
@@ -32,14 +32,19 @@ import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
 
+//<<<<<<< DEF01
 //new
 import SidebarLayout from "./components/SidebarLayout";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
 
+=======
+import EmployeeLayout from './pages/Employee/EmployeeLayout';
+import Attendance from "./pages/employee/Attendance";
+//>>>>>>> main
 
 const App = () => {
   const location = useLocation();
-  const isSellerPath = location.pathname.startsWith("/seller");
+  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee");
   const { isSeller, showUserLogin, navigate, setShowUserLogin } = useAppContext(); //new
 //new
 const handleSignInClick = () => {     
@@ -68,6 +73,10 @@ const handleSignInClick = () => {
 
            <Route path="/product/:id" element={<ProductDetails />} />
 
+          <Route path="/product" element={<AllProducts />} />
+
+          <Route path="/contact" element={<Contact />} />
+
 
         </Routes>
       </div>
@@ -84,9 +93,9 @@ const handleSignInClick = () => {
       <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           {/* Login if not seller, else show layout with nested routes */}
-          <Route path="/seller" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
-            <Route index element={<AddProduct />} />
-            <Route path="Dashboard" element={<Dashboard />} />
+          <Route path="/seller" element={<SellerLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="add-product" element={<AddProduct />} />
             <Route path="product-list" element={<ProductList />} />
             <Route path="add-employee" element={<AddEmployee />} />
             <Route path="employee-list" element={<EmployeeList />} />
@@ -98,6 +107,7 @@ const handleSignInClick = () => {
         </Routes>
       </div>
 
+//<<<<<<< DEF01
       <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
           <Routes>
             <Route path='/' element={<SidebarLayout />}>
@@ -106,6 +116,22 @@ const handleSignInClick = () => {
           </Routes>
       </div>
 
+      {/* new Employee */}
+
+        <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+        <Routes>
+          <Route path="/employee" element={<EmployeeLayout />}>
+          <Route index element={<Attendance />} />
+          <Route path="Attendance" element={<Attendance />} />
+        
+        </Route>
+
+        </Routes>
+      </div>
+
+      {/* new Employee */}
+
+//>>>>>>> main
       {!isSellerPath && <Footer />}
     </div>
   );

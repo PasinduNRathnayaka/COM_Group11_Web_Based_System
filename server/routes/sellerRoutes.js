@@ -1,0 +1,1 @@
+// Seller routes (e.g., /add-product)
