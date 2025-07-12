@@ -32,6 +32,11 @@ import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
 
+//new
+import SidebarLayout from "./components/SidebarLayout";
+import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
+
+
 const App = () => {
   const location = useLocation();
   const isSellerPath = location.pathname.startsWith("/seller");
@@ -91,6 +96,14 @@ const handleSignInClick = () => {
          
           </Route>
         </Routes>
+      </div>
+
+      <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+          <Routes>
+            <Route path='/' element={<SidebarLayout />}>
+            <Route path="/order-details" element={<OrderDetails />} />
+            </Route>  
+          </Routes>
       </div>
 
       {!isSellerPath && <Footer />}
