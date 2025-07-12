@@ -1,15 +1,6 @@
 import React, { useState } from "react";
 
-/**
- * -----------------------------------------------------------------------------
- * AddProductForm.jsx – Stand‑alone product creation form with dynamic category
- * management (dropdown + “Add new Category” modal with image upload).
- * TailwindCSS for styling. No sidebar / header in this file.
- * -----------------------------------------------------------------------------
- */
-
 const AddProductForm = () => {
-  /* ────────────────────────────────── state ────────────────────────────────── */
   const [form, setForm] = useState({
     productId: `PRD-${Math.floor(100000 + Math.random() * 900000)}`,
     productName: "",
@@ -30,7 +21,6 @@ const AddProductForm = () => {
   const [newCatName, setNewCatName] = useState("");
   const [newCatImage, setNewCatImage] = useState(null);
 
-  /* ─────────────────────────────── handlers ──────────────────────────────── */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
@@ -38,7 +28,9 @@ const AddProductForm = () => {
 
   const handleMainImgUpload = (e) => {
     const file = e.target.files[0];
-    file && setForm((p) => ({ ...p, imagePreview: URL.createObjectURL(file) }));
+    if (file) {
+      setForm((p) => ({ ...p, imagePreview: URL.createObjectURL(file) }));
+    }
   };
 
   const handleGalleryUpload = (e) => {
@@ -56,21 +48,62 @@ const AddProductForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Product submitted", form);
-    // TODO: backend integration
+
+    const productData = {
+      productId: form.productId,
+      productName: form.productName,
+      description: form.description,
+      category: form.category,
+      brand: form.brand,
+      code: form.code,
+      stock: Number(form.stock),
+      regularPrice: Number(form.regularPrice),
+      salePrice: Number(form.salePrice),
+      tags: form.tags,
+      image: "", // Skip blob URL for now (you can replace with actual uploaded image URL later)
+      gallery: form.gallery.map((file) => file.name),
+    };
+
+    try {
+      const res = await fetch("http://localhost:4000/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productData),
+      });
+
+      if (!res.ok) throw new Error("Failed to save product");
+
+      const result = await res.json();
+      console.log("✅ Product added:", result);
+      alert("✅ Product saved successfully!");
+
+      setForm({
+        productId: `PRD-${Math.floor(100000 + Math.random() * 900000)}`,
+        productName: "",
+        description: "",
+        category: "",
+        brand: "",
+        code: "",
+        stock: "",
+        regularPrice: "",
+        salePrice: "",
+        tags: "",
+        imagePreview: null,
+        gallery: [],
+      });
+    } catch (err) {
+      console.error("❌ Error saving product:", err.message);
+      alert("❌ Failed to save product");
+    }
   };
 
-  /* ────────────────────────────────── JSX ─────────────────────────────────── */
   return (
     <>
-      {/* ─────────────── form ─────────────── */}
       <form onSubmit={handleSubmit} className="min-h-screen bg-gray-50 p-6 space-y-8">
         <h2 className="text-xl font-bold">Product Details</h2>
-
         <div className="grid md:grid-cols-2 gap-10">
-          {/* left */}
           <div className="space-y-5">
             {[
               { label: "Product ID", name: "productId", disabled: true },
@@ -88,7 +121,6 @@ const AddProductForm = () => {
               </div>
             ))}
 
-            {/* Description */}
             <div>
               <label className="block font-medium mb-1">Description</label>
               <textarea
@@ -99,7 +131,6 @@ const AddProductForm = () => {
               />
             </div>
 
-            {/* Category dropdown */}
             <div>
               <label className="block font-medium mb-1">Category</label>
               <select
@@ -121,7 +152,6 @@ const AddProductForm = () => {
               </select>
             </div>
 
-            {/* Brand, Code, Stock, Prices */}
             <div>
               <label className="block font-medium mb-1">Brand Name</label>
               <input name="brand" value={form.brand} onChange={handleChange} className="w-full border rounded px-3 py-2" />
@@ -156,12 +186,11 @@ const AddProductForm = () => {
             </div>
 
             <div>
-              <label className="block font-medium mb-1">Tag</label>
+              <label className="block font-medium mb-1">Tags</label>
               <input name="tags" value={form.tags} onChange={handleChange} className="w-full border rounded px-3 py-2" />
             </div>
           </div>
 
-          {/* right */}
           <div className="space-y-6">
             <div className="h-60 bg-gray-200 flex items-center justify-center rounded-lg">
               {form.imagePreview ? (
@@ -204,7 +233,6 @@ const AddProductForm = () => {
         </div>
       </form>
 
-      {/* ─────────────── add‑category modal ─────────────── */}
       {showCatModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-sm p-6 rounded-lg shadow-lg">
