@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({ product }) => (
   <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full">
@@ -26,6 +27,7 @@ const ProductCard = ({ product }) => (
 
 const ProductGrid = () => {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:4000/api/products")
@@ -45,7 +47,10 @@ const ProductGrid = () => {
           <h2 className="text-xl font-bold">All Products</h2>
           <p className="text-sm text-gray-500">Home &gt; All Products</p>
         </div>
-        <button className="bg-black text-white rounded px-4 py-2 text-sm font-semibold">
+        <button
+          onClick={() => navigate("/seller/add-product")}
+          className="bg-black text-white rounded px-4 py-2 text-sm font-semibold"
+        >
           + Add New Product
         </button>
       </div>
