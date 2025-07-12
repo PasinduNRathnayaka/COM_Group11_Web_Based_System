@@ -5,34 +5,37 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './configs/db.js';
 import authRoutes from './routes/auth.routes.js';
+import productRoutes from './routes/Seller/product.routes.js';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
 
-// Connect to MongoDB
+// ✅ Connect to MongoDB
 await connectDB();
 
-// Allow multiple origins (CORS)
-const allowedOrigins = ['http://localhost:5173'];
-
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true  // ✅ Note the correct spelling is `credentials`, not `Credential`
-}));
-
-// Middleware
+// ✅ Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
-app.use('/api/auth', authRoutes);
+// ✅ CORS configuration
+const allowedOrigins = ['http://localhost:5173'];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 
+// ✅ Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+
+// ✅ Root route
 app.get('/', (req, res) => {
   res.send("API is Working ✅");
 });
 
+// ✅ Start server
 app.listen(port, () => {
   console.log(`🚀 Server is running on http://localhost:${port}`);
 });
