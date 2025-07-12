@@ -104,9 +104,15 @@ const EmployeeLayout = () => {
   }, []);
 
   const sidebarLinks = [
-    { name: "Dashboard", path: "/employee", icon: addProductIcon },
-     { name: "Attendance", path: "/employee/Attendance", icon: addEmployeeIcon },
-  ];
+  { name: "Profile", path: "/employee/profile" },
+  { name: "View Attendance", path: "/employee/attendance" },
+  { name: "Check Payment", path: "/employee/salary" },
+  { name: "Apply For Leave", path: "/employee/leave" },
+  { name: "Download ID", path: "/employee/download-id" },
+  { name: "Customer Replies", path: "/employee/replies" },
+  { name: "Order Details", path: "/employee/order-details" },
+  { name: "Back", path: "/employee" } // assuming this is the target for the BACK button
+];
 
   return (
     <>

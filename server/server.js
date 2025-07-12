@@ -33,6 +33,9 @@ app.use(cors({
 // Connect to MongoDB
 await connectDB();
 
+// ✅ Serve uploaded images from /uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -41,6 +44,10 @@ app.use('/api/products', productRoutes);
 app.get('/', (req, res) => {
   res.send('✅ API is Working');
 });
+
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Start the server
 app.listen(port, () => {

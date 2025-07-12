@@ -12,9 +12,8 @@ const productSchema = new mongoose.Schema({
   salePrice: Number,
   tags: String,
   image: String,
-  gallery: [String]
+  gallery: [String],
 });
 
 const Product = mongoose.model('Product', productSchema);
-
 export default Product;

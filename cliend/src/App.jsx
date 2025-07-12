@@ -32,7 +32,7 @@ import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
 
-//DEF01
+// DEF01
 //new
 import SidebarLayout from "./components/SidebarLayout";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
@@ -107,22 +107,13 @@ const handleSignInClick = () => {
         </Routes>
       </div>
 
-//DEF01
-      <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
-          <Routes>
-            <Route path='/' element={<SidebarLayout />}>
-            <Route path="/order-details" element={<OrderDetails />} />
-            </Route>  
-          </Routes>
-      </div>
-
       {/* new Employee */}
 
         <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
-          <Route path="Attendance" element={<Attendance />} />
+          <Route path="order-details" element={<OrderDetails />} />
         
         </Route>
 
@@ -131,7 +122,7 @@ const handleSignInClick = () => {
 
       {/* new Employee */}
 
-//main
+{/* DEF01// */}
       {!isSellerPath && <Footer />}
     </div>
   );
