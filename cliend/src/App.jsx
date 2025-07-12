@@ -37,7 +37,7 @@ import MarkAttendance from './pages/seller/MarkAttendence';
 import SidebarLayout from "./components/SidebarLayout";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
 
-=======
+
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
 import Attendance from "./pages/employee/Attendance";
 //main
