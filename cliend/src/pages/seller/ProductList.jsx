@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowUp } from 'lucide-react';
 
 const ProductCard = ({ product }) => {
   const imageUrl = product.image
@@ -7,36 +8,71 @@ const ProductCard = ({ product }) => {
     : "/placeholder.png"; // fallback image
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full">
+  <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm transition-all hover:shadow-lg space-y-3">
+    {/* Top Row: Image + Info */}
+    <div className="flex items-start gap-4">
       <img
         src={imageUrl}
         alt={product.productName}
-        className="w-full h-40 object-contain rounded"
+        className="w-16 h-16 object-cover rounded-md shadow"
       />
-      <h4 className="text-sm font-semibold text-center">
-        {product.productName}
-      </h4>
-      <p className="text-xs text-center text-gray-500">{product.category}</p>
-      <p className="text-center font-bold text-sm text-green-600">
-        Rs: {product.salePrice || product.regularPrice}
-      </p>
-      <p className="text-xs text-center text-gray-500">{product.brand}</p>
-      <p className="text-xs text-center text-gray-400 mb-2">
-        {product.description || "No description provided."}
-      </p>
-      <div className="text-xs flex justify-between px-2">
-        <span>
-          Code: <span className="text-orange-500">{product.code}</span>
-        </span>
-        <span>
-          Stock: <span className="text-orange-500">{product.stock}</span>
-        </span>
+      <div className="flex-1">
+        <h4 className="text-base font-semibold text-gray-800">{product.productName}</h4>
+        <p className="text-xs text-gray-500">{product.category}</p>
+        <p className="text-sm font-bold text-gray-800">
+          Rs:{' '}
+          <span className="text-black">
+            {product.salePrice || product.regularPrice}
+          </span>
+        </p>
       </div>
-      <button className="bg-blue-600 text-white text-xs rounded px-4 py-1 mt-2 self-center">
+    </div>
+
+    {/* Name + Description */}
+    <div>
+      <p className="text-sm font-semibold text-gray-800">Name</p>
+      <p className="text-xs text-gray-500">
+        {product.description || 'Lorem ipsum is placeholder text commonly used in the graphic.'}
+      </p>
+    </div>
+
+    {/* Sales & Stock Box */}
+    <div className="bg-gray-50 border rounded-lg p-3 space-y-2">
+      <div className="flex justify-between text-xs font-medium text-gray-600">
+        <span className="flex items-center gap-1">
+          Sales <ArrowUp className="w-3 h-3 text-orange-500" />
+        </span>
+        <span className="text-gray-700">{product.sales || 1269}</span>
+      </div>
+
+      <div className="flex justify-between text-xs font-medium text-gray-600">
+        <span>Remaining Products</span>
+        <span className="text-gray-700">{product.stock}</span>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-orange-400"
+          style={{
+            width: `${Math.min(
+              (product.stock / (product.sales || product.stock || 1)) * 100,
+              100
+            )}%`,
+          }}
+        ></div>
+      </div>
+    </div>
+
+    {/* Edit Button */}
+    <div className="flex justify-end">
+      <button className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-5 py-1 rounded-full shadow">
         Edit
       </button>
     </div>
-  );
+  </div>
+);
+
 };
 
 const ProductGrid = () => {

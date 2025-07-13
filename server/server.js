@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './configs/db.js';
 import authRoutes from './routes/auth.routes.js';
 import productRoutes from './routes/Seller/product.routes.js';
+import categoryRoutes from './routes/Seller/category.routes.js';
 
 // Setup __dirname manually (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
@@ -36,9 +37,15 @@ await connectDB();
 // ✅ Serve uploaded images from /uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+
+// after product route
+app.use('/api/categories', categoryRoutes);
 
 // Root Test Route
 app.get('/', (req, res) => {

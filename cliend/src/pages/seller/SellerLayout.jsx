@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { FiSearch, FiBell, FiChevronDown, FiLogOut } from "react-icons/fi";
+import { FiSearch, FiBell, FiChevronDown, FiChevronRight, FiLogOut } from "react-icons/fi";
 import { useAppContext } from "../../context/AppContext";
 
 import logo from "../../assets/kamal-logo.png";
@@ -74,6 +74,8 @@ const SellerLayout = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
 
   const menuRef = useRef(null);
   const bellRef = useRef(null);
@@ -97,6 +99,13 @@ const SellerLayout = () => {
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:4000/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((err) => console.error("Failed to load categories", err));
   }, []);
 
   const sidebarLinks = [
@@ -206,6 +215,38 @@ const SellerLayout = () => {
               <p className="hidden md:block">{item.name}</p>
             </NavLink>
           ))}
+
+          {/* Category Dropdown */}
+          <button
+            onClick={() => setCatDropdownOpen((p) => !p)}
+            className="flex items-center justify-between py-3 px-4 font-medium text-gray-700 hover:bg-blue-200 hover:text-blue-900"
+          >
+            <div className="flex gap-3 items-center">
+              <img src="/category-icon.png" alt="Category" className="w-6 h-6" />
+              <p className="hidden md:block">Category</p>
+            </div>
+            {catDropdownOpen ? <FiChevronDown /> : <FiChevronRight />}
+          </button>
+
+          {catDropdownOpen && (
+            <div className="pl-12">
+              {categories.map((cat) => (
+                <NavLink
+                  key={cat._id}
+                  to={`/seller/category/${cat.name}`}
+                  className={({ isActive }) =>
+                    `block py-2 text-sm transition-all ${
+                      isActive
+                        ? "text-blue-700 font-semibold"
+                        : "text-gray-700 hover:text-blue-900"
+                    }`
+                  }
+                >
+                  {cat.name}
+                </NavLink>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Main Content + Footer */}

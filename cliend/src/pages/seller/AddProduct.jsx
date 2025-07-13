@@ -1,7 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const AddProductForm = () => {
   const fileInputRef = useRef(null);
+  const [categories, setCategories] = useState([]);
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatImage, setNewCatImage] = useState(null);
 
   const [form, setForm] = useState({
     productId: `PRD-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -18,9 +22,14 @@ const AddProductForm = () => {
   });
 
   const [mainImageFile, setMainImageFile] = useState(null);
-  const [categories, setCategories] = useState(["Battery", "Filter", "Oil"]);
-  const [showCatModal, setShowCatModal] = useState(false);
-  const [newCatName, setNewCatName] = useState("");
+
+  // Fetch categories from backend
+  useEffect(() => {
+    fetch("http://localhost:4000/api/categories")
+      .then((res) => res.json())
+      .then(setCategories)
+      .catch((err) => console.error("❌ Error loading categories:", err));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,23 +46,15 @@ const AddProductForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!mainImageFile) {
-      alert("❗ Please select an image before submitting.");
+      alert("❗ Please upload a main image.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("productId", form.productId);
-    formData.append("productName", form.productName);
-    formData.append("description", form.description);
-    formData.append("category", form.category);
-    formData.append("brand", form.brand);
-    formData.append("code", form.code);
-    formData.append("stock", form.stock);
-    formData.append("regularPrice", form.regularPrice);
-    formData.append("salePrice", form.salePrice);
-    formData.append("tags", form.tags);
+    Object.entries(form).forEach(([key, val]) => {
+      if (key !== "imagePreview") formData.append(key, val);
+    });
     formData.append("image", mainImageFile);
 
     try {
@@ -65,8 +66,8 @@ const AddProductForm = () => {
       if (!res.ok) throw new Error("Failed to save product");
 
       const result = await res.json();
-      alert("✅ Product added!");
-      console.log("Saved product:", result);
+      alert("✅ Product saved!");
+      console.log(result);
 
       // Reset form
       setForm({
@@ -85,17 +86,35 @@ const AddProductForm = () => {
       setMainImageFile(null);
       if (fileInputRef.current) fileInputRef.current.value = null;
     } catch (err) {
-      console.error("❌ Upload failed:", err.message);
+      console.error(err);
       alert("❌ Failed to save product.");
     }
   };
 
-  const addNewCategory = () => {
-    if (newCatName.trim()) {
-      setCategories((prev) => [...prev, newCatName]);
-      setForm((p) => ({ ...p, category: newCatName }));
-      setNewCatName("");
+  const handleAddCategory = async () => {
+    if (!newCatName || !newCatImage) return alert("Fill name and image");
+
+    const catData = new FormData();
+    catData.append("name", newCatName);
+    catData.append("image", newCatImage);
+
+    try {
+      const res = await fetch("http://localhost:4000/api/categories", {
+        method: "POST",
+        body: catData,
+      });
+
+      if (!res.ok) throw new Error("Category creation failed");
+
+      const newCat = await res.json();
+      setCategories((prev) => [...prev, newCat]);
+      setForm((prev) => ({ ...prev, category: newCat.name }));
       setShowCatModal(false);
+      setNewCatImage(null);
+      setNewCatName("");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to add category");
     }
   };
 
@@ -105,7 +124,6 @@ const AddProductForm = () => {
         <h2 className="text-xl font-bold">Add New Product</h2>
         <div className="grid md:grid-cols-2 gap-10">
           <div className="space-y-5">
-            {/* Text Fields */}
             {[{ label: "Product ID", name: "productId", disabled: true }, { label: "Product Name", name: "productName" }].map((f) => (
               <div key={f.name}>
                 <label className="block font-medium mb-1">{f.label}</label>
@@ -142,7 +160,9 @@ const AddProductForm = () => {
               >
                 <option value="">Select category</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name}
+                  </option>
                 ))}
                 <option value="__add__">+ Add new category</option>
               </select>
@@ -181,7 +201,7 @@ const AddProductForm = () => {
             </div>
           </div>
 
-          {/* Image Upload Section */}
+          {/* Image Upload */}
           <div className="space-y-6">
             <div className="h-60 bg-gray-200 flex items-center justify-center rounded-lg">
               {form.imagePreview ? (
@@ -221,9 +241,15 @@ const AddProductForm = () => {
               placeholder="Category name"
               className="w-full border rounded px-3 py-2 mb-4"
             />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewCatImage(e.target.files[0])}
+              className="mb-4"
+            />
             <div className="flex justify-end gap-2">
               <button onClick={() => setShowCatModal(false)} className="px-4 py-1 border rounded">Cancel</button>
-              <button onClick={addNewCategory} className="px-4 py-1 bg-blue-600 text-white rounded">Add</button>
+              <button onClick={handleAddCategory} className="px-4 py-1 bg-blue-600 text-white rounded">Add</button>
             </div>
           </div>
         </div>

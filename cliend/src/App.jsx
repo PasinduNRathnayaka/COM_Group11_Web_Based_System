@@ -31,6 +31,8 @@ import AddEmployee from './pages/seller/AddEmployee';
 import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
+import CategoryProductList from './pages/seller/CategoryProductList';
+
 
 // DEF01
 //new
@@ -103,7 +105,8 @@ const handleSignInClick = () => {
             <Route path="orders" element={<Orders />} />
             <Route path="mark-attendence" element={<MarkAttendance />} />
 
-         
+            {/* ✅ Category Page */}
+            <Route path="category/:categoryName" element={<CategoryProductList />} />
           </Route>
         </Routes>
       </div>
