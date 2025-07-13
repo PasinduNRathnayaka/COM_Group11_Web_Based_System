@@ -1,4 +1,3 @@
-// server/routes/Seller/category.routes.js
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -17,11 +16,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// POST: create new category
+/** --- POST: Create New Category --- */
 router.post('/', upload.single('image'), async (req, res) => {
   try {
     const { name } = req.body;
-    const image = `/uploads/${req.file.filename}`;
+    const image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     const newCategory = new Category({ name, image });
     await newCategory.save();
     res.status(201).json(newCategory);
@@ -31,7 +30,34 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-// GET: fetch all categories
+/** --- PUT: Update Existing Category --- */
+router.put('/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { name } = req.body;
+    const updateData = { name };
+
+    if (req.file) {
+      updateData.image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedCategory) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json(updatedCategory);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+/** --- GET: Fetch All Categories --- */
 router.get('/', async (req, res) => {
   try {
     const categories = await Category.find();
