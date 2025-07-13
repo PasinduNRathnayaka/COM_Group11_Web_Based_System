@@ -6,6 +6,8 @@ import Product from '../../models/Seller/Product.model.js';
 
 const router = express.Router();
 
+
+
 // Setup __dirname for ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,5 +57,18 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
+
+// GET products by category
+router.get("/category/:categoryName", async (req, res) => {
+  const { categoryName } = req.params;
+  try {
+    const products = await Product.find({ category: categoryName });
+    res.json(products);
+  } catch (err) {
+    console.error("Failed to fetch products by category", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 
 export default router;
