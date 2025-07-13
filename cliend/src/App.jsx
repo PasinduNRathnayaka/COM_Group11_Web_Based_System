@@ -105,7 +105,7 @@ const handleSignInClick = () => {
             <Route path="mark-attendence" element={<MarkAttendance />} />
 
             {/* ✅ Category Page */}
-  <Route path="category/:categoryName" element={<CategoryProductList />} />
+            <Route path="category/:categoryName" element={<CategoryProductList />} />
           </Route>
         </Routes>
       </div>
