@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowUp } from 'lucide-react';
 
 const ProductCard = ({ product }) => {
   const imageUrl = product.image
@@ -7,43 +8,68 @@ const ProductCard = ({ product }) => {
     : "/placeholder.png"; // fallback image
 
   return (
-  <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center gap-3 w-full transition-all hover:shadow-xl">
-    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 shadow-sm">
+  <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm transition-all hover:shadow-lg space-y-3">
+    {/* Top Row: Image + Info */}
+    <div className="flex items-start gap-4">
       <img
         src={imageUrl}
         alt={product.productName}
-        className="w-full h-full object-cover"
+        className="w-16 h-16 object-cover rounded-md shadow"
       />
+      <div className="flex-1">
+        <h4 className="text-base font-semibold text-gray-800">{product.productName}</h4>
+        <p className="text-xs text-gray-500">{product.category}</p>
+        <p className="text-sm font-bold text-gray-800">
+          Rs:{' '}
+          <span className="text-black">
+            {product.salePrice || product.regularPrice}
+          </span>
+        </p>
+      </div>
     </div>
 
-    <div className="text-center space-y-1 w-full">
-      <h4 className="text-base font-semibold text-gray-800 truncate">
-        {product.productName}
-      </h4>
-      <p className="text-xs text-gray-500">{product.category}</p>
-      <p className="text-sm font-bold text-green-600">
-        Rs: {product.salePrice || product.regularPrice}
+    {/* Name + Description */}
+    <div>
+      <p className="text-sm font-semibold text-gray-800">Name</p>
+      <p className="text-xs text-gray-500">
+        {product.description || 'Lorem ipsum is placeholder text commonly used in the graphic.'}
       </p>
-      <p className="text-xs text-gray-500">{product.brand}</p>
-      <p className="text-xs text-gray-400">
-        {product.description || "No description provided."}
-      </p>
     </div>
 
-    <div className="w-full flex justify-between text-xs text-gray-600 mt-2 px-1">
-      <span>
-        Code: <span className="text-orange-500">{product.code}</span>
-      </span>
-      <span>
-        Stock: <span className="text-orange-500">{product.stock}</span>
-      </span>
+    {/* Sales & Stock Box */}
+    <div className="bg-gray-50 border rounded-lg p-3 space-y-2">
+      <div className="flex justify-between text-xs font-medium text-gray-600">
+        <span className="flex items-center gap-1">
+          Sales <ArrowUp className="w-3 h-3 text-orange-500" />
+        </span>
+        <span className="text-gray-700">{product.sales || 1269}</span>
+      </div>
+
+      <div className="flex justify-between text-xs font-medium text-gray-600">
+        <span>Remaining Products</span>
+        <span className="text-gray-700">{product.stock}</span>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-orange-400"
+          style={{
+            width: `${Math.min(
+              (product.stock / (product.sales || product.stock || 1)) * 100,
+              100
+            )}%`,
+          }}
+        ></div>
+      </div>
     </div>
 
-    <button
-      className="mt-3 bg-blue-600 hover:bg-blue-700 transition text-white text-sm rounded-full px-5 py-1.5 shadow-sm"
-    >
-      Edit
-    </button>
+    {/* Edit Button */}
+    <div className="flex justify-end">
+      <button className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-5 py-1 rounded-full shadow">
+        Edit
+      </button>
+    </div>
   </div>
 );
 
