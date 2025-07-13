@@ -37,6 +37,9 @@ await connectDB();
 // ✅ Serve uploaded images from /uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
