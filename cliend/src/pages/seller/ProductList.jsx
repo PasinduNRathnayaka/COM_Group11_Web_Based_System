@@ -7,36 +7,46 @@ const ProductCard = ({ product }) => {
     : "/placeholder.png"; // fallback image
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full">
+  <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center gap-3 w-full transition-all hover:shadow-xl">
+    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 shadow-sm">
       <img
         src={imageUrl}
         alt={product.productName}
-        className="w-full h-40 object-contain rounded"
+        className="w-full h-full object-cover"
       />
-      <h4 className="text-sm font-semibold text-center">
+    </div>
+
+    <div className="text-center space-y-1 w-full">
+      <h4 className="text-base font-semibold text-gray-800 truncate">
         {product.productName}
       </h4>
-      <p className="text-xs text-center text-gray-500">{product.category}</p>
-      <p className="text-center font-bold text-sm text-green-600">
+      <p className="text-xs text-gray-500">{product.category}</p>
+      <p className="text-sm font-bold text-green-600">
         Rs: {product.salePrice || product.regularPrice}
       </p>
-      <p className="text-xs text-center text-gray-500">{product.brand}</p>
-      <p className="text-xs text-center text-gray-400 mb-2">
+      <p className="text-xs text-gray-500">{product.brand}</p>
+      <p className="text-xs text-gray-400">
         {product.description || "No description provided."}
       </p>
-      <div className="text-xs flex justify-between px-2">
-        <span>
-          Code: <span className="text-orange-500">{product.code}</span>
-        </span>
-        <span>
-          Stock: <span className="text-orange-500">{product.stock}</span>
-        </span>
-      </div>
-      <button className="bg-blue-600 text-white text-xs rounded px-4 py-1 mt-2 self-center">
-        Edit
-      </button>
     </div>
-  );
+
+    <div className="w-full flex justify-between text-xs text-gray-600 mt-2 px-1">
+      <span>
+        Code: <span className="text-orange-500">{product.code}</span>
+      </span>
+      <span>
+        Stock: <span className="text-orange-500">{product.stock}</span>
+      </span>
+    </div>
+
+    <button
+      className="mt-3 bg-blue-600 hover:bg-blue-700 transition text-white text-sm rounded-full px-5 py-1.5 shadow-sm"
+    >
+      Edit
+    </button>
+  </div>
+);
+
 };
 
 const ProductGrid = () => {
