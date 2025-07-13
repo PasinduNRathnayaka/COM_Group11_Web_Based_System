@@ -22,6 +22,7 @@ const SidebarLayout = () => {
           <NavLink to="/replies" className="hover:underline">Customer Replies</NavLink>
           <div>
             <div className="font-semibold">Order List</div>
+            <NavLink to="/order-list" className="ml-4 block">Order List</NavLink>
             <NavLink to="/order-details" className="ml-4 block">Order Details</NavLink>
           </div>
           <button className="mt-6 bg-blue-600 text-white px-3 py-1 rounded">BACK</button>
