@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import ProductCard from "../../components/seller/ProductCard"; // Adjust path as needed
 
 const CategoryProductList = () => {
   const { categoryName } = useParams();
@@ -12,25 +13,21 @@ const CategoryProductList = () => {
       .catch((err) => console.error("Failed to fetch products:", err));
   }, [categoryName]);
 
+  const handleEdit = (product) => {
+    console.log("Edit clicked for:", product);
+    // Navigate or open modal
+  };
+
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-semibold mb-4">Products in {categoryName}</h2>
+      <h2 className="text-2xl font-semibold mb-6">Products in {categoryName}</h2>
 
       {products.length === 0 ? (
-        <p>No products found in this category.</p>
+        <p className="text-gray-600">No products found in this category.</p>
       ) : (
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <div key={product._id} className="border rounded shadow p-4 bg-white">
-              <img
-                src={`http://localhost:4000/uploads/${product.image}`}
-                alt={product.productName}
-                className="h-40 w-full object-contain mb-4"
-              />
-              <h3 className="font-semibold">{product.productName}</h3>
-              <p className="text-sm text-gray-600">{product.brand}</p>
-              <p className="text-blue-600 font-bold">Rs. {product.salePrice}</p>
-            </div>
+            <ProductCard key={product._id} product={product} onEdit={handleEdit} />
           ))}
         </div>
       )}
