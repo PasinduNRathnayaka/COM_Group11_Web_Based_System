@@ -37,6 +37,7 @@ import CategoryProductList from './pages/seller/CategoryProductList';
 // DEF01
 //new
 import SidebarLayout from "./components/SidebarLayout";
+import CustomerReplies from "./pages/OnlineEmployee/CustomerReplies";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
 import OrderList from "./pages/OnlineEmployee/OrderList";
 
@@ -117,6 +118,7 @@ const handleSignInClick = () => {
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
+          <Route path="replies" element={<CustomerReplies />} />
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
         
