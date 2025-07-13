@@ -36,6 +36,7 @@ import MarkAttendance from './pages/seller/MarkAttendence';
 //new
 import SidebarLayout from "./components/SidebarLayout";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
+import OrderList from "./pages/OnlineEmployee/OrderList";
 
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
@@ -114,6 +115,7 @@ const handleSignInClick = () => {
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
           <Route path="order-details" element={<OrderDetails />} />
+          <Route path="order-list" element={<OrderList />} />
         
         </Route>
 
