@@ -148,7 +148,7 @@ const Cart = () => {
           ))}
         </div>
         <div className="text-right mt-4">
-          <Link to="/products" className="text-sm font-semibold text-black border px-4 py-2 rounded hover:bg-gray-100">
+          <Link to="/product" className="text-sm font-semibold text-black border px-4 py-2 rounded hover:bg-gray-100">
             View More →
           </Link>
         </div>
