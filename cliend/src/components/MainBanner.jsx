@@ -161,7 +161,7 @@ useEffect(() => {
 
       <div className="flex justify-end mt-6">
         <Link
-          to="/products"
+          to="/product"
           className="text-sm text-primary hover:underline font-semibold"
         >
           View More →
