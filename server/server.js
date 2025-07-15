@@ -11,6 +11,8 @@ import authRoutes from './routes/auth.routes.js';
 import productRoutes from './routes/Seller/product.routes.js';
 import categoryRoutes from './routes/Seller/category.routes.js';
 
+import userRoutes from './routes/userRoutes.js';
+
 // Setup __dirname manually (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,6 +48,8 @@ app.use('/api/products', productRoutes);
 
 // after product route
 app.use('/api/categories', categoryRoutes);
+
+app.use('/api/user', userRoutes);
 
 // Root Test Route
 app.get('/', (req, res) => {
