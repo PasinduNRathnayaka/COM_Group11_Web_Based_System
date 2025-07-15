@@ -65,15 +65,16 @@ const Profile = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">Account Info</h2>
             <form className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
                 <div>
-                  <label className="block mb-1 font-medium">First Name</label>
+                  <label className="block mb-1 font-medium">User Name</label>
                   <input
                     type="text"
                     className="w-full border rounded px-3 py-2"
                     defaultValue={user?.name || "Pasidu"}
                   />
                 </div>
+               {/*
                 <div>
                   <label className="block mb-1 font-medium">Last Name</label>
                   <input
@@ -83,6 +84,7 @@ const Profile = () => {
                   />
                 </div>
               </div>
+              */}
               <div>
                 <label className="block mb-1 font-medium">Email Address</label>
                 <input
