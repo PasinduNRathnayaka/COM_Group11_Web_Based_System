@@ -7,37 +7,63 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const SignUp = () => {
+  // form state
   const [formData, setFormData] = useState({
     firstName: '',
-    lastName: '',
-    address: '',
-    email: '',
-    password: '',
+    lastName : '',
+    address  : '',
+    email    : '',
+    password : '',
   });
 
-  const { setUser } = useAppContext(); // ✅ Use global context
-  const navigate = useNavigate(); // ✅ Redirect after signup
+  const { setUser } = useAppContext();
+  const navigate  = useNavigate();
 
+  /* ---------------- handlers ---------------- */
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: send data to backend or show success message
-    alert('Account created successfully!');
 
-    setUser({
-      name: `${formData.firstName} ${formData.lastName}`,
-      profilePic: assets.profile2,
-    });
+    try {
+      // 1️⃣  send to backend
+      const { data } = await axios.post('/api/user/register', {
+        name     : `${formData.firstName} ${formData.lastName}`,
+        email    : formData.email,
+        password : formData.password,
+        address  : formData.address,
+      });
 
-    navigate('/'); // ✅ Redirect to homepage
+      // 2️⃣  store user + token
+      setUser({
+        _id       : data._id,
+        name      : data.name,
+        email     : data.email,
+        profilePic: assets.profile2,  // backend can return real pic later
+        token     : data.token,
+      });
+      localStorage.setItem('user', JSON.stringify({
+        _id   : data._id,
+        name  : data.name,
+        email : data.email,
+        token : data.token,
+      }));
+      localStorage.setItem('token', data.token);
 
+      toast.success('Account created!');
+
+      // 3️⃣  redirect
+      navigate('/');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Registration failed');
+    }
   };
+
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
