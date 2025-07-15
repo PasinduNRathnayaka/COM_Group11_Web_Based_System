@@ -7,5 +7,10 @@ import bcrypt from 'bcryptjs';
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
+   // 1. Validate
+  if (!name || !email || !password) {
+    res.status(400);
+    throw new Error('Please fill in all fields');
+  }
 
   });
