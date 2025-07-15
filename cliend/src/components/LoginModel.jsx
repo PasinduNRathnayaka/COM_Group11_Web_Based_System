@@ -2,6 +2,9 @@ import { useAppContext } from '../context/AppContext';
 import { useState } from 'react';
 import { assets } from '../assets/assets';
 
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
 const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   const { setUser } = useAppContext();
 

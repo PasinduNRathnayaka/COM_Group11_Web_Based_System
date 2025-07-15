@@ -71,7 +71,7 @@ const Profile = () => {
                   <input
                     type="text"
                     className="w-full border rounded px-3 py-2"
-                    defaultValue="Pasindu"
+                    defaultValue={user?.name || "Pasidu"}
                   />
                 </div>
                 <div>
