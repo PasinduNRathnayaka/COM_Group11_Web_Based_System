@@ -3,6 +3,9 @@ import { useAppContext } from '../../context/AppContext'; // ✅ NEW
 import { useNavigate } from 'react-router-dom'; // ✅ NEW
 import { assets } from '../../assets/assets'; // ✅ NEW
 
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
 const SignUp = () => {
   const [formData, setFormData] = useState({
     firstName: '',
