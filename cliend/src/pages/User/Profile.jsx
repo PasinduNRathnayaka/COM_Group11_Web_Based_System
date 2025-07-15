@@ -98,7 +98,7 @@ const Profile = () => {
                 <input
                   type="tel"
                   className="w-full border rounded px-3 py-2"
-                  defaultValue="+94 0777 555 999"
+                  defaultValue={user?.number || "0777555666"}
                 />
               </div>
               <button
