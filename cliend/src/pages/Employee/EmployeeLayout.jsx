@@ -109,9 +109,7 @@ const EmployeeLayout = () => {
   { name: "Check Payment", path: "/employee/salary" },
   { name: "Apply For Leave", path: "/employee/leave" },
   { name: "Download ID", path: "/employee/download-id" },
-  { name: "Customer Replies", path: "/employee/replies" },
-  { name: "Order List", path: "/employee/order-list" },
-  { name: "Order Details", path: "/employee/order-details" },
+ 
   { name: "Back", path: "/employee" } // assuming this is the target for the BACK button
 ];
 
