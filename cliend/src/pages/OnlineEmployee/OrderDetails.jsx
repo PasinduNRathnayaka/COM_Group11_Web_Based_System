@@ -20,7 +20,7 @@ const OrderDetails = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-4 text-sm text-gray-500">
-        Home &gt; Order List &gt; <span className="text-black font-medium">Order Details</span>
+        Home &gt; <span className="text-black font-medium">Order Details</span>
       </div>
 
       <div className="flex justify-between items-center mb-4">

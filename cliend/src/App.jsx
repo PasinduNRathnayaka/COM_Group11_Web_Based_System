@@ -45,6 +45,7 @@ import EmployeeProfile from "./pages/Employee/Profile";
 import EditProfile from "./pages/Employee/EditProfile";
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
+import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
 import Attendance from "./pages/employee/Attendance";
 
 import CheckPayment from "./pages/employee/CheckPayment";
@@ -53,7 +54,7 @@ import CheckPayment from "./pages/employee/CheckPayment";
 
 const App = () => {
   const location = useLocation();
-  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee");
+  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee");
   const { isSeller, showUserLogin, navigate, setShowUserLogin } = useAppContext(); //new
 //new
 const handleSignInClick = () => {     
@@ -139,6 +140,27 @@ const handleSignInClick = () => {
       </div>
 
       {/* new Employee */}
+
+       {/* new online Employee */}
+
+        <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+        <Routes>
+          <Route path="/online_employee" element={<OnlineEmloyeeLayout />}>
+          <Route index element={<Attendance />} />
+          <Route path="replies" element={<CustomerReplies />} />
+          <Route path="order-details" element={<OrderDetails />} />
+          <Route path="order-list" element={<OrderList />} />
+
+          <Route path="profile" element={<EmployeeProfile />} />
+          <Route path="edit-profile" element={<EditProfile />} />
+        
+
+        </Route>
+
+        </Routes>
+      </div>
+
+      {/* new online Employee */}
 
 {/* DEF01// */}
       {!isSellerPath && <Footer />}

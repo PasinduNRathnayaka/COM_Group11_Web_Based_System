@@ -21,7 +21,7 @@ const EditProfileModal = ({ open, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white w-[90%] max-w-md rounded-lg shadow-lg p-6 relative">
-        <h2 className="font-semibold text-lg mb-4">EMPLOYEE &gt; EDIT PROFILE</h2>
+        <h2 className="font-semibold text-lg mb-4">ONLINE EMPLOYEE &gt; EDIT PROFILE</h2>
 
         <div className="flex items-center gap-4 mb-6">
           <img
@@ -70,7 +70,7 @@ const EditProfileModal = ({ open, onClose }) => {
 };
 
 /* ------------------------------ SellerLayout ------------------------------ */
-const EmployeeLayout = () => {
+const OnlineEmployeeLayout = () => {
   const { setIsSeller } = useAppContext();
   const navigate = useNavigate();
 
@@ -104,13 +104,15 @@ const EmployeeLayout = () => {
   }, []);
 
   const sidebarLinks = [
-  { name: "Profile", path: "/employee/profile" },
-  { name: "View Attendance", path: "/employee/attendance" },
-  { name: "Check Payment", path: "/employee/salary" },
-  { name: "Apply For Leave", path: "/employee/leave" },
-  { name: "Download ID", path: "/employee/download-id" },
- 
-  { name: "Back", path: "/employee" } // assuming this is the target for the BACK button
+  { name: "Profile", path: "/online_employee/profile" },
+  { name: "View Attendance", path: "/online_employee/attendance" },
+  { name: "Check Payment", path: "/online_employee/salary" },
+  { name: "Apply For Leave", path: "/online_employee/leave" },
+  { name: "Download ID", path: "/online_employee/download-id" },
+  { name: "Customer Replies", path: "/online_employee/replies" },
+  { name: "Order List", path: "/online_employee/order-list" },
+  { name: "Order Details", path: "/online_employee/order-details" },
+  { name: "Back", path: "/online_employee" } // assuming this is the target for the BACK button
 ];
 
   return (
@@ -165,12 +167,12 @@ const EmployeeLayout = () => {
               onClick={() => setShowMenu((p) => !p)}
               className="flex items-center gap-1 bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded text-sm font-semibold"
             >
-              EMPLOYEE <FiChevronDown size={14} />
+              ONLINE EMPLOYEE <FiChevronDown size={14} />
             </button>
 
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-20">
-                <div className="px-4 py-3 font-semibold border-b">EMPLOYEE</div>
+                <div className="px-4 py-3 font-semibold border-b">ONLINE EMPLOYEE</div>
                 <button
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                   onClick={() => {
@@ -227,4 +229,4 @@ const EmployeeLayout = () => {
   );
 };
 
-export default EmployeeLayout;
+export default OnlineEmployeeLayout;
