@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
-// Helper Input component
+// Reusable input component
 const Input = ({ label, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-1">{label}</label>
@@ -8,7 +10,6 @@ const Input = ({ label, ...props }) => (
   </div>
 );
 
-// Helper Textarea component
 const Textarea = ({ label, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-1">{label}</label>
@@ -28,6 +29,7 @@ const AddEmployee = () => {
     username: "",
     password: "",
     confirmPassword: "",
+    imageFile: null,
     imagePreview: null,
     gallery: [],
   });
@@ -44,13 +46,20 @@ const AddEmployee = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setForm((prev) => ({ ...prev, imagePreview: URL.createObjectURL(file) }));
+      setForm((prev) => ({
+        ...prev,
+        imageFile: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
     }
   };
 
   const handleGalleryUpload = (e) => {
     const files = Array.from(e.target.files);
-    setForm((prev) => ({ ...prev, gallery: [...prev.gallery, ...files] }));
+    setForm((prev) => ({
+      ...prev,
+      gallery: [...prev.gallery, ...files],
+    }));
   };
 
   const addNewCategory = () => {
@@ -62,9 +71,51 @@ const AddEmployee = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Employee Submitted:", form);
+
+    if (form.password !== form.confirmPassword) {
+      return toast.error("Passwords do not match");
+    }
+
+    try {
+      const formData = new FormData();
+
+      for (const key in form) {
+        if (key === "gallery") {
+          form.gallery.forEach((file) => {
+            formData.append("gallery", file);
+          });
+        } else if (key === "imageFile") {
+          formData.append("image", form.imageFile); // ✅ Fixed key name
+        } else if (key !== "imagePreview" && key !== "confirmPassword") {
+          formData.append(key, form[key]);
+        }
+      }
+
+      await axios.post("http://localhost:4000/api/employees", formData);
+      toast.success("Employee added successfully!");
+
+      setForm((prev) => ({
+        ...prev,
+        employeeId: `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
+        name: "",
+        about: "",
+        category: "",
+        contact: "",
+        rate: "",
+        address: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+        imageFile: null,
+        imagePreview: null,
+        gallery: [],
+      }));
+    } catch (err) {
+      console.error("Error:", err);
+      toast.error("Failed to add employee");
+    }
   };
 
   return (
@@ -73,13 +124,15 @@ const AddEmployee = () => {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-md max-w-6xl mx-auto shadow-md"
       >
-        <h2 className="text-xl font-semibold mb-1">Employee Details</h2>
+        <h2 className="text-xl font-semibold mb-1">
+          Employee Details <span className="ml-4 text-sm text-blue-600">ID: {form.employeeId}</span>
+        </h2>
         <p className="text-sm text-gray-500 mb-6">
           Home &gt; All Products &gt; Add New Employee
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left side */}
+          {/* Left side form */}
           <div className="space-y-4">
             <Input label="Employee Name" name="name" value={form.name} onChange={handleChange} />
             <Textarea label="About" name="about" value={form.about} onChange={handleChange} />
@@ -153,7 +206,7 @@ const AddEmployee = () => {
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Action buttons */}
         <div className="flex justify-end mt-8 space-x-3">
           <button type="submit" className="bg-black text-white px-6 py-2 rounded-md text-sm">SAVE</button>
           <button type="button" className="bg-blue-900 text-white px-6 py-2 rounded-md text-sm">DELETE</button>
@@ -185,4 +238,3 @@ const AddEmployee = () => {
 };
 
 export default AddEmployee;
-
