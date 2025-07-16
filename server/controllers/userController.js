@@ -51,10 +51,11 @@ export const loginUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      profilePic: user.profilePic,
       token: generateToken(user._id),
     });
   } else {
     res.status(401);
-    throw new Error('Invalid credentials');
+    throw new Error('Invalid email or password');
   }
 });
