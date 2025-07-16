@@ -7,7 +7,9 @@ export const AppContext = createContext();
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
+  const storedUser = JSON.parse(localStorage.getItem('user'));
+
+  const [user, setUser] = useState(storedUser || null);
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
 
