@@ -1,29 +1,51 @@
+// src/components/LoginModel.jsx
+import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { useState } from 'react';
 import { assets } from '../assets/assets';
 
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import axios from 'axios';             // ⭐ changed (ensure axios installed)
+import toast from 'react-hot-toast';   // ⭐ changed
 
 const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   const { setUser } = useAppContext();
 
-  const [step, setStep] = useState(0); // 0 = login, 1 = email, 2 = code, 3 = reset
+  /* ---------- local state ---------- */
+  const [step, setStep] = useState(0);      // 0 = login, 1 = email, 2 = code, 3 = reset
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState(['', '', '', '']);
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [code, setCode] = useState(['', '', '', '']);
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmNew, setConfirmNew] = useState('');
 
-  const handleLogin = (e) => {
+  /* ---------- login handler ---------- */
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setUser({ name: 'John Doe', profilePic: assets.profile2 });
-    onClose();
+
+    try {
+      const { data } = await axios.post('/api/user/login', {
+        email,
+        password,
+      });
+
+      // save user in context + localStorage
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      localStorage.setItem('token', data.token);
+
+      toast.success('Logged in!');
+      onClose();
+      setStep(0);
+      setEmail(''); setPassword('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Login failed');
+    }
   };
 
-  const handleCodeChange = (index, value) => {
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
+  /* ---------- forgot‑password helpers (kept minimal) ---------- */
+  const handleCodeChange = (i, val) => {
+    const tmp = [...code];
+    tmp[i] = val;
+    setCode(tmp);
   };
 
   if (!isOpen) return null;
@@ -31,29 +53,55 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center">
-        {/* STEP 0: LOGIN */}
+
+        {/* ---------------- STEP 0 — LOGIN ---------------- */}
         {step === 0 && (
           <>
             <h2 className="text-2xl font-bold mb-4">Login</h2>
+
+            {/* ⭐ changed — use email & password controlled inputs */}
             <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-              <input type="text" placeholder="Username" className="border rounded px-4 py-2" />
-              <input type="password" placeholder="Password" className="border rounded px-4 py-2" />
-              <button type="submit" className="bg-blue-900 text-white rounded px-4 py-2">LOGIN</button>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border rounded px-4 py-2"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="border rounded px-4 py-2"
+                required
+              />
+              <button type="submit" className="bg-blue-900 text-white rounded px-4 py-2">
+                LOGIN
+              </button>
             </form>
+
             <button
               className="mt-2 text-sm text-blue-900 hover:underline"
               onClick={() => setStep(1)}
             >
               Forgot Password?
             </button>
+
             <div className="mt-3 text-sm">
               <span>Don't have an account? </span>
-              <button onClick={onSignInClick} className="text-blue-900 hover:underline font-semibold">Sign Up</button>
+              <button
+                onClick={onSignInClick}
+                className="text-blue-900 hover:underline font-semibold"
+              >
+                Sign Up
+              </button>
             </div>
           </>
         )}
 
-        {/* STEP 1: ENTER EMAIL */}
+        {/* ---------------- STEP 1 — enter email ---------------- */}
         {step === 1 && (
           <>
             <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
@@ -63,29 +111,30 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="border rounded px-4 py-2 w-full"
+              required
             />
             <button
               onClick={() => setStep(2)}
               className="mt-4 w-full bg-blue-900 text-white rounded py-2"
             >
-              NEXT 
+              NEXT
             </button>
           </>
         )}
 
-        {/* STEP 2: ENTER 4-DIGIT CODE */}
+        {/* ---------------- STEP 2 — enter 4‑digit code ---------------- */}
         {step === 2 && (
           <>
             <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
             <p className="mb-3">Enter 4 Digit Code</p>
             <div className="flex justify-center gap-2">
-              {code.map((value, index) => (
+              {code.map((val, i) => (
                 <input
-                  key={index}
+                  key={i}
                   maxLength={1}
+                  value={val}
+                  onChange={(e) => handleCodeChange(i, e.target.value)}
                   className="w-12 h-12 text-center border rounded"
-                  value={value}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
                 />
               ))}
             </div>
@@ -93,33 +142,34 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
               onClick={() => setStep(3)}
               className="mt-4 w-full bg-blue-900 text-white rounded py-2"
             >
-              NEXT 
+              NEXT
             </button>
           </>
         )}
 
-        {/* STEP 3: RESET PASSWORD */}
+        {/* ---------------- STEP 3 — reset password ---------------- */}
         {step === 3 && (
           <>
             <h2 className="text-xl font-bold mb-4">Change Password</h2>
             <input
               type="password"
               placeholder="Enter New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={newPwd}
+              onChange={(e) => setNewPwd(e.target.value)}
               className="border rounded px-4 py-2 mb-2 w-full"
             />
             <input
               type="password"
               placeholder="Confirm Password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              value={confirmNew}
+              onChange={(e) => setConfirmNew(e.target.value)}
               className="border rounded px-4 py-2 w-full"
             />
             <button
               onClick={() => {
-                alert("Password updated!");
-                setStep(0); // back to login
+                toast('Password updated (dummy)', { icon: '✅' });
+                setStep(0);
+                setNewPwd(''); setConfirmNew('');
               }}
               className="mt-4 w-full bg-blue-900 text-white rounded py-2"
             >
@@ -128,7 +178,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           </>
         )}
 
-        {/* COMMON CLOSE BUTTON */}
+        {/* ---------------- CLOSE BUTTON (all steps) ---------------- */}
         <button
           onClick={() => {
             onClose();
@@ -144,3 +194,4 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
 };
 
 export default LoginModal;
+
