@@ -1,32 +1,70 @@
-// src/context/AppContext.jsx
-import { createContext, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import * as jwtDecode from 'jwt-decode';
 
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
 
-  const storedUser = JSON.parse(localStorage.getItem('user'));
+  // Load user from localStorage on initial render
+  const stored = JSON.parse(localStorage.getItem('user') || 'null');
+  const initialUser = stored && stored.token ? stored : null;
+  const [user, _setUser] = useState(initialUser);
 
-  const [user, setUser] = useState(storedUser || null);
+  // Wrapped setter: keeps localStorage in sync
+  const setUser = (newUser) => {
+    _setUser(newUser);
+    if (newUser) {
+      localStorage.setItem('user', JSON.stringify(newUser));
+      localStorage.setItem('token', newUser.token);
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }
+  };
+
+  // Validate token whenever user changes
+  useEffect(() => {
+  const validateToken = async () => {
+    if (!initialUser) return;  // if no logged in user, skip
+
+    try {
+      // Decode token expiry time
+      const { exp } = jwtDecode.default(initialUser.token); // exp is in seconds
+
+      // If token expired, throw error
+      if (Date.now() >= exp * 1000) throw new Error('token expired');
+
+      // Optional: server-side token validation
+      await axios.get('/api/user/validate-token', {
+        headers: { Authorization: `Bearer ${initialUser.token}` },
+      });
+    } catch (err) {
+      console.warn('🔐 Token invalid/expired – logging out');
+      setUser(null);  // log out user if invalid
+    }
+  };
+
+  validateToken();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+  // Other states
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
-
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product, quantity) => {
+  const addToCart = (product, qty) => {
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+      const found = prev.find((i) => i.id === product.id);
+      if (found) {
+        return prev.map((i) =>
+          i.id === product.id ? { ...i, quantity: i.quantity + qty } : i
         );
-      } else {
-        return [...prev, { ...product, quantity }];
       }
+      return [...prev, { ...product, quantity: qty }];
     });
   };
 
@@ -51,5 +89,3 @@ export const AppContextProvider = ({ children }) => {
 };
 
 export const useAppContext = () => useContext(AppContext);
-
-
