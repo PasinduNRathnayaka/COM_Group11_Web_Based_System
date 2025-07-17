@@ -50,6 +50,10 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/user', userRoutes);
 
+app.use('/api/employees', employeeRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 // Default route
 app.get('/', (req, res) => {
   res.send('✅ API is Working');
