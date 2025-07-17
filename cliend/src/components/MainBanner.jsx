@@ -96,7 +96,7 @@ useEffect(() => {
   <>
 
      {/* ✅ MAIN CATEGORIES Section */}
-<div className="px-4 mt-12 mb-16">
+    <div className="px-4 mt-12 mb-16">
   <h1 className="text-left text-xl md:text-2xl font-bold mb-6">
     Main Categories
   </h1>
@@ -114,18 +114,22 @@ useEffect(() => {
     ].map((cat, i) => (
       <div
         key={i}
-        className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer"
+        className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col"
       >
-        <img
-          src={cat.image}
-          alt={cat.name}
-          className="w-16 h-16 mx-auto mb-2 object-contain"
-        />
-        <p className="text-sm font-medium">{cat.name}</p>
+        <div className="flex-grow mb-2">
+          <img
+            src={cat.image}
+            alt={cat.name}
+            className="w-full h-full object-cover rounded"
+            style={{ maxHeight: '150px', width: '100%' }} // adjust maxHeight as you want
+          />
+        </div>
+        <p className="text-lg font-semibold">{cat.name}</p>
       </div>
     ))}
   </div>
 </div>
+
 
 
     {/* Related Products */}
@@ -239,12 +243,15 @@ useEffect(() => {
         key={i}
         className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer"
       >
+        <div className="flex-grow mb-2">
         <img
           src={cat.image}
           alt={cat.name}
-          className="w-16 h-16 mx-auto mb-2 object-contain"
+           className="w-full h-full object-cover rounded"
+            style={{ maxHeight: '150px', width: '100%' }}   
         />
-        <p className="text-sm font-medium">{cat.name}</p>
+        </div>
+        <p className="text-lg font-semibold">{cat.name}</p>
       </div>
     ))}
   </div>
