@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const AddEmployee = () => {
+const AddEmployeeForm = () => {
   const [formData, setFormData] = useState({
     empId: "",
     name: "",
@@ -11,14 +11,16 @@ const AddEmployee = () => {
     rate: "",
     address: "",
     username: "",
+    email: "",
     password: "",
     confirmPassword: "",
     image: null,
   });
 
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Generate a unique EMP ID
+  // Generate unique empId on mount
   useEffect(() => {
     const randomId = `EMP${Date.now().toString().slice(-6)}`;
     setFormData((prev) => ({ ...prev, empId: randomId }));
@@ -35,37 +37,67 @@ const AddEmployee = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setLoading(true);
+
     if (formData.password !== formData.confirmPassword) {
-      return setMessage("Passwords do not match.");
+      setMessage("❌ Passwords do not match.");
+      setLoading(false);
+      return;
     }
 
     try {
       const payload = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        payload.append(key, value);
-      });
+      for (const [key, value] of Object.entries(formData)) {
+        // Append only non-null for file, others as is
+        if (key === "image" && value) {
+          payload.append(key, value);
+        } else if (key !== "image") {
+          payload.append(key, value);
+        }
+      }
 
       const res = await axios.post("http://localhost:4000/api/employees", payload);
-      setMessage("✅ Employee added successfully");
-      console.log(res.data);
+
+      setMessage("✅ Employee added successfully!");
+      setLoading(false);
+
+      // Reset form (generate new empId)
+      const newEmpId = `EMP${Date.now().toString().slice(-6)}`;
+      setFormData({
+        empId: newEmpId,
+        name: "",
+        about: "",
+        category: "",
+        contact: "",
+        rate: "",
+        address: "",
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        image: null,
+      });
     } catch (err) {
-      console.error(err);
-      setMessage("❌ Failed to add employee");
+      console.error("Failed to add employee:", err.response?.data || err.message);
+      setMessage(`❌ Failed to add employee. ${err.response?.data?.message || ''}`);
+      setLoading(false);
     }
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white rounded shadow">
-      <h2 className="text-2xl font-semibold mb-4">Add Employee</h2>
+      <h2 className="text-2xl font-semibold mb-6">Add New Employee</h2>
+
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label>EMP ID</label>
+          <label>Employee ID</label>
           <input
             type="text"
             name="empId"
             value={formData.empId}
             readOnly
-            className="w-full border rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2 bg-gray-100"
           />
         </div>
 
@@ -74,6 +106,7 @@ const AddEmployee = () => {
           <input
             type="text"
             name="name"
+            value={formData.name}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -84,10 +117,11 @@ const AddEmployee = () => {
           <label>About</label>
           <textarea
             name="about"
+            value={formData.about}
             onChange={handleChange}
             required
-            className="w-full border rounded px-3 py-2"
-          ></textarea>
+            className="w-full border rounded px-3 py-2 resize-none"
+          />
         </div>
 
         <div>
@@ -95,6 +129,7 @@ const AddEmployee = () => {
           <input
             type="text"
             name="category"
+            value={formData.category}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -106,6 +141,7 @@ const AddEmployee = () => {
           <input
             type="text"
             name="contact"
+            value={formData.contact}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -117,6 +153,7 @@ const AddEmployee = () => {
           <input
             type="number"
             name="rate"
+            value={formData.rate}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -128,6 +165,7 @@ const AddEmployee = () => {
           <input
             type="text"
             name="address"
+            value={formData.address}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -139,8 +177,21 @@ const AddEmployee = () => {
           <input
             type="text"
             name="username"
+            value={formData.username}
             onChange={handleChange}
             required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Email (optional)</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="example@example.com"
             className="w-full border rounded px-3 py-2"
           />
         </div>
@@ -150,6 +201,7 @@ const AddEmployee = () => {
           <input
             type="password"
             name="password"
+            value={formData.password}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -161,6 +213,7 @@ const AddEmployee = () => {
           <input
             type="password"
             name="confirmPassword"
+            value={formData.confirmPassword}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
@@ -178,19 +231,22 @@ const AddEmployee = () => {
           />
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 flex justify-end">
           <button
             type="submit"
+            disabled={loading}
             className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
           >
-            Save
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
       </form>
 
-      {message && <p className="mt-4 text-center text-lg">{message}</p>}
+      {message && (
+        <p className="mt-4 text-center text-lg text-red-600">{message}</p>
+      )}
     </div>
   );
 };
 
-export default AddEmployee;
+export default AddEmployeeForm;
