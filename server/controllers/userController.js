@@ -5,10 +5,10 @@ import generateToken from '../utils/generateToken.js';
 import bcrypt from 'bcryptjs';
 
 export const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, number } = req.body;
+  const { name, email, password, number, address } = req.body;
 
    // 1. Validate
-  if (!name || !email || !password || !number) {
+  if (!name || !email || !password || !number || !address) {
     res.status(400);
     throw new Error('Please fill in all fields');
   }
@@ -25,6 +25,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     name,
     email,
     number,
+    address,
     password, // will be hashed by pre('save')
   });
 
@@ -34,6 +35,7 @@ export const registerUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       number: user.number,
+      address: user.address,
       token: generateToken(user._id),
     });
   } else {
@@ -55,6 +57,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       email: user.email,
       profilePic: user.profilePic,
       number: user.number,
+      address: user.address,
       token: generateToken(user._id),
     });
   } else {
