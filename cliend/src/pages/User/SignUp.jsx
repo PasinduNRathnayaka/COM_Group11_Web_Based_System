@@ -130,7 +130,7 @@ const SignUp = () => {
 
           {/* Login Details */}
           <div>
-            <label className="block mb-1 font-medium">Login Details</label>
+            <label className="block mb-1 font-medium">E-mail</label>
             <input
               type="email"
               name="email"
@@ -140,6 +140,7 @@ const SignUp = () => {
               className="w-full border px-4 py-2 rounded mb-2"
               required
             />
+            <label className="block mb-1 font-medium">Password</label>
             <input
               type="password"
               name="password"
