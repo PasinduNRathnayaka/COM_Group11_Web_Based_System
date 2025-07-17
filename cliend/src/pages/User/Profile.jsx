@@ -101,6 +101,14 @@ const Profile = () => {
                   defaultValue={user?.number || "0777555666"}
                 />
               </div>
+              <div>
+                <label className="block mb-1 font-medium">Address</label>
+                <input
+                  type="string"
+                  className="w-full border rounded px-3 py-2"
+                  defaultValue={user?.address || "Medagoda"}
+                />
+              </div>
               <button
                 type="submit"
                 className="mt-4 px-6 py-2 bg-primary hover:bg-blue-700 text-white rounded"
