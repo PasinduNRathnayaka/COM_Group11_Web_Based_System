@@ -51,14 +51,14 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/user', userRoutes);
 
 app.use('/api/employees', employeeRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 // Default route
 app.get('/', (req, res) => {
   res.send('✅ API is Working');
 });
-
+app.listen(4000, () => console.log("Server running at http://localhost:4000"));
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);

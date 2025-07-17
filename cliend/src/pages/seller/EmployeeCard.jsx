@@ -2,8 +2,8 @@ import React from "react";
 
 const EmployeeCard = ({ employee }) => {
   // Construct full URL for images served from backend
-  const profileUrl = employee.image ? `http://localhost:4000${employee.image}` : "/placeholder.png";
-  const qrUrl = employee.qrCode ? `http://localhost:4000${employee.qrCode}` : null;
+  const profileUrl = employee.image ? `http://localhost:4000/uploads/employees/qrs/${employee.image}` : "/placeholder.png";
+  const qrUrl = employee.qrCode ? `http://localhost:4000/uploads/employees/qrs/${employee.qrCode}` : null;
 
   return (
     <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm transition-all hover:shadow-lg space-y-3">
