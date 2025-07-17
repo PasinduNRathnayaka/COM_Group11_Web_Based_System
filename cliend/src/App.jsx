@@ -46,7 +46,7 @@ import EditProfile from "./pages/Employee/EditProfile";
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
 
-import Attendance from "./pages/employee/Attendance";
+//import Attendance from "./pages/employee/Attendance";
 import Viewattendance from './pages/Employee/Viewattendance';
 
 import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
@@ -154,8 +154,8 @@ const handleSignInClick = () => {
           <Route path="order-list" element={<OrderList />} />
 
 
-          <Route path="/employee/profile" element={<EmployeeProfile />} />
-          <Route path="/employee/edit-profile" element={<EditProfile />} />
+          <Route path="employee/profile" element={<EmployeeProfile />} />
+          <Route path="employee/edit-profile" element={<EditProfile />} />
        
          <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />
