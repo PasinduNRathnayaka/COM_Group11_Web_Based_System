@@ -18,10 +18,9 @@ const OrderDetails = () => {
   const total = subtotal + tax;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-4 text-sm text-gray-500">
-        Home &gt; <span className="text-black font-medium">Order Details</span>
-      </div>
+    <div className="p-4">
+      <h2 className="text-2xl font-semibold mb-2">Order Details</h2>
+      <p className="text-sm text-gray-500 mb-6">Home &gt; Order Details</p>
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Order ID: #6743</h2>
@@ -135,7 +134,14 @@ const OrderDetails = () => {
           </div>
         </CardContent>
       </Card>
+
+      
+      <footer className="mt-8 text-center text-sm text-gray-400">
+        © 2025 · OnlineEmployee Dashboard
+      </footer>
+  
     </div>
+    
   );
 };
 
