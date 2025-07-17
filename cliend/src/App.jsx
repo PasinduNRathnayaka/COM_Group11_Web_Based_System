@@ -124,9 +124,6 @@ const handleSignInClick = () => {
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
-          <Route path="replies" element={<CustomerReplies />} />
-          <Route path="order-details" element={<OrderDetails />} />
-          <Route path="order-list" element={<OrderList />} />
 
           <Route path="/employee/profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
@@ -153,6 +150,9 @@ const handleSignInClick = () => {
 
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
+
+          <Route path="salary" element={<CheckPayment />} />
+
         
 
         </Route>
