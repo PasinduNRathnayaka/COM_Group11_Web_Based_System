@@ -47,10 +47,15 @@ import EmployeeProfile from "./pages/Employee/Profile";
 import EditProfile from "./pages/Employee/EditProfile";
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
+
+//import Attendance from "./pages/employee/Attendance";
+import Viewattendance from './pages/Employee/Viewattendance';
+
 import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
 import Attendance from "./pages/Employee/Attendance";
 
 import CheckPayment from "./pages/Employee/CheckPayment";
+
 
 //main
 
@@ -126,9 +131,6 @@ const handleSignInClick = () => {
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
-          <Route path="replies" element={<CustomerReplies />} />
-          <Route path="order-details" element={<OrderDetails />} />
-          <Route path="order-list" element={<OrderList />} />
 
           <Route path="/employee/profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
@@ -153,8 +155,15 @@ const handleSignInClick = () => {
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
 
+
+          <Route path="employee/profile" element={<EmployeeProfile />} />
+          <Route path="employee/edit-profile" element={<EditProfile />} />
+       
+         <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
+          <Route path="salary" element={<CheckPayment />} />
+
         </Route>
         </Routes>
       </div>
