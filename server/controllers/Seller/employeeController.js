@@ -1,62 +1,43 @@
-import Employee from "../../models/Seller/Employee.js";
-import { generateQR } from "../../utils/generateQR.js";
-import path from "path";
+import Employee from '../../models/Seller/Employee.js';
+import { generateQR } from '../../utils/generateQR.js';
+import bcrypt from 'bcryptjs';
 
-// Add new employee
-export const addEmployee = async (req, res) => {
+export const createEmployee = async (req, res) => {
   try {
-    const {
-      name,
-      about,
-      category,
-      contact,
-      hourlyRate,
-      address,
-      username,
-      password,
-    } = req.body;
+    const { empId, name, about, category, contact, rate, address, username, password, email } = req.body;
 
-    const image = req.file?.filename;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const qrFilename = `${empId}_qr.png`;
+    const qrCodePath = await generateQR(empId, qrFilename);
 
-    if (!image) {
-      return res.status(400).json({ message: "Employee image is required." });
-    }
-
-    // Generate unique EMP ID (e.g., EMP123456)
-    const empId = "EMP" + Math.floor(100000 + Math.random() * 900000);
-
-    // Generate QR and get the path
-    const qrPath = await generateQR(empId);
-
-    // Save employee
     const employee = new Employee({
       empId,
       name,
       about,
       category,
       contact,
-      hourlyRate,
+      rate,
       address,
       username,
-      password,
-      image: `/uploads/employees/${image}`,
-      qrCode: `/${qrPath.replace(/\\/g, "/")}`, // Normalize for Windows
+      password: hashedPassword,
+      email: email || null, // ✅ safely set null if empty
+      image: req.file ? `/uploads/employees/${req.file.filename}` : '',
+      qrCode: qrCodePath,
     });
 
     await employee.save();
-    res.status(201).json({ message: "Employee added successfully!", employee });
-  } catch (error) {
-    console.error("Add Employee Error:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    res.status(201).json(employee);
+  } catch (err) {
+    console.error("❌ Failed to create employee:", err.message);
+    res.status(500).json({ message: "Failed to create employee", error: err.message });
   }
 };
 
-// Get all employees
-export const getAllEmployees = async (req, res) => {
+export const getEmployees = async (req, res) => {
   try {
     const employees = await Employee.find().sort({ createdAt: -1 });
-    res.status(200).json(employees);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+    res.json(employees);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch employees' });
   }
 };

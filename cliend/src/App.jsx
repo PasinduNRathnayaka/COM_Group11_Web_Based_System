@@ -5,6 +5,8 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { useAppContext } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
 
+// import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import EmployeeScanner from './pages/QRScanner/EmployeeScanner';
 
 import Home from './pages/User/Home' //new
 import LoginModal from './components/LoginModel' //new
@@ -160,15 +162,22 @@ const handleSignInClick = () => {
          <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
-
           <Route path="salary" element={<CheckPayment />} />
 
         </Route>
-
         </Routes>
       </div>
 
       {/* new online Employee */}
+
+      {/* QR */}
+
+      <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+        <Routes>
+          <Route path="/qr_scanner" element={<EmployeeScanner />}>
+        </Route>
+        </Routes>
+      </div>
 
 {/* DEF01// */}
       {!isSellerPath && <Footer />}
