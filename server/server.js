@@ -9,46 +9,53 @@ import connectDB from './configs/db.js';
 import authRoutes from './routes/auth.routes.js';
 import productRoutes from './routes/Seller/product.routes.js';
 import categoryRoutes from './routes/Seller/category.routes.js';
-import employeeRoutes from './routes/Seller/employee.routes.js'; // ✅ NEW
+import employeeRoutes from './routes/Seller/employee.routes.js';
 import userRoutes from './routes/userRoutes.js';
 
 // Setup __dirname (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load env variables
+// Load environment variables
 dotenv.config();
 
+// Initialize app
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Connect to MongoDB
+connectDB().then(() => {
+  console.log("✅ Connected to MongoDB");
+}).catch((err) => {
+  console.error("❌ MongoDB connection failed:", err);
+  process.exit(1); // Exit if DB connection fails
+});
+
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
   origin: ['http://localhost:5173'],
   credentials: true,
 }));
 
-// ✅ Connect to MongoDB before starting server
-await connectDB();
-
-// ✅ Serve static files from /uploads
+// Static file serving
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ API Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/employees', employeeRoutes); // ✅ NEW employee route
+app.use('/api/employees', employeeRoutes);
 app.use('/api/user', userRoutes);
 
-// Root Route
+// Default route
 app.get('/', (req, res) => {
   res.send('✅ API is Working');
 });
 
-// Start the server
+// Start server
 app.listen(port, () => {
-  console.log(`🚀 Server is running on http://localhost:${port}`);
+  console.log(`🚀 Server running at http://localhost:${port}`);
 });
