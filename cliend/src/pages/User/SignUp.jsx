@@ -118,7 +118,7 @@ const SignUp = () => {
           <div>
             <label className="block mb-1 font-medium">Phone Number</label>
             <input
-              type="number"
+              type="string"
               name="number"
               placeholder="Phone number"
               value={formData.number}
