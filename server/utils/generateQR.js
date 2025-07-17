@@ -1,10 +1,21 @@
 import QRCode from "qrcode";
+import fs from "fs";
+import path from "path";
 
-export const generateQR = async (text, outputPath) => {
-  try {
-    await QRCode.toFile(outputPath, text);
-  } catch (err) {
-    console.error("QR generation error:", err);
-    throw err;
-  }
+// Generate QR image and save to disk
+export const generateQR = async (empId) => {
+  const qrDir = path.join("uploads", "employees", "qr");
+  if (!fs.existsSync(qrDir)) fs.mkdirSync(qrDir, { recursive: true });
+
+  const filePath = path.join(qrDir, `${empId}.png`);
+  const qrData = `EMPLOYEE_ID:${empId}`;
+
+  await QRCode.toFile(filePath, qrData, {
+    color: {
+      dark: "#000000",
+      light: "#ffffff"
+    }
+  });
+
+  return filePath;
 };
