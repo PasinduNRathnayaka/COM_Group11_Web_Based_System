@@ -46,6 +46,7 @@ import EditProfile from "./pages/Employee/EditProfile";
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
 import Attendance from "./pages/employee/Attendance";
+import Viewattendance from './pages/Employee/Viewattendance';
 //main
 
 const App = () => {
@@ -126,7 +127,9 @@ const handleSignInClick = () => {
 
           <Route path="/employee/profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
-        
+       
+         <Route path="attendance" element={<Viewattendance />} />
+
 
         </Route>
 
