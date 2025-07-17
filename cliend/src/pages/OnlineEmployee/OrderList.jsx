@@ -12,6 +12,11 @@ const orders = new Array(10).fill({
 
 const OrderList = () => {
   return (
+
+  <div className="p-4">
+      <h2 className="text-2xl font-semibold mb-2">Order List</h2>
+      <p className="text-sm text-gray-500 mb-6">Home &gt; Order List</p>
+      
     <div className="bg-white rounded-lg p-4 shadow">
       <h2 className="text-lg font-semibold mb-2">Recent Purchases</h2>
       <table className="w-full text-sm table-auto border-separate border-spacing-y-2">
@@ -60,6 +65,14 @@ const OrderList = () => {
         </div>
       </div>
     </div>
+
+    
+      <footer className="mt-8 text-center text-sm text-gray-400">
+        © 2025 · OnlineEmployee Dashboard
+      </footer>
+    
+    </div>
+    
   );
 };
 
