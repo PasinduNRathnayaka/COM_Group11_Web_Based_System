@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
       required: [true, 'Please enter a phone number'],
       minlength: 10,
     },
+     address: {
+      type: String,
+      required: [true, 'Please enter the address'],
+    },
     profilePic: {
       type: String,
       default: '', // placeholder until user uploads
