@@ -46,9 +46,9 @@ import EditProfile from "./pages/Employee/EditProfile";
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
 import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
-import Attendance from "./pages/employee/Attendance";
+import Attendance from "./pages/Employee/Attendance";
 
-import CheckPayment from "./pages/employee/CheckPayment";
+import CheckPayment from "./pages/Employee/CheckPayment";
 
 //main
 
