@@ -50,6 +50,12 @@ import Attendance from "./pages/employee/Attendance";
 
 import CheckPayment from "./pages/employee/CheckPayment";
 
+import ApplyLeave from "./pages/Employee/ApplyLeave";
+
+import DownloadID from "./pages/Employee/DownloadID";
+
+
+
 //main
 
 const App = () => {
@@ -133,6 +139,10 @@ const handleSignInClick = () => {
           
           <Route path="/employee/salary" element={<CheckPayment />} />
 
+          <Route path="/employee/leave" element={<ApplyLeave />} />
+
+          <Route path="/employee/download_id" element={<DownloadID />} />
+
 
         </Route>
 
@@ -154,6 +164,17 @@ const handleSignInClick = () => {
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
         
+          <Route path="salary" element={<CheckPayment />} />
+
+          <Route path="leave" element={<ApplyLeave />} />
+
+          
+
+         
+
+         
+
+
 
         </Route>
 
