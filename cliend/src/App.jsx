@@ -5,6 +5,8 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { useAppContext } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
 
+// import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import EmployeeScanner from './pages/QRScanner/EmployeeScanner';
 
 import Home from './pages/User/Home' //new
 import LoginModal from './components/LoginModel' //new
@@ -45,10 +47,15 @@ import EmployeeProfile from "./pages/Employee/Profile";
 import EditProfile from "./pages/Employee/EditProfile";
 
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
-import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
-import Attendance from "./pages/employee/Attendance";
 
-import CheckPayment from "./pages/employee/CheckPayment";
+//import Attendance from "./pages/employee/Attendance";
+import Viewattendance from './pages/Employee/Viewattendance';
+
+import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
+import Attendance from "./pages/Employee/Attendance";
+
+import CheckPayment from "./pages/Employee/CheckPayment";
+
 
 import ApplyLeave from "./pages/Employee/ApplyLeave";
 
@@ -130,9 +137,6 @@ const handleSignInClick = () => {
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
-          <Route path="replies" element={<CustomerReplies />} />
-          <Route path="order-details" element={<OrderDetails />} />
-          <Route path="order-list" element={<OrderList />} />
 
           <Route path="/employee/profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
@@ -161,8 +165,14 @@ const handleSignInClick = () => {
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
 
+
+          <Route path="employee/profile" element={<EmployeeProfile />} />
+          <Route path="employee/edit-profile" element={<EditProfile />} />
+       
+         <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
+
         
           <Route path="salary" element={<CheckPayment />} />
 
@@ -176,12 +186,23 @@ const handleSignInClick = () => {
 
 
 
-        </Route>
+          <Route path="salary" element={<CheckPayment />} />
 
+
+        </Route>
         </Routes>
       </div>
 
       {/* new online Employee */}
+
+      {/* QR */}
+
+      <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
+        <Routes>
+          <Route path="/qr_scanner" element={<EmployeeScanner />}>
+        </Route>
+        </Routes>
+      </div>
 
 {/* DEF01// */}
       {!isSellerPath && <Footer />}

@@ -47,10 +47,10 @@ const CustomerReplies = () => {
   const [input, setInput] = useState('');
 
   return (
-    <div className="flex flex-col w-full p-4 bg-[#f1f1f1]">
-      <div className="text-lg font-bold text-gray-700 mb-4">
-        Customer Replies &gt; <span className="font-normal">Home</span>
-      </div>
+
+    <div className="p-4">
+      <h2 className="text-2xl font-semibold mb-2">Customer Replies</h2>
+      <p className="text-sm text-gray-500 mb-6">Home &gt; Customer Replies</p>
 
       <div className="flex bg-white rounded-lg shadow h-[80vh]">
         {/* Left Chat List */}
@@ -113,7 +113,14 @@ const CustomerReplies = () => {
           </div>
         </div>
       </div>
+
+      
+      <footer className="mt-8 text-center text-sm text-gray-400">
+        © 2025 · OnlineEmployee Dashboard
+      </footer>
     </div>
+    
+    
   );
 };
 

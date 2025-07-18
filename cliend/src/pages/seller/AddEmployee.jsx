@@ -1,24 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-// Helper Input component
-const Input = ({ label, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium mb-1">{label}</label>
-    <input {...props} className="w-full border rounded p-2 text-sm" />
-  </div>
-);
-
-// Helper Textarea component
-const Textarea = ({ label, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium mb-1">{label}</label>
-    <textarea {...props} className="w-full border rounded p-2 text-sm" rows="3" />
-  </div>
-);
-
-const AddEmployee = () => {
-  const [form, setForm] = useState({
-    employeeId: `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
+const AddEmployeeForm = () => {
+  const [formData, setFormData] = useState({
+    empId: "",
     name: "",
     about: "",
     category: "",
@@ -26,163 +11,242 @@ const AddEmployee = () => {
     rate: "",
     address: "",
     username: "",
+    email: "",
     password: "",
     confirmPassword: "",
-    imagePreview: null,
-    gallery: [],
+    image: null,
   });
 
-  const [categories, setCategories] = useState(["Mechanic", "Electrician", "Sales"]);
-  const [showCatModal, setShowCatModal] = useState(false);
-  const [newCatName, setNewCatName] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Generate unique empId on mount
+  useEffect(() => {
+    const randomId = `EMP${Date.now().toString().slice(-6)}`;
+    setFormData((prev) => ({ ...prev, empId: randomId }));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setForm((prev) => ({ ...prev, imagePreview: URL.createObjectURL(file) }));
-    }
+  const handleFileChange = (e) => {
+    setFormData((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
-  const handleGalleryUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setForm((prev) => ({ ...prev, gallery: [...prev.gallery, ...files] }));
-  };
-
-  const addNewCategory = () => {
-    if (newCatName.trim()) {
-      setCategories([...categories, newCatName]);
-      setForm((prev) => ({ ...prev, category: newCatName }));
-      setNewCatName("");
-      setShowCatModal(false);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Employee Submitted:", form);
+    setMessage("");
+    setLoading(true);
+
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("❌ Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const payload = new FormData();
+      for (const [key, value] of Object.entries(formData)) {
+        // Append only non-null for file, others as is
+        if (key === "image" && value) {
+          payload.append(key, value);
+        } else if (key !== "image") {
+          payload.append(key, value);
+        }
+      }
+
+      const res = await axios.post("http://localhost:4000/api/employees", payload);
+
+      setMessage("✅ Employee added successfully!");
+      setLoading(false);
+
+      // Reset form (generate new empId)
+      const newEmpId = `EMP${Date.now().toString().slice(-6)}`;
+      setFormData({
+        empId: newEmpId,
+        name: "",
+        about: "",
+        category: "",
+        contact: "",
+        rate: "",
+        address: "",
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        image: null,
+      });
+    } catch (err) {
+      console.error("Failed to add employee:", err.response?.data || err.message);
+      setMessage(`❌ Failed to add employee. ${err.response?.data?.message || ''}`);
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-[#f3f3f3] min-h-screen p-6">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-md max-w-6xl mx-auto shadow-md"
-      >
-        <h2 className="text-xl font-semibold mb-1">Employee Details</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          Home &gt; All Products &gt; Add New Employee
-        </p>
+    <div className="p-6 max-w-4xl mx-auto bg-white rounded shadow">
+      <h2 className="text-2xl font-semibold mb-6">Add New Employee</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left side */}
-          <div className="space-y-4">
-            <Input label="Employee Name" name="name" value={form.name} onChange={handleChange} />
-            <Textarea label="About" name="about" value={form.about} onChange={handleChange} />
-            <div>
-              <label className="block text-sm font-medium mb-1">Category</label>
-              <div className="flex gap-2">
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="w-full border rounded p-2 text-sm"
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat, i) => (
-                    <option key={i} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="px-3 bg-gray-300 text-sm rounded"
-                  onClick={() => setShowCatModal(true)}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            <Input label="Contact" name="contact" value={form.contact} onChange={handleChange} />
-            <Input label="Hourly Rate" name="rate" value={form.rate} onChange={handleChange} placeholder="Rs:150" />
-            <Input label="Address" name="address" value={form.address} onChange={handleChange} />
-            <Input label="User Name" name="username" value={form.username} onChange={handleChange} />
-            <Input label="Password" type="password" name="password" value={form.password} onChange={handleChange} />
-            <Input label="Confirm Password" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
-          </div>
-
-          {/* Right side */}
-          <div className="space-y-6">
-            {/* Image Upload */}
-            <div>
-              <div className="h-48 w-full bg-gray-200 rounded-md overflow-hidden">
-                {form.imagePreview ? (
-                  <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
-                )}
-              </div>
-              <input type="file" onChange={handleImageUpload} className="mt-2 text-sm" />
-            </div>
-
-            {/* Gallery Upload */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Employee Gallery</label>
-              <div className="border border-dashed border-gray-400 p-4 rounded-md text-center text-gray-500 text-sm mb-4">
-                <label className="cursor-pointer block">
-                  <p>Drop your image here, or browse</p>
-                  <p className="text-xs text-gray-400">jpeg, png are allowed</p>
-                  <input type="file" multiple className="hidden" onChange={handleGalleryUpload} />
-                </label>
-              </div>
-
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {form.gallery.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between px-3 py-2 border rounded text-sm">
-                    <span>{file.name}</span>
-                    <span className="text-green-600 font-bold">✓</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label>Employee ID</label>
+          <input
+            type="text"
+            name="empId"
+            value={formData.empId}
+            readOnly
+            className="w-full border rounded px-3 py-2 bg-gray-100"
+          />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end mt-8 space-x-3">
-          <button type="submit" className="bg-black text-white px-6 py-2 rounded-md text-sm">SAVE</button>
-          <button type="button" className="bg-blue-900 text-white px-6 py-2 rounded-md text-sm">DELETE</button>
-          <button type="button" className="bg-gray-200 px-6 py-2 rounded-md text-sm">CANCEL</button>
+        <div>
+          <label>Full Name</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>About</label>
+          <textarea
+            name="about"
+            value={formData.about}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2 resize-none"
+          />
+        </div>
+
+        <div>
+          <label>Category</label>
+          <input
+            type="text"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Contact</label>
+          <input
+            type="text"
+            name="contact"
+            value={formData.contact}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Hourly Rate</label>
+          <input
+            type="number"
+            name="rate"
+            value={formData.rate}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Address</label>
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Username</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Email (optional)</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="example@example.com"
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Confirm Password</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label>Upload Photo</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            required
+            className="w-full"
+          />
+        </div>
+
+        <div className="md:col-span-2 flex justify-end">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          >
+            {loading ? "Saving..." : "Save"}
+          </button>
         </div>
       </form>
 
-      {/* Category Modal */}
-      {showCatModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-md shadow-md w-96">
-            <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
-            <input
-              type="text"
-              value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
-              placeholder="Enter category name"
-              className="w-full border p-2 rounded mb-4"
-            />
-            <div className="flex justify-end space-x-3">
-              <button onClick={() => setShowCatModal(false)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-              <button onClick={addNewCategory} className="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
-            </div>
-          </div>
-        </div>
+      {message && (
+        <p className="mt-4 text-center text-lg text-red-600">{message}</p>
       )}
     </div>
   );
 };
 
-export default AddEmployee;
-
+export default AddEmployeeForm;
