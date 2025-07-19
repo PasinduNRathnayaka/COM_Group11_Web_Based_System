@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "./cropImage";
@@ -6,11 +6,30 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const Profile = () => {
-  const { user, setUser } = useAppContext(); // Make sure setUser is available in context
+  const { user, setUser } = useAppContext();
   const [activeTab, setActiveTab] = useState("account");
-  const [profileImage, setProfileImage] = useState(
-    user?.profilePic || "https://i.ibb.co/vzvY0kQ/user.png"
-  );
+
+  // ✅ Helper function to get the correct image URL
+  const getImageUrl = (profilePic) => {
+    if (!profilePic) {
+      return "https://i.ibb.co/vzvY0kQ/user.png"; // Default image
+    }
+    
+    // If it's already a full URL (starts with http), return as is
+    if (profilePic.startsWith('http')) {
+      return profilePic;
+    }
+    
+    // If it's a relative path, prepend server URL
+    return `http://localhost:4000${profilePic}`;
+  };
+
+  const [profileImage, setProfileImage] = useState(getImageUrl(user?.profilePic));
+
+  // ✅ Update profile image when user data changes (important for login)
+  useEffect(() => {
+    setProfileImage(getImageUrl(user?.profilePic));
+  }, [user?.profilePic]);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -19,6 +38,18 @@ const Profile = () => {
     number: user?.number || "",
     address: user?.address || ""
   });
+
+  // ✅ Update form data when user changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        number: user.number || "",
+        address: user.address || ""
+      });
+    }
+  }, [user]);
 
   // Password form state
   const [passwordData, setPasswordData] = useState({
@@ -44,34 +75,76 @@ const Profile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+
       const imageUrl = URL.createObjectURL(file);
       setCroppingImage(imageUrl);
       setShowCropper(true);
     }
   };
-
+  
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  // ✅ FIXED: Use correct loading state variable
   const handleCropSave = async () => {
     try {
-      const croppedImageBlob = await getCroppedImg(croppingImage, croppedAreaPixels);
-      const croppedImageUrl = URL.createObjectURL(croppedImageBlob);
-      setProfileImage(croppedImageUrl);
-      setShowCropper(false);
+      setLoading(true); // ✅ Use the existing loading state
       
-      // TODO: Upload image to server here if needed
-      toast.success("Profile image updated!");
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to crop image");
+      // Get cropped image blob
+      const croppedImageBlob = await getCroppedImg(croppingImage, croppedAreaPixels);
+      
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('profileImage', croppedImageBlob, 'profile.jpg');
+
+      const token = localStorage.getItem('token');
+      
+      // Upload to server
+      const response = await axios.put('/api/user/profile-image', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        // Update local state with server response
+        const newProfilePic = response.data.profilePic;
+        setProfileImage(getImageUrl(newProfilePic)); // ✅ Use helper function
+        
+        // ✅ Update user context with the new profilePic
+        setUser({ ...user, profilePic: newProfilePic });
+        
+        setShowCropper(false);
+        setCroppingImage(null);
+        toast.success("Profile image updated successfully!");
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error(error.response?.data?.message || "Failed to upload image");
+    } finally {
+      setLoading(false); // ✅ Use the existing loading state
     }
   };
 
   const handleCropCancel = () => {
     setShowCropper(false);
     setCroppingImage(null);
+    if (croppingImage) {
+      URL.revokeObjectURL(croppingImage);
+    }
   };
 
   // Handle form input changes
@@ -96,7 +169,7 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token'); // Adjust based on how you store the token
+      const token = localStorage.getItem('token');
       
       const response = await axios.put('/api/user/profile', formData, {
         headers: {
@@ -106,8 +179,9 @@ const Profile = () => {
       });
 
       if (response.data.success) {
-        // Update user context with new data
-        setUser({ ...user, ...formData });
+        // ✅ Update user context with new data
+        const updatedUserData = { ...user, ...formData };
+        setUser(updatedUserData);
         toast.success("Profile updated successfully!");
       }
     } catch (error) {
@@ -378,10 +452,11 @@ const Profile = () => {
                 </button>
                 <button
                   onClick={handleCropSave}
-                  className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700"
+                  disabled={loading}
+                  className={`px-4 py-2 bg-primary text-white rounded hover:bg-blue-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   style={{ pointerEvents: "auto" }}
                 >
-                  Save
+                  {loading ? "Saving..." : "Save"}
                 </button>
               </div>
             </div>
