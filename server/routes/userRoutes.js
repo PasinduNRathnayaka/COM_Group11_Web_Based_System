@@ -2,11 +2,17 @@
 import express from 'express';
 import { registerUser, loginUser, 
   updateUserProfile, 
-  updateUserPassword, 
-  getUserProfile } from '../controllers/userController.js';
+  updateUserPassword,
+  updateProfileImage, 
+  getUserProfile,
+  upload } from '../controllers/userController.js';
 
 import { protect } from '../middlewares/authMiddleware.js';
 
+//import multer from 'multer';
+
+//const storage = multer.memoryStorage(); // or diskStorage({...}) if saving to disk
+//const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -19,6 +25,7 @@ router.get('/validate-token', protect, (req, res) => {
 
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
+router.put('/profile-image', protect, upload.single('profileImage'), updateProfileImage);
 router.put('/password', protect, updateUserPassword);
 
 export default router;
