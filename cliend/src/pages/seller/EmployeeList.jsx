@@ -13,6 +13,10 @@ const EmployeeList = () => {
       .catch((err) => console.error("❌ Error fetching employees:", err.message));
   }, []);
 
+  const handleDelete = (id) => {
+    setEmployees((prev) => prev.filter((emp) => emp._id !== id));
+  };
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -30,7 +34,7 @@ const EmployeeList = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {employees.map((emp) => (
-            <EmployeeCard key={emp._id} employee={emp} />
+            <EmployeeCard key={emp._id} employee={emp} onDelete={handleDelete} />
           ))}
         </div>
       )}
