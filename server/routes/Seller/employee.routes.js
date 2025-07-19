@@ -10,7 +10,6 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const employeeUploadDir = path.resolve(__dirname, '../../uploads/employees');
-
 if (!fs.existsSync(employeeUploadDir)) {
   fs.mkdirSync(employeeUploadDir, { recursive: true });
 }
@@ -21,7 +20,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-router.post("/", upload.single('image'), createEmployee);
-router.get("/", getEmployees);
+router.post('/', upload.single('image'), createEmployee);
+router.get('/', getEmployees);
 
 export default router;
