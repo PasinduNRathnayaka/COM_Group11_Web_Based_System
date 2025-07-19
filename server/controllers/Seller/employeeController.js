@@ -40,3 +40,38 @@ export const getEmployees = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch employees' });
   }
 };
+
+// ✅ GET employee by ID
+export const getEmployeeById = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching employee by ID' });
+  }
+};
+
+// ✅ PUT (update employee)
+export const updateEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    // Update fields
+    const fieldsToUpdate = ['name', 'about', 'category', 'contact', 'rate', 'address', 'username', 'email'];
+    fieldsToUpdate.forEach(field => {
+      if (req.body[field] !== undefined) employee[field] = req.body[field];
+    });
+
+    // Handle image update
+    if (req.file) {
+      employee.image = `/uploads/employees/${req.file.filename}`;
+    }
+
+    await employee.save();
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update employee', error: err.message });
+  }
+};
