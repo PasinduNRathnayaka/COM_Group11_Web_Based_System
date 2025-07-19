@@ -2,6 +2,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+import multer from 'multer';
+
 export const protect = async (req, res, next) => {
   let token;
 
@@ -23,5 +25,31 @@ export const protect = async (req, res, next) => {
   } else {
     res.status(401).json({ message: 'Not authorized, no token' });
   }
+};
+
+export const handleMulterError = (error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File size too large. Maximum size is 5MB.'
+      });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Unexpected file field.'
+      });
+    }
+  }
+  
+  if (error.message === 'Please upload only image files') {
+    return res.status(400).json({
+      success: false,
+      message: 'Please upload only image files (JPG, PNG, GIF, etc.)'
+    });
+  }
+  
+  next(error);
 };
 
