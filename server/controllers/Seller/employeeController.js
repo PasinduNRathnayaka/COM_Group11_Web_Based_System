@@ -1,6 +1,8 @@
 import Employee from '../../models/Seller/Employee.js';
 import { generateQR } from '../../utils/generateQR.js';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 export const createEmployee = async (req, res) => {
   try {
@@ -41,7 +43,6 @@ export const getEmployees = async (req, res) => {
   }
 };
 
-// ✅ GET employee by ID
 export const getEmployeeById = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
@@ -52,19 +53,16 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
-// ✅ PUT (update employee)
 export const updateEmployee = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
     if (!employee) return res.status(404).json({ message: 'Employee not found' });
 
-    // Update fields
     const fieldsToUpdate = ['name', 'about', 'category', 'contact', 'rate', 'address', 'username', 'email'];
     fieldsToUpdate.forEach(field => {
       if (req.body[field] !== undefined) employee[field] = req.body[field];
     });
 
-    // Handle image update
     if (req.file) {
       employee.image = `/uploads/employees/${req.file.filename}`;
     }
@@ -73,5 +71,15 @@ export const updateEmployee = async (req, res) => {
     res.json(employee);
   } catch (err) {
     res.status(500).json({ message: 'Failed to update employee', error: err.message });
+  }
+};
+
+export const deleteEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findByIdAndDelete(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    res.json({ message: 'Employee deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete employee', error: err.message });
   }
 };
