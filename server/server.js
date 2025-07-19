@@ -12,6 +12,8 @@ import categoryRoutes from './routes/Seller/category.routes.js';
 import employeeRoutes from './routes/Seller/employee.routes.js';
 import userRoutes from './routes/userRoutes.js';
 
+import  multerErrorHandler  from './middlewares/multerErrorHandler.js';
+
 // Setup __dirname (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,12 +55,25 @@ app.use('/api/user', userRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Multer error handling middleware (place after routes that use multer)
+//app.use(handleMulterError);
+
+app.use(multerErrorHandler);
 
 // Default route
 app.get('/', (req, res) => {
   res.send('✅ API is Working');
 });
-app.listen(4000, () => console.log("Server running at http://localhost:4000"));
+
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  res.status(error.status || 500).json({
+    success: false,
+    message: error.message || 'Internal server error'
+  });
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
