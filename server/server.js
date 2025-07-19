@@ -26,7 +26,15 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ✅ Serve static images
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(
+  '/uploads',
+  express.static('uploads', {
+    setHeaders: (res, path, stat) => {
+      res.set('Access-Control-Allow-Origin', '*'); // allow cross-origin image access
+    },
+  })
+);
 
 // Routes
 app.use('/api/products', productRoutes);
