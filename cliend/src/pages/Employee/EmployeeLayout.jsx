@@ -10,6 +10,16 @@ import addEmployeeIcon from "../../assets/add-employee.png";
 import employeeListIcon from "../../assets/employee-list.png";
 import attendanceIcon from "../../assets/attendance.png";
 import ordersIcon from "../../assets/orders.png";
+import {
+  FaUser,
+  FaCalendarCheck,
+  FaMoneyCheckAlt,
+  FaPaperPlane,
+  FaFileDownload,
+  FaArrowLeft,
+} from "react-icons/fa";
+
+
 
 // Import NotificationPopup
 import NotificationPopup from "../../components/seller/NotificationPopup";
@@ -104,13 +114,13 @@ const EmployeeLayout = () => {
   }, []);
 
   const sidebarLinks = [
-  { name: "Profile", path: "/employee/profile" },
-  { name: "View Attendance", path: "/employee/attendance" },
-  { name: "Check Payment", path: "/employee/salary" },
-  { name: "Apply For Leave", path: "/employee/leave" },
-  { name: "Download ID", path: "/employee/download_id" },
- 
-  { name: "Back", path: "/employee" } // assuming this is the target for the BACK button
+    { name: "Profile", path: "/employee/profile", icon: <FaUser /> },
+    { name: "View Attendance", path: "/employee/attendance", icon: <FaCalendarCheck /> },
+    { name: "Check Payment", path: "/employee/salary", icon: <FaMoneyCheckAlt /> },
+    { name: "Apply For Leave", path: "/employee/leave", icon: <FaPaperPlane /> },
+    { name: "Download ID", path: "/employee/download_id", icon: <FaFileDownload /> },
+    { name: "Back", path: "/employee", icon: <FaArrowLeft /> },
+   // assuming this is the target for the BACK button
   
 ];
 
@@ -208,7 +218,8 @@ const EmployeeLayout = () => {
                    : "text-gray-700 hover:bg-blue-200 hover:text-blue-900"}`
               }
             >
-              <img src={item.icon} alt={item.name} className="w-6 h-6" />
+              <span className="text-xl">{item.icon}</span>
+
               <p className="hidden md:block">{item.name}</p>
             </NavLink>
           ))}
