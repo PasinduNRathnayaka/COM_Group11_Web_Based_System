@@ -12,6 +12,7 @@ import employeeRoutes from './routes/Seller/employee.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
 
+
 const app = express();
 dotenv.config();
 
@@ -43,8 +44,10 @@ app.use('/api/employees', employeeRoutes);
 
 app.use('/api/user', userRoutes);
 
+
 // Start Server
 connectDB();
+
 
 // Default route
 app.get('/', (req, res) => {
