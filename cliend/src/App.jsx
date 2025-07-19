@@ -146,7 +146,8 @@ const handleSignInClick = () => {
           <Route path="/employee/leave" element={<ApplyLeave />} />
 
           <Route path="/employee/download_id" element={<DownloadID />} />
-
+          
+          <Route path="attendance" element={<Viewattendance />} />
 
         </Route>
 
