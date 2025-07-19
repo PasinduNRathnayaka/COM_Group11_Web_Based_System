@@ -3,7 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { createEmployee, getEmployees } from '../../controllers/Seller/employeeController.js';
+import {
+  createEmployee,
+  getEmployees,
+  getEmployeeById,
+  updateEmployee,
+  deleteEmployee,
+} from '../../controllers/Seller/employeeController.js';
 
 const router = express.Router();
 
@@ -19,9 +25,13 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, employeeUploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
 });
+
 const upload = multer({ storage });
 
-router.post("/", upload.single('image'), createEmployee);
-router.get("/", getEmployees);
+router.post('/', upload.single('image'), createEmployee);
+router.get('/', getEmployees);
+router.get('/:id', getEmployeeById);
+router.put('/:id', upload.single('image'), updateEmployee);
+router.delete('/:id', deleteEmployee);
 
 export default router;

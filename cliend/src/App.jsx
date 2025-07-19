@@ -34,7 +34,7 @@ import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
 import CategoryProductList from './pages/seller/CategoryProductList';
-
+import EditEmployeeForm from './pages/seller/EditEmployeeForm';
 
 // DEF01
 //new
@@ -124,7 +124,8 @@ const handleSignInClick = () => {
             <Route path="employee-list" element={<EmployeeList />} />
             <Route path="orders" element={<Orders />} />
             <Route path="mark-attendence" element={<MarkAttendance />} />
-
+            <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
+            
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
           </Route>
