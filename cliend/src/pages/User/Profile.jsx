@@ -1,21 +1,39 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useAppContext } from "../../context/AppContext";
 import Cropper from "react-easy-crop";
-import getCroppedImg from "./cropImage"; // helper function to crop image from canvas
+import getCroppedImg from "./cropImage";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const Profile = () => {
-  const { user } = useAppContext();
+  const { user, setUser } = useAppContext(); // Make sure setUser is available in context
   const [activeTab, setActiveTab] = useState("account");
   const [profileImage, setProfileImage] = useState(
     user?.profilePic || "https://i.ibb.co/vzvY0kQ/user.png"
   );
 
+  // Form data state
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    number: user?.number || "",
+    address: user?.address || ""
+  });
+
+  // Password form state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
   // Crop states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [croppingImage, setCroppingImage] = useState(null); // image to crop
+  const [croppingImage, setCroppingImage] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef();
 
@@ -23,13 +41,12 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
-  // When file selected, read file and open cropper
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setCroppingImage(imageUrl);
-      setShowCropper(true); // open cropper modal
+      setShowCropper(true);
     }
   };
 
@@ -40,16 +57,15 @@ const Profile = () => {
   const handleCropSave = async () => {
     try {
       const croppedImageBlob = await getCroppedImg(croppingImage, croppedAreaPixels);
-
-      // Convert blob to URL for preview
       const croppedImageUrl = URL.createObjectURL(croppedImageBlob);
-
       setProfileImage(croppedImageUrl);
       setShowCropper(false);
-
-      // TODO: upload croppedImageBlob to server if needed
+      
+      // TODO: Upload image to server here if needed
+      toast.success("Profile image updated!");
     } catch (e) {
       console.error(e);
+      toast.error("Failed to crop image");
     }
   };
 
@@ -58,62 +74,152 @@ const Profile = () => {
     setCroppingImage(null);
   };
 
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Handle password input changes
+  const handlePasswordChange = (e) => {
+    setPasswordData({
+      ...passwordData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Save profile data
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token'); // Adjust based on how you store the token
+      
+      const response = await axios.put('/api/user/profile', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        // Update user context with new data
+        setUser({ ...user, ...formData });
+        toast.success("Profile updated successfully!");
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save password
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords don't match");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.put('/api/user/password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+        toast.success("Password updated successfully!");
+      }
+    } catch (error) {
+      console.error('Password update error:', error);
+      toast.error(error.response?.data?.message || "Failed to update password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderMainContent = () => {
     switch (activeTab) {
       case "account":
         return (
           <div>
             <h2 className="text-xl font-bold mb-4">Account Info</h2>
-            <form className="space-y-4">
-             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+            <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div>
                   <label className="block mb-1 font-medium">User Name</label>
                   <input
                     type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
                     className="w-full border rounded px-3 py-2"
-                    defaultValue={user?.name || "Pasidu"}
+                    required
                   />
                 </div>
-               {/*
-                <div>
-                  <label className="block mb-1 font-medium">Last Name</label>
-                  <input
-                    type="text"
-                    className="w-full border rounded px-3 py-2"
-                    defaultValue="Indusara"
-                  />
-                </div>
-              </div>
-              */}
               <div>
                 <label className="block mb-1 font-medium">Email Address</label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2"
-                  defaultValue={user?.email || "test@gmail.com"}
+                  required
                 />
               </div>
               <div>
                 <label className="block mb-1 font-medium">Phone Number</label>
                 <input
                   type="tel"
+                  name="number"
+                  value={formData.number}
+                  onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2"
-                  defaultValue={user?.number || "0777555666"}
+                  required
                 />
               </div>
               <div>
                 <label className="block mb-1 font-medium">Address</label>
                 <input
-                  type="string"
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2"
-                  defaultValue={user?.address || "Medagoda"}
+                  required
                 />
               </div>
               <button
                 type="submit"
-                className="mt-4 px-6 py-2 bg-primary hover:bg-blue-700 text-white rounded"
+                disabled={loading}
+                className={`mt-4 px-6 py-2 bg-primary hover:bg-blue-700 text-white rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Save
+                {loading ? "Saving..." : "Save"}
               </button>
             </form>
           </div>
@@ -129,33 +235,48 @@ const Profile = () => {
         return (
           <div>
             <h2 className="text-xl font-bold mb-4">Change Password</h2>
-            <form className="space-y-4">
+            <form onSubmit={handleSavePassword} className="space-y-4">
               <div>
                 <label className="block mb-1 font-medium">Current Password</label>
                 <input
                   type="password"
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
                   className="w-full border rounded px-3 py-2"
+                  required
                 />
               </div>
               <div>
                 <label className="block mb-1 font-medium">New Password</label>
                 <input
                   type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
                   className="w-full border rounded px-3 py-2"
+                  required
+                  minLength="6"
                 />
               </div>
               <div>
                 <label className="block mb-1 font-medium">Confirm Password</label>
                 <input
                   type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
                   className="w-full border rounded px-3 py-2"
+                  required
+                  minLength="6"
                 />
               </div>
               <button
                 type="submit"
-                className="mt-4 px-6 py-2 bg-primary hover:bg-blue-700 text-white rounded"
+                disabled={loading}
+                className={`mt-4 px-6 py-2 bg-primary hover:bg-blue-700 text-white rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Update Password
+                {loading ? "Updating..." : "Update Password"}
               </button>
             </form>
           </div>
@@ -186,8 +307,8 @@ const Profile = () => {
                 className="hidden"
               />
             </div>
-            <h3 className="font-semibold mt-2">{user?.name || "Pasindu Indusara"}</h3>
-            <p className="text-sm text-gray-500">{user?.email || "test@gmail.com"}</p>
+            <h3 className="font-semibold mt-2">{formData.name || "User Name"}</h3>
+            <p className="text-sm text-gray-500">{formData.email || "user@example.com"}</p>
           </div>
           <hr className="mb-4" />
           <div className="space-y-2">
@@ -230,43 +351,41 @@ const Profile = () => {
         {/* Cropper Modal */}
         {showCropper && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-  <div
-    className="relative w-[90vw] max-w-lg bg-white rounded-lg p-4 flex flex-col"
-    style={{ height: "450px" }}
-  >
-    <Cropper
-      image={croppingImage}
-      crop={crop}
-      zoom={zoom}
-      aspect={1}
-      onCropChange={setCrop}
-      onZoomChange={setZoom}
-      onCropComplete={onCropComplete}
-      style={{ flexGrow: 1, position: "relative" }}
-    />
-    <div
-  className="flex justify-between mt-4"
-  style={{ pointerEvents: "auto", zIndex: 10 }}
->
-  <button
-    onClick={handleCropCancel}
-    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-    style={{ pointerEvents: "auto" }}
-  >
-    Cancel
-  </button>
-  <button
-    onClick={handleCropSave}
-    className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700"
-    style={{ pointerEvents: "auto" }}
-  >
-    Save
-  </button>
-</div>
-
-  </div>
-</div>
-
+            <div
+              className="relative w-[90vw] max-w-lg bg-white rounded-lg p-4 flex flex-col"
+              style={{ height: "450px" }}
+            >
+              <Cropper
+                image={croppingImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                style={{ flexGrow: 1, position: "relative" }}
+              />
+              <div
+                className="flex justify-between mt-4"
+                style={{ pointerEvents: "auto", zIndex: 10 }}
+              >
+                <button
+                  onClick={handleCropCancel}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  style={{ pointerEvents: "auto" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCropSave}
+                  className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700"
+                  style={{ pointerEvents: "auto" }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
