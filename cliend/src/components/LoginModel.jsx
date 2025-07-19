@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { assets } from '../assets/assets';
 
-import axios from 'axios';             // ⭐ changed (ensure axios installed)
-import toast from 'react-hot-toast';   // ⭐ changed
+import axios from 'axios';             
+import toast from 'react-hot-toast';   
 
 const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   const { setUser } = useAppContext();
@@ -27,15 +27,25 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         password,
       });
 
-      // save user in context + localStorage
-      setUser(data);
-      localStorage.setItem('user', JSON.stringify(data));
-      localStorage.setItem('token', data.token);
+      // ✅ UPDATED: Store complete user data including profilePic
+      const userData = {
+        _id: data._id,
+        name: data.name,
+        email: data.email,
+        number: data.number,
+        address: data.address,
+        profilePic: data.profilePic, // ✅ Make sure this is included
+        token: data.token
+      };
+
+      // save user in context + localStorage
+      setUser(userData);
 
       toast.success('Logged in!');
       onClose();
       setStep(0);
-      setEmail(''); setPassword('');
+      setEmail(''); 
+      setPassword('');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     }
@@ -54,12 +64,11 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center">
 
-        {/* ---------------- STEP 0 — LOGIN ---------------- */}
+        {/* ---------------- STEP 0 — LOGIN ---------------- */}
         {step === 0 && (
           <>
             <h2 className="text-2xl font-bold mb-4">Login</h2>
 
-            {/* ⭐ changed — use email & password controlled inputs */}
             <form className="flex flex-col gap-4" onSubmit={handleLogin}>
               <input
                 type="email"
@@ -101,7 +110,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           </>
         )}
 
-        {/* ---------------- STEP 1 — enter email ---------------- */}
+        {/* ---------------- STEP 1 — enter email ---------------- */}
         {step === 1 && (
           <>
             <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
@@ -122,7 +131,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           </>
         )}
 
-        {/* ---------------- STEP 2 — enter 4‑digit code ---------------- */}
+        {/* ---------------- STEP 2 — enter 4‑digit code ---------------- */}
         {step === 2 && (
           <>
             <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
@@ -147,7 +156,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           </>
         )}
 
-        {/* ---------------- STEP 3 — reset password ---------------- */}
+        {/* ---------------- STEP 3 — reset password ---------------- */}
         {step === 3 && (
           <>
             <h2 className="text-xl font-bold mb-4">Change Password</h2>
@@ -194,4 +203,3 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
 };
 
 export default LoginModal;
-
