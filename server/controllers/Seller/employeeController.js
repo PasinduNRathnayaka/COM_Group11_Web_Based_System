@@ -5,7 +5,6 @@ import bcrypt from 'bcryptjs';
 export const createEmployee = async (req, res) => {
   try {
     const { empId, name, about, category, contact, rate, address, username, password, email } = req.body;
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const qrFilename = `${empId}_qr.png`;
     const qrCodePath = await generateQR(empId, qrFilename);
@@ -20,7 +19,7 @@ export const createEmployee = async (req, res) => {
       address,
       username,
       password: hashedPassword,
-      email: email || null, // ✅ safely set null if empty
+      email: email || null,
       image: req.file ? `/uploads/employees/${req.file.filename}` : '',
       qrCode: qrCodePath,
     });
