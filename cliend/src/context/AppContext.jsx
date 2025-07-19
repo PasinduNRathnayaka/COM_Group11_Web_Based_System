@@ -27,29 +27,45 @@ export const AppContextProvider = ({ children }) => {
 
   // Validate token whenever user changes
   useEffect(() => {
-  const validateToken = async () => {
-    if (!initialUser) return;  // if no logged in user, skip
+    const validateToken = async () => {
+      if (!initialUser) return;  // if no logged in user, skip
 
-    try {
-      // Decode token expiry time
-      const { exp } = jwtDecode.default(initialUser.token); // exp is in seconds
+      try {
+        // Decode token expiry time
+        const { exp } = jwtDecode.default(initialUser.token); // exp is in seconds
 
-      // If token expired, throw error
-      if (Date.now() >= exp * 1000) throw new Error('token expired');
+        // If token expired, throw error
+        if (Date.now() >= exp * 1000) throw new Error('token expired');
 
-      // Optional: server-side token validation
-      await axios.get('/api/user/validate-token', {
-        headers: { Authorization: `Bearer ${initialUser.token}` },
-      });
-    } catch (err) {
-      console.warn('🔐 Token invalid/expired – logging out');
-      setUser(null);  // log out user if invalid
-    }
-  };
+        // Optional: server-side token validation
+        await axios.get('/api/user/validate-token', {
+          headers: { Authorization: `Bearer ${initialUser.token}` },
+        });
 
-  validateToken();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+        // ✅ UPDATE: Fetch fresh user profile data on app load
+        const profileResponse = await axios.get('/api/user/profile', {
+          headers: { Authorization: `Bearer ${initialUser.token}` },
+        });
+
+        if (profileResponse.data.success) {
+          // Update user with fresh data from server (including profilePic)
+          const updatedUser = {
+            ...initialUser,
+            ...profileResponse.data.user
+          };
+          _setUser(updatedUser); // Use _setUser to avoid localStorage loop
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+
+      } catch (err) {
+        console.warn('🔐 Token invalid/expired – logging out');
+        setUser(null);  // log out user if invalid
+      }
+    };
+
+    validateToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Other states
   const [isSeller, setIsSeller] = useState(false);
