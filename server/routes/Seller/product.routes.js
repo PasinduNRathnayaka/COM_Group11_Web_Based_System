@@ -70,5 +70,36 @@ router.get("/category/:categoryName", async (req, res) => {
   }
 });
 
+// GET /api/products/:id - Get Single Product by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let product;
+    
+    // Try to find by MongoDB _id first
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      product = await Product.findById(id);
+    }
+    
+    // If not found, try by productId or productName
+    if (!product) {
+      product = await Product.findOne({
+        $or: [
+          { productId: id },
+          { productName: { $regex: id.replace(/-/g, ' '), $options: 'i' } }
+        ]
+      });
+    }
+    
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    res.json(product);
+  } catch (err) {
+    console.error('❌ Error fetching product:', err.message);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
 
 export default router;
