@@ -35,6 +35,7 @@ import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
 import CategoryProductList from './pages/seller/CategoryProductList';
 import EditEmployeeForm from './pages/seller/EditEmployeeForm';
+import EditProductForm from './pages/seller/EditProductPage';
 
 // DEF01
 //new
@@ -125,7 +126,8 @@ const handleSignInClick = () => {
             <Route path="orders" element={<Orders />} />
             <Route path="mark-attendence" element={<MarkAttendance />} />
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
-            
+            <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
+
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
           </Route>
