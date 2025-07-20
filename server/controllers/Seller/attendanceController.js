@@ -13,30 +13,40 @@ export const markAttendance = async (req, res) => {
     const today = getToday();
     let attendance = await Attendance.findOne({ employee: employee._id, date: today });
 
-    if (!attendance) {
-      if (type === 'checkIn') {
+    if (type === 'checkIn') {
+      if (attendance) {
+        if (attendance.checkIn) {
+          return res.status(400).json({ message: 'Already checked in today' });
+        } else {
+          attendance.checkIn = new Date().toLocaleTimeString();
+        }
+      } else {
         attendance = new Attendance({
           employee: employee._id,
           date: today,
           checkIn: new Date().toLocaleTimeString(),
         });
-      } else {
-        return res.status(400).json({ message: 'Check-in first' });
-      }
-    } else {
-      if (type === 'checkOut') {
-        if (attendance.checkOut) return res.status(400).json({ message: 'Already checked out' });
-        attendance.checkOut = new Date().toLocaleTimeString();
-      } else {
-        return res.status(400).json({ message: 'Already checked in' });
       }
     }
 
+    if (type === 'checkOut') {
+      if (!attendance) {
+        return res.status(400).json({ message: 'Check-in first before checking out' });
+      }
+      if (attendance.checkOut) {
+        return res.status(400).json({ message: 'Already checked out today' });
+      }
+      attendance.checkOut = new Date().toLocaleTimeString();
+    }
+
     await attendance.save();
-    res.status(200).json({ message: 'Attendance updated', attendance });
+    res.status(200).json({
+      message: `Successfully ${type === 'checkIn' ? 'checked in' : 'checked out'}`,
+      attendance,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error while marking attendance' });
   }
 };
 
