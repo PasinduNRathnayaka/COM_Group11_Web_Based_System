@@ -111,7 +111,7 @@ const EditProductForm = () => {
       }
 
       alert("✅ Product updated successfully!");
-      navigate("/products");
+      navigate("/seller/product-list");
     } catch (err) {
       console.error("Update error:", err);
       alert("❌ Error updating product.");
@@ -280,10 +280,10 @@ const EditProductForm = () => {
 
       {/* Buttons */}
       <div className="flex justify-end gap-4 mt-6">
-        <button type="submit" className="bg-black text-white px-6 py-2 rounded">
+        <button type="submit" className="bg-black text-white px-6 py-2 rounded" onClick={() => navigate("/seller/product-list")}>
           UPDATE
         </button>
-        <button type="button" className="border px-6 py-2 rounded" onClick={() => navigate("/products")}>
+        <button type="button" className="border px-6 py-2 rounded" onClick={() => navigate("/seller/product-list")}>
           CANCEL
         </button>
       </div>
