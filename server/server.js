@@ -11,7 +11,7 @@ import categoryRoutes from './routes/Seller/category.routes.js';
 import employeeRoutes from './routes/Seller/employee.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
-
+import attendanceRoutes from './routes/Seller/attendance.routes.js';
 
 const app = express();
 dotenv.config();
@@ -41,6 +41,7 @@ app.use(
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 app.use('/api/user', userRoutes);
 
