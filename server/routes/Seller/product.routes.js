@@ -82,6 +82,61 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
+// PUT /api/products/:id - Update Product with optional new image
+router.put('/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      productId,
+      productName,
+      description,
+      category,
+      brand,
+      code,
+      stock,
+      regularPrice,
+      salePrice,
+      tags,
+      imageRemoved
+    } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    if (imageRemoved === 'true' && product.image) {
+      const imagePath = path.join(process.cwd(), 'uploads', product.image.replace('/uploads/', ''));
+      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+      product.image = null;
+    }
+
+    if (req.file) {
+      if (product.image) {
+        const oldImagePath = path.join(process.cwd(), 'uploads', product.image.replace('/uploads/', ''));
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      }
+      product.image = `/uploads/employees/Product/${req.file.filename}`;
+    }
+
+    product.productId = productId;
+    product.productName = productName;
+    product.description = description;
+    product.category = category;
+    product.brand = brand;
+    product.code = code;
+    product.stock = Number(stock);
+    product.regularPrice = Number(regularPrice);
+    product.salePrice = Number(salePrice);
+    product.tags = tags;
+
+    await product.save();
+
+    res.status(200).json({ message: 'Product updated', product });
+  } catch (err) {
+    console.error('❌ Error updating product:', err);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
 // Helper to add full URLs for images and qrPath fields
 function addFullUrls(products, req) {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -123,8 +178,6 @@ router.delete('/:id', async (req, res) => {
   try {
     const productId = req.params.id;
 
-    // Optional: delete image and QR files from disk if needed here
-
     const deleted = await Product.findByIdAndDelete(productId);
     if (!deleted) return res.status(404).json({ error: "Product not found" });
 
@@ -135,5 +188,15 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// GET /api/products/:id - Get product by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 
 export default router;
