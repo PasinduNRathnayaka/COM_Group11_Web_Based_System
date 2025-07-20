@@ -1,10 +1,7 @@
-import Product from '../../models/Seller/Product.model.js';
-import { generateQR } from '../../utils/generateQR.js';
-
-export const createProduct = async (req, res) => {
+export const updateProduct = async (req, res) => {
   try {
-    // req.body contains product fields from the form
-    // req.file contains the uploaded image file info (via multer)
+    const { id } = req.params;
+
     const {
       productId,
       productName,
@@ -18,58 +15,43 @@ export const createProduct = async (req, res) => {
       tags,
     } = req.body;
 
-    // Image file path (stored in uploads)
-    const image = req.file ? `/uploads/employees/Product/${req.file.filename}` : null;
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) return res.status(404).json({ error: 'Product not found' });
 
-    // Generate QR code text (customize as needed)
-    const qrText = `Product ID: ${productId}`;
+    // Handle image update
+    if (req.file) {
+      // Delete old image
+      if (existingProduct.image) {
+        const oldImagePath = path.join('backend', existingProduct.image);
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      }
 
-    // Generate QR code image file path
-    const qrFilename = `${productId}-qr.png`;
-    const qrPath = await generateQR(qrText, qrFilename, 'Product');
+      // Save new image
+      existingProduct.image = `/uploads/employees/Product/${req.file.filename}`;
+    }
 
-    // Create product document with image and qrPath
-    const product = new Product({
-      productId,
-      productName,
-      description,
-      category,
-      brand,
-      code,
-      stock,
-      regularPrice,
-      salePrice,
-      tags,
-      image,
-      qrPath,
-    });
+    // Update product fields
+    existingProduct.productId = productId;
+    existingProduct.productName = productName;
+    existingProduct.description = description;
+    existingProduct.category = category;
+    existingProduct.brand = brand;
+    existingProduct.code = code;
+    existingProduct.stock = Number(stock);
+    existingProduct.regularPrice = Number(regularPrice);
+    existingProduct.salePrice = Number(salePrice);
+    existingProduct.tags = tags;
 
-    await product.save();
+    // Regenerate QR if productId changed
+    const newQRFilename = `${productId}-qr.png`;
+    const newQRPath = await generateQR(`Product ID: ${productId}`, newQRFilename, 'Product');
+    existingProduct.qrPath = newQRPath;
 
-    res.status(201).json({ message: 'Product created', product });
+    await existingProduct.save();
+
+    res.json({ message: 'Product updated successfully', product: existingProduct });
   } catch (err) {
-    console.error('Create product error:', err);
-    res.status(500).json({ error: 'Failed to create product', details: err.message });
-  }
-};
-
-// Get All Products
-export const getProducts = async (req, res) => {
-  try {
-    const products = await Product.find().sort({ createdAt: -1 });
-
-    // Assuming your backend runs on localhost:4000 — adjust if different
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-
-    // Map products to add full URLs for image and qrPath
-    const productsWithFullPaths = products.map((product) => ({
-      ...product.toObject(),
-      image: product.image ? baseUrl + product.image : null,
-      qrPath: product.qrPath ? baseUrl + product.qrPath : null,
-    }));
-
-    res.status(200).json(productsWithFullPaths);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch products' });
+    console.error('❌ Error updating product:', err.message);
+    res.status(500).json({ error: 'Failed to update product' });
   }
 };
