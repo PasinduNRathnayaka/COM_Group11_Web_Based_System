@@ -123,7 +123,7 @@ const OnlineEmployeeLayout = () => {
   { name: "Customer Replies", path: "/online_employee/replies", icon: <FaComments /> },
   { name: "Order List", path: "/online_employee/order-list", icon: <FaList /> },
   { name: "Order Details", path: "/online_employee/order-details", icon: <FaInfoCircle /> },
-  { name: "Back", path: "/online_employee", icon: <FaArrowLeft /> }, // assuming this is the target for the BACK button
+  
 ];
 
   return (
