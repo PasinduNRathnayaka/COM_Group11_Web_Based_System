@@ -1,8 +1,10 @@
-// ProductCard.jsx
 import React from "react";
 import { ArrowUp, Download, Pencil, Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const ProductCard = ({ product, onDelete, onEdit }) => {
+const ProductCard = ({ product, onDelete }) => {
+  const navigate = useNavigate();
+
   const imageUrl = product.image || "/placeholder.png";
   const qrUrl = product.qrPath || null;
 
@@ -17,6 +19,18 @@ const ProductCard = ({ product, onDelete, onEdit }) => {
 
   return (
     <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm transition-all hover:shadow-lg space-y-3">
+      {/* QR first */}
+      {qrUrl && (
+        <div className="flex justify-center">
+          <img
+            src={qrUrl}
+            alt={`${product.productName} QR code`}
+            className="w-24 h-24 object-contain"
+          />
+        </div>
+      )}
+
+      {/* Image + Info */}
       <div className="flex items-start gap-4">
         <img
           src={imageUrl}
@@ -34,16 +48,7 @@ const ProductCard = ({ product, onDelete, onEdit }) => {
         </div>
       </div>
 
-      {qrUrl && (
-        <div className="flex justify-center">
-          <img
-            src={qrUrl}
-            alt={`${product.productName} QR code`}
-            className="w-24 h-24 object-contain"
-          />
-        </div>
-      )}
-
+      {/* Description */}
       <div>
         <p className="text-sm font-semibold text-gray-800">Description</p>
         <p className="text-xs text-gray-500">
@@ -52,6 +57,7 @@ const ProductCard = ({ product, onDelete, onEdit }) => {
         </p>
       </div>
 
+      {/* Stats Bar */}
       <div className="bg-gray-50 border rounded-lg p-3 space-y-2">
         <div className="flex justify-between text-xs font-medium text-gray-600">
           <span className="flex items-center gap-1">
@@ -89,7 +95,7 @@ const ProductCard = ({ product, onDelete, onEdit }) => {
           </button>
         )}
         <button
-          onClick={() => onEdit(product)}
+          onClick={() => navigate(`/seller/edit-product/${product._id}`)}
           className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-4 py-1 rounded-full shadow flex items-center gap-1"
         >
           <Pencil className="w-4 h-4" /> Edit
