@@ -119,7 +119,7 @@ const EmployeeLayout = () => {
     { name: "Check Payment", path: "/employee/salary", icon: <FaMoneyCheckAlt /> },
     { name: "Apply For Leave", path: "/employee/leave", icon: <FaPaperPlane /> },
     { name: "Download ID", path: "/employee/download_id", icon: <FaFileDownload /> },
-    { name: "Back", path: "/employee", icon: <FaArrowLeft /> },
+   
    // assuming this is the target for the BACK button
   
 ];
