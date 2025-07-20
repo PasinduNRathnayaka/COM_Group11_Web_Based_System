@@ -3,23 +3,182 @@ import { Link } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
 
 import RateUsPopup from '../components/RateUsPopup'; 
-import { useState } from 'react';
-
-import { useEffect } from 'react';
-
-
+import { useState, useEffect } from 'react';
 
 const MainBanner = () => {
 
 const { user } = useAppContext();
 
 const [showRatePopup, setShowRatePopup] = useState(false);
+const [products, setProducts] = useState([]);
+const [categories, setCategories] = useState([]);
+const [loading, setLoading] = useState(true);
+const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+// Fetch products from database
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+      } else {
+        console.error('Failed to fetch products');
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
+// Fetch categories from database
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      } else {
+        console.error('Failed to fetch categories');
+        // Fallback to static categories if API fails
+        setCategories(getStaticCategories());
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to static categories if API fails
+      setCategories(getStaticCategories());
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  fetchCategories();
+}, []);
 
 useEffect(() => {
   if (user) {
     setShowRatePopup(false);
   }
 }, [user]);
+
+// Fallback static categories (in case API fails)
+const getStaticCategories = () => [
+  { name: 'Engine', image: assets.Bugatti_Chiron_Engine, category: 'engine', _id: 'static-engine' },
+  { name: 'Brakes', image: assets.brakes_suspension, category: 'brakes', _id: 'static-brakes' },
+  { name: 'Tires', image: assets.Tires_and_Wheels, category: 'tires', _id: 'static-tires' },
+  { name: 'Exterior', image: assets.Exterior_and_Body_parts, category: 'exterior', _id: 'static-exterior' },
+  { name: 'Interior', image: assets.Interior, category: 'interior', _id: 'static-interior' },
+  { name: 'Filters', image: assets.Filters, category: 'filters', _id: 'static-filters' },
+  { name: 'Lights', image: assets.lights, category: 'lights', _id: 'static-lights' },
+  { name: 'Exhaust', image: assets.exhaust, category: 'exhaust', _id: 'static-exhaust' },
+];
+
+// Helper function to get random products
+const getRandomProducts = (count = 12) => {
+  if (products.length === 0) return [];
+  
+  const shuffled = [...products].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
+
+// Helper function to render star rating
+const renderStarRating = (rating = 4) => {
+  const stars = Array.from({ length: 5 }, (_, i) => (
+    i < rating ? '★' : '☆'
+  )).join('');
+  return stars;
+};
+
+// Helper function to format price
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('en-LK').format(price);
+};
+
+// Product card component to avoid repetition
+const ProductCard = ({ product, isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="w-24 h-24 mx-auto mb-3 bg-gray-200 animate-pulse rounded"></div>
+        <div className="h-4 bg-gray-200 animate-pulse rounded mb-2"></div>
+        <div className="h-3 bg-gray-200 animate-pulse rounded mb-1"></div>
+        <div className="h-3 bg-gray-200 animate-pulse rounded w-16 mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (!product) return null;
+
+  const productPrice = product.salePrice || product.regularPrice || 0;
+  const productImage = product.image ? `http://localhost:5000${product.image}` : assets.Airfilter;
+  
+  return (
+    <div className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer">
+      <Link to={`/product/${product._id}`}>
+        <img
+          src={productImage}
+          alt={product.productName || 'Product'}
+          className="w-24 h-24 mx-auto mb-3 object-contain"
+          onError={(e) => {
+            e.target.src = assets.Airfilter; // Fallback image
+          }}
+        />
+        <p className="font-medium text-sm line-clamp-2" title={product.productName}>
+          {product.productName || 'Unknown Product'}
+        </p>
+        <p className="text-sm text-gray-600 mt-1">Rs {formatPrice(productPrice)}</p>
+        <p className="text-yellow-500 text-sm">{renderStarRating()}</p>
+      </Link>
+    </div>
+  );
+};
+
+// Category card component with loading state
+const CategoryCard = ({ category, isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4 text-center">
+        <div className="w-full bg-gray-200 animate-pulse rounded mb-2" style={{ height: '150px' }}></div>
+        <div className="h-6 bg-gray-200 animate-pulse rounded"></div>
+      </div>
+    );
+  }
+
+  if (!category) return null;
+
+  // Handle both database categories (with image URL) and static fallback categories
+  const categoryImage = category.image 
+    ? (category.image.startsWith('http') ? category.image : `http://localhost:5000${category.image}`)
+    : assets.Airfilter; // Default fallback image
+
+  const categorySlug = category.slug || category.category || category.name.toLowerCase();
+  
+  return (
+    <Link
+      to={`/products?category=${categorySlug}`}
+      className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col"
+    >
+      <div className="flex-grow mb-2">
+        <img
+          src={categoryImage}
+          alt={category.name}
+          className="w-full h-full object-cover rounded"
+          style={{ maxHeight: '150px', width: '100%' }}
+          onError={(e) => {
+            e.target.src = assets.Airfilter; // Fallback image
+          }}
+        />
+      </div>
+      <p className="text-lg font-semibold">{category.name}</p>
+    </Link>
+  );
+};
 
   return (
     <>
@@ -44,7 +203,7 @@ useEffect(() => {
             className="text-sm text-primary hover:underline font-semibold"
             onClick={() => setShowRatePopup(true)}
           >
-            We’d love your feedback! Rate us & help us improve →
+            We'd love your feedback! Rate us & help us improve →
           </button>
         </div>
       )}
@@ -102,35 +261,16 @@ useEffect(() => {
   </h1>
 
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-    {[
-      { name: 'Engine', image: assets.Bugatti_Chiron_Engine },
-      { name: 'Brakes', image: assets.brakes_suspension },
-      { name: 'Tires', image: assets.Tires_and_Wheels },
-      { name: 'Exterior', image: assets.Exterior_and_Body_parts },
-      { name: 'Interior', image: assets.Interior },
-      { name: 'Filters', image: assets.Filters },
-      { name: 'Lights', image: assets.lights },
-      { name: 'Exhaust', image: assets.exhaust },
-    ].map((cat, i) => (
-      <div
-        key={i}
-        className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col"
-      >
-        <div className="flex-grow mb-2">
-          <img
-            src={cat.image}
-            alt={cat.name}
-            className="w-full h-full object-cover rounded"
-            style={{ maxHeight: '150px', width: '100%' }} // adjust maxHeight as you want
-          />
-        </div>
-        <p className="text-lg font-semibold">{cat.name}</p>
-      </div>
-    ))}
+    {categoriesLoading
+      ? Array(8).fill(0).map((_, i) => (
+          <CategoryCard key={i} isLoading={true} />
+        ))
+      : categories.map((category) => (
+          <CategoryCard key={category._id || category.category} category={category} />
+        ))
+    }
   </div>
 </div>
-
-
 
     {/* Related Products */}
     <div className="px-4 mt-16 mb-20">
@@ -139,33 +279,19 @@ useEffect(() => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-        {Array(12).fill(0).map((_, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer"
-          >
-
-          <Link to="/product/airfilter">
-
-
-            <img
-              src={assets.Airfilter}
-              alt="Airfilter"
-              className="w-24 h-24 mx-auto mb-3 object-contain"
-            />
-            <p className="font-medium text-sm">Airfilter</p>
-            <p className="text-sm text-gray-600 mt-1">Rs 2500</p>
-            <p className="text-yellow-500 text-sm">★★★★☆</p>
-
-          </Link>
-
-          </div>
-        ))}
+        {loading
+          ? Array(12).fill(0).map((_, i) => (
+              <ProductCard key={i} isLoading={true} />
+            ))
+          : getRandomProducts(12).map((product, i) => (
+              <ProductCard key={product._id || i} product={product} />
+            ))
+        }
       </div>
 
       <div className="flex justify-end mt-6">
         <Link
-          to="/product"
+          to="/products"
           className="text-sm text-primary hover:underline font-semibold"
         >
           View More →
@@ -213,7 +339,7 @@ useEffect(() => {
       <p className="text-sm md:text-base font-medium leading-relaxed text-justify">
         <strong>Kamal Auto Parts</strong> is your trusted online destination for high-quality auto parts, car accessories,
         and vehicle care products in Sri Lanka. We are dedicated to providing a wide range of genuine and imported products
-        to vehicle owners, garages, and car enthusiasts across the island. Whether you’re upgrading, maintaining, or
+        to vehicle owners, garages, and car enthusiasts across the island. Whether you're upgrading, maintaining, or
         repairing – Kamal Auto Parts is here to deliver reliability, performance, and value, all in one place.
       </p>
     </div>
@@ -229,31 +355,14 @@ useEffect(() => {
   </h1>
 
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-    {[
-      { name: 'Engine', image: assets.Bugatti_Chiron_Engine },
-      { name: 'Brakes', image: assets.brakes_suspension },
-      { name: 'Tires', image: assets.Tires_and_Wheels },
-      { name: 'Exterior', image: assets.Exterior_and_Body_parts },
-      { name: 'Interior', image: assets.Interior },
-      { name: 'Filters', image: assets.Filters },
-      { name: 'Lights', image: assets.lights },
-      { name: 'Exhaust', image: assets.exhaust },
-    ].map((cat, i) => (
-      <div
-        key={i}
-        className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer"
-      >
-        <div className="flex-grow mb-2">
-        <img
-          src={cat.image}
-          alt={cat.name}
-           className="w-full h-full object-cover rounded"
-            style={{ maxHeight: '150px', width: '100%' }}   
-        />
-        </div>
-        <p className="text-lg font-semibold">{cat.name}</p>
-      </div>
-    ))}
+    {categoriesLoading
+      ? Array(8).fill(0).map((_, i) => (
+          <CategoryCard key={i} isLoading={true} />
+        ))
+      : categories.map((category) => (
+          <CategoryCard key={category._id || category.category} category={category} />
+        ))
+    }
   </div>
 </div>
 
@@ -264,28 +373,14 @@ useEffect(() => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-        {Array(12).fill(0).map((_, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer"
-          >
-
-          <Link to="/product/airfilter">
-
-
-            <img
-              src={assets.Airfilter}
-              alt="Airfilter"
-              className="w-24 h-24 mx-auto mb-3 object-contain"
-            />
-            <p className="font-medium text-sm">Airfilter</p>
-            <p className="text-sm text-gray-600 mt-1">Rs 2500</p>
-            <p className="text-yellow-500 text-sm">★★★★☆</p>
-
-          </Link>
-
-          </div>
-        ))}
+        {loading
+          ? Array(12).fill(0).map((_, i) => (
+              <ProductCard key={i} isLoading={true} />
+            ))
+          : getRandomProducts(12).map((product, i) => (
+              <ProductCard key={product._id || i} product={product} />
+            ))
+        }
       </div>
 
       <div className="flex justify-end mt-6">

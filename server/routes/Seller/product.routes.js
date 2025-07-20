@@ -173,6 +173,7 @@ router.get('/category/:categoryName', async (req, res) => {
   }
 });
 
+
 // DELETE /api/products/:id - Delete a product by ID
 router.delete('/:id', async (req, res) => {
   try {
@@ -196,6 +197,7 @@ router.get('/:id', async (req, res) => {
     res.json(product);
   } catch (err) {
     res.status(500).json({ message: 'Server Error' });
+
   }
 });
 
