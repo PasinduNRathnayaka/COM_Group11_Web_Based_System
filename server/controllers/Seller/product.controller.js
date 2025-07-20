@@ -1,22 +1,57 @@
-import Product from '../../models/Seller/Product.model.js';
-
-// Create Product
-export const createProduct = async (req, res) => {
+export const updateProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
-    await product.save();
-    res.status(201).json({ message: 'Product created', product });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create product', details: err.message });
-  }
-};
+    const { id } = req.params;
 
-// Get All Products
-export const getProducts = async (req, res) => {
-  try {
-    const products = await Product.find().sort({ createdAt: -1 });
-    res.status(200).json(products);
+    const {
+      productId,
+      productName,
+      description,
+      category,
+      brand,
+      code,
+      stock,
+      regularPrice,
+      salePrice,
+      tags,
+    } = req.body;
+
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) return res.status(404).json({ error: 'Product not found' });
+
+    // Handle image update
+    if (req.file) {
+      // Delete old image
+      if (existingProduct.image) {
+        const oldImagePath = path.join('backend', existingProduct.image);
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      }
+
+      // Save new image
+      existingProduct.image = `/uploads/employees/Product/${req.file.filename}`;
+    }
+
+    // Update product fields
+    existingProduct.productId = productId;
+    existingProduct.productName = productName;
+    existingProduct.description = description;
+    existingProduct.category = category;
+    existingProduct.brand = brand;
+    existingProduct.code = code;
+    existingProduct.stock = Number(stock);
+    existingProduct.regularPrice = Number(regularPrice);
+    existingProduct.salePrice = Number(salePrice);
+    existingProduct.tags = tags;
+
+    // Regenerate QR if productId changed
+    const newQRFilename = `${productId}-qr.png`;
+    const newQRPath = await generateQR(`Product ID: ${productId}`, newQRFilename, 'Product');
+    existingProduct.qrPath = newQRPath;
+
+    await existingProduct.save();
+
+    res.json({ message: 'Product updated successfully', product: existingProduct });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch products' });
+    console.error('❌ Error updating product:', err.message);
+    res.status(500).json({ error: 'Failed to update product' });
   }
 };
