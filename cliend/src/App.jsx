@@ -37,6 +37,7 @@ import CategoryProductList from './pages/seller/CategoryProductList';
 import EditEmployeeForm from './pages/seller/EditEmployeeForm';
 import EditProductForm from './pages/seller/EditProductPage';
 
+import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
 // DEF01
 //new
 import SidebarLayout from "./components/SidebarLayout";
@@ -68,7 +69,7 @@ import DownloadID from "./pages/Employee/DownloadID";
 
 const App = () => {
   const location = useLocation();
-  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee");
+  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee")  || location.pathname.startsWith("/attendance-scanner");
   const { isSeller, showUserLogin, navigate, setShowUserLogin } = useAppContext(); //new
 //new
 const handleSignInClick = () => {     
@@ -101,6 +102,7 @@ const handleSignInClick = () => {
 
           <Route path="/contact" element={<Contact />} />
 
+          <Route path="/attendance-scanner" element={<AttendanceScanner />} />
 
         </Routes>
       </div>
