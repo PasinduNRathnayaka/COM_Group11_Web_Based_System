@@ -23,7 +23,7 @@ const AddProductForm = () => {
 
   const [mainImageFile, setMainImageFile] = useState(null);
 
-  // Fetch categories from backend
+  // Fetch categories
   useEffect(() => {
     fetch("http://localhost:4000/api/categories")
       .then((res) => res.json())
@@ -65,9 +65,7 @@ const AddProductForm = () => {
 
       if (!res.ok) throw new Error("Failed to save product");
 
-      const result = await res.json();
       alert("✅ Product saved!");
-      console.log(result);
 
       // Reset form
       setForm({
@@ -118,6 +116,26 @@ const AddProductForm = () => {
     }
   };
 
+  const handleDeleteCategory = async (catId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this category?");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/categories/${catId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Delete failed");
+
+      setCategories((prev) => prev.filter((cat) => cat._id !== catId));
+      if (form.category === catId) setForm((prev) => ({ ...prev, category: "" }));
+      alert("✅ Category deleted.");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to delete category");
+    }
+  };
+
   return (
     <>
       <form onSubmit={handleSubmit} className="min-h-screen bg-gray-50 p-6 space-y-8">
@@ -149,23 +167,37 @@ const AddProductForm = () => {
 
             <div>
               <label className="block font-medium mb-1">Category</label>
-              <select
-                name="category"
-                value={form.category}
-                onChange={(e) => {
-                  if (e.target.value === "__add__") setShowCatModal(true);
-                  else handleChange(e);
-                }}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">Select category</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-                <option value="__add__">+ Add new category</option>
-              </select>
+              <div className="flex gap-2">
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={(e) => {
+                    if (e.target.value === "__add__") setShowCatModal(true);
+                    else setForm((prev) => ({ ...prev, category: e.target.value }));
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">Select category</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  <option value="__add__">+ Add new category</option>
+                </select>
+                {form.category && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const catToDelete = categories.find((c) => c.name === form.category);
+                      if (catToDelete) handleDeleteCategory(catToDelete._id);
+                    }}
+                    className="text-red-500 border border-red-300 rounded px-3 hover:bg-red-100"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
 
             <div>
