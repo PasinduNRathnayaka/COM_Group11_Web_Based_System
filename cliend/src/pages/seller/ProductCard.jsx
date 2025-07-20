@@ -19,31 +19,34 @@ const ProductCard = ({ product, onDelete }) => {
 
   return (
     <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm transition-all hover:shadow-lg space-y-3">
-      {/* QR first */}
-      {qrUrl && (
-        <div className="flex justify-center">
-          <img
-            src={qrUrl}
-            alt={`${product.productName} QR code`}
-            className="w-24 h-24 object-contain"
-          />
-        </div>
-      )}
-
-      {/* Image + Info */}
-      <div className="flex items-start gap-4">
+      {/* Image first (swapped position) */}
+      <div className="flex justify-center">
         <img
           src={imageUrl}
           alt={product.productName}
-          className="w-16 h-16 object-cover rounded-md shadow"
+          className="w-24 h-24 object-cover rounded-md shadow"
         />
+      </div>
+
+      {/* QR and Info (QR swapped) */}
+      <div className="flex items-start gap-4">
+        {qrUrl && (
+          <img
+            src={qrUrl}
+            alt={`${product.productName} QR code`}
+            className="w-16 h-16 object-contain"
+          />
+        )}
         <div className="flex-1">
           <h4 className="text-base font-semibold text-gray-800">
             {product.productName}
           </h4>
           <p className="text-xs text-gray-500">{product.category}</p>
           <p className="text-sm font-bold text-gray-800">
-            Rs: <span className="text-black">{product.salePrice || product.regularPrice}</span>
+            Rs:{" "}
+            <span className="text-black">
+              {product.salePrice || product.regularPrice}
+            </span>
           </p>
         </div>
       </div>
