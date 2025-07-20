@@ -8,18 +8,30 @@ const ProductCard = ({ product, onDelete }) => {
   const imageUrl = product.image || "/placeholder.png";
   const qrUrl = product.qrPath || null;
 
-  const handleQRDownload = () => {
-    if (qrUrl) {
+  const handleQRDownload = async () => {
+    try {
+      if (!qrUrl) return;
+
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
       const link = document.createElement("a");
-      link.href = qrUrl;
+      link.href = url;
       link.download = `${product.productName}-qr.png`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading QR code:", error);
     }
   };
 
   return (
     <div className="bg-white rounded-xl shadow p-4 w-full max-w-sm transition-all hover:shadow-lg space-y-3">
-      {/* Image first (swapped position) */}
+      {/* Product Image */}
       <div className="flex justify-center">
         <img
           src={imageUrl}
@@ -28,7 +40,7 @@ const ProductCard = ({ product, onDelete }) => {
         />
       </div>
 
-      {/* QR and Info (QR swapped) */}
+      {/* QR & Info */}
       <div className="flex items-start gap-4">
         {qrUrl && (
           <img
@@ -60,7 +72,7 @@ const ProductCard = ({ product, onDelete }) => {
         </p>
       </div>
 
-      {/* Stats Bar */}
+      {/* Stats */}
       <div className="bg-gray-50 border rounded-lg p-3 space-y-2">
         <div className="flex justify-between text-xs font-medium text-gray-600">
           <span className="flex items-center gap-1">
@@ -87,7 +99,7 @@ const ProductCard = ({ product, onDelete }) => {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Actions */}
       <div className="flex justify-end gap-2">
         {qrUrl && (
           <button
