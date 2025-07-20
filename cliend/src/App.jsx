@@ -36,7 +36,7 @@ import MarkAttendance from './pages/seller/MarkAttendence';
 import CategoryProductList from './pages/seller/CategoryProductList';
 import EditEmployeeForm from './pages/seller/EditEmployeeForm';
 import EditProductForm from './pages/seller/EditProductPage';
-
+import ViewAttendance from './pages/seller/AttendancePage'; 
 import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
 // DEF01
 //new
@@ -126,7 +126,7 @@ const handleSignInClick = () => {
             <Route path="add-employee" element={<AddEmployee />} />
             <Route path="employee-list" element={<EmployeeList />} />
             <Route path="orders" element={<Orders />} />
-            <Route path="mark-attendence" element={<MarkAttendance />} />
+            <Route path="view-attendence" element={<ViewAttendance />} />
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
             <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
 
