@@ -34,7 +34,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ✅ Serve static images
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+//app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(
   '/uploads',
   express.static('uploads', {
