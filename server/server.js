@@ -12,6 +12,8 @@ import categoryRoutes from './routes/Seller/category.routes.js';
 import employeeRoutes from './routes/Seller/employee.routes.js';
 import userRoutes from './routes/userRoutes.js';
 
+import orderRoutes from './routes/OnlineEmployee/order.routes.js';
+
 // Setup __dirname (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,6 +54,8 @@ app.use('/api/user', userRoutes);
 
 app.use('/api/employees', employeeRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use('/api/order', orderRoutes);
 
 
 // Default route
