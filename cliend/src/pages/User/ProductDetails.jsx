@@ -24,6 +24,12 @@ const ProductDetails = () => {
   const [showReviewPopup, setShowReviewPopup] = useState(false);
   const [reviews, setReviews] = useState([]); // local review state
 
+const getImageUrl = (path) => {
+    if (!path) return assets.wheel1;
+    return path.startsWith('http') ? path : `http://localhost:5000${path}`;
+  };
+
+
   // Fetch product by ID
   useEffect(() => {
     const fetchProduct = async () => {
@@ -59,10 +65,9 @@ const ProductDetails = () => {
           price: foundProduct.salePrice || foundProduct.regularPrice,
           discount: foundProduct.regularPrice - (foundProduct.salePrice || foundProduct.regularPrice),
           images: [
-            foundProduct.image ? `http://localhost:5000${foundProduct.image}` : assets.wheel1,
-            ...foundProduct.gallery?.map(img => `http://localhost:5000${img}`) || [],
-            // Add default images if gallery is empty
-            ...(foundProduct.gallery?.length < 2 ? [assets.wheel2, assets.wheel3] : [])
+            getImageUrl(foundProduct.image),
+            ...(foundProduct.gallery?.map(getImageUrl) || []),
+            ...(foundProduct.gallery?.length < 2 ? [{/*assets.wheel2, assets.wheel3*/}] : [])
           ],
           description: foundProduct.description || 'No description available',
           specs: [
