@@ -12,7 +12,12 @@ import employeeRoutes from './routes/Seller/employee.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
 
+import attendanceRoutes from './routes/Seller/attendance.routes.js';
+import salaryRoutes from './routes/Seller/salary.routes.js';
+
+
 import orderRoutes from './routes/OnlineEmployee/order.routes.js';
+
 
 
 const app = express();
@@ -43,6 +48,9 @@ app.use(
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/salary', salaryRoutes);
+
 
 app.use('/api/user', userRoutes);
 

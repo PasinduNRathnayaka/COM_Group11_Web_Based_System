@@ -114,7 +114,7 @@ const SellerLayout = () => {
     { name: "Product List", path: "/seller/product-list", icon: productListIcon },
     { name: "Add Employee", path: "/seller/add-employee", icon: addEmployeeIcon },
     { name: "Employee List", path: "/seller/employee-list", icon: employeeListIcon },
-    { name: "Mark Attendance", path: "/seller/mark-attendence", icon: attendanceIcon },
+    { name: "View Attendance", path: "/seller/view-attendence", icon: attendanceIcon },
     { name: "Orders", path: "/seller/orders", icon: ordersIcon },
   ];
 

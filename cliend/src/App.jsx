@@ -36,6 +36,9 @@ import MarkAttendance from './pages/seller/MarkAttendence';
 import CategoryProductList from './pages/seller/CategoryProductList';
 import EditEmployeeForm from './pages/seller/EditEmployeeForm';
 import EditProductForm from './pages/seller/EditProductPage';
+import ViewAttendance from './pages/seller/AttendancePage'; 
+import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
+import MonthlySalary from './pages/Reports/MonthlySalary';
 
 // DEF01
 //new
@@ -68,7 +71,7 @@ import DownloadID from "./pages/Employee/DownloadID";
 
 const App = () => {
   const location = useLocation();
-  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee");
+  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee")  || location.pathname.startsWith("/attendance-scanner");
   const { isSeller, showUserLogin, navigate, setShowUserLogin } = useAppContext(); //new
 //new
 const handleSignInClick = () => {     
@@ -101,6 +104,7 @@ const handleSignInClick = () => {
 
           <Route path="/contact" element={<Contact />} />
 
+          <Route path="/attendance-scanner" element={<AttendanceScanner />} />
 
         </Routes>
       </div>
@@ -124,9 +128,10 @@ const handleSignInClick = () => {
             <Route path="add-employee" element={<AddEmployee />} />
             <Route path="employee-list" element={<EmployeeList />} />
             <Route path="orders" element={<Orders />} />
-            <Route path="mark-attendence" element={<MarkAttendance />} />
+            <Route path="view-attendence" element={<ViewAttendance />} />
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
             <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
+            {/* <Route path="/monthly-salary" element={<MonthlySalary />} /> */}
 
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
