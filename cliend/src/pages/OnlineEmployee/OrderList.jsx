@@ -1,16 +1,25 @@
-import React from "react";
-import { FaCheckCircle } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const orders = new Array(10).fill({
-  product: "Lorem Ipsum",
-  orderId: "#25426",
-  date: "Nov 8th, 2023",
-  customer: "Kavin",
-  status: "Delivered",
-  amount: "Rs:200.00",
-});
+
 
 const OrderList = () => {
+  //new
+  const [orders, setOrders] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:4000/api/orders?page=${page}`)
+      .then((res) => {
+        setOrders(res.data.orders);
+        setTotalPages(res.data.totalPages);
+      })
+      .catch((err) => console.error(err));
+  }, [page]);
+  //new
+
   return (
 
   <div className="p-4">
@@ -22,33 +31,25 @@ const OrderList = () => {
       <table className="w-full text-sm table-auto border-separate border-spacing-y-2">
         <thead className="text-left text-gray-600">
           <tr>
-            <th><input type="checkbox" /></th>
-            <th>Product</th>
-            <th>Order ID</th>
-            <th>Date</th>
-            <th>Customer Name</th>
-            <th>Status</th>
-            <th>Amount</th>
+             <th className="p-2">Product</th>
+            <th className="p-2">Order ID</th>
+            <th className="p-2">Date</th>
+            <th className="p-2">Customer Name</th>
+            <th className="p-2">Status</th>
+            <th className="p-2">Amount</th>
           </tr>
         </thead>
         <tbody>
-          {orders.map((item, index) => (
-            <tr key={index} className="bg-gray-50">
-              <td><input type="checkbox" /></td>
-              <td>{item.product}</td>
-              <td>{item.orderId}</td>
-              <td>{item.date}</td>
-              <td className="flex items-center space-x-2">
-                <img src="/avatar.png" alt="avatar" className="w-6 h-6 rounded-full" />
-                <span>{item.customer}</span>
-              </td>
-              <td>
-                <span className="flex items-center text-blue-600">
-                  <FaCheckCircle className="mr-1" /> {item.status}
-                </span>
-              </td>
-              <td>{item.amount}</td>
+          {orders.map((o, i) => (
+            <tr key={i} className="text-center">
+              <td className="p-2">{o.product}</td>
+              <td className="p-2">{o.orderId}</td>
+              <td className="p-2">{new Date(o.date).toDateString()}</td>
+              <td className="p-2">{o.customerName}</td>
+              <td className="p-2 text-blue-600">{o.status}</td>
+              <td className="p-2">Rs:{o.amount.toFixed(2)}</td>
             </tr>
+            //new
           ))}
         </tbody>
       </table>
