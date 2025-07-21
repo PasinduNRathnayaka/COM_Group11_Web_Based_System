@@ -38,7 +38,7 @@ import EditEmployeeForm from './pages/seller/EditEmployeeForm';
 import EditProductForm from './pages/seller/EditProductPage';
 import ViewAttendance from './pages/seller/AttendancePage'; 
 import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
-import MonthlySalary from './pages/Reports/MonthlySalary';
+import MonthlySalary from './pages/seller/MonthlySalary';
 
 // DEF01
 //new
@@ -131,7 +131,7 @@ const handleSignInClick = () => {
             <Route path="view-attendence" element={<ViewAttendance />} />
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
             <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
-            {/* <Route path="/monthly-salary" element={<MonthlySalary />} /> */}
+            <Route path="monthly-salary" element={<MonthlySalary />} />
 
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
