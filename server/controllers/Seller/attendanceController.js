@@ -69,7 +69,7 @@ export const getAllAttendance = async (req, res) => {
 
     const records = await Attendance.find(filter)
       .populate('employee')
-      .sort({ date: -1 });
+      .sort({ date: -1, checkIn: 1 });
 
     res.json(records);
   } catch (err) {
@@ -78,7 +78,7 @@ export const getAllAttendance = async (req, res) => {
   }
 };
 
-// In attendanceController.js
+// GET FULL ATTENDANCE HISTORY BY EMPLOYEE -------------------------------
 export const getAttendanceByEmployee = async (req, res) => {
   try {
     const { empId } = req.params;
@@ -88,12 +88,11 @@ export const getAttendanceByEmployee = async (req, res) => {
 
     const records = await Attendance.find({ employee: employee._id })
       .populate('employee')
-      .sort({ date: -1 });
+      .sort({ date: -1, checkIn: 1 });
 
     res.json(records);
   } catch (err) {
-    console.error('Error:', err);
+    console.error('Error fetching employee attendance:', err);
     res.status(500).json({ message: 'Error fetching employee attendance' });
   }
 };
-
