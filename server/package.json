@@ -23,14 +23,23 @@
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "html2canvas": "^1.4.1",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.1",
+    "mongoose": "^8.16.0",
+    "multer": "^2.0.1",
+    "npm": "^11.4.2",
+
     "jsonwebtoken": "^9.0.2",
 
     "jspdf": "^3.0.1",
     "mongoose": "^8.16.4",
 
     "multer": "^2.0.2",
+
     "qrcode": "^1.5.4",
     "sharp": "^0.34.2",
+    "socket.io": "^4.8.1",
     "stripe": "^18.2.1"
   },
   "devDependencies": {
