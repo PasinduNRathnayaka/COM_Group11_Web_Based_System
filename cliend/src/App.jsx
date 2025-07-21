@@ -181,18 +181,12 @@ const handleSignInClick = () => {
          <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
-
-        
+               
           <Route path="salary" element={<CheckPayment />} />
 
           <Route path="leave" element={<ApplyLeave />} />
 
-          
-
-         
-
-         
-
+          <Route path="download-id" element={<DownloadID />} />
 
 
           <Route path="salary" element={<CheckPayment />} />

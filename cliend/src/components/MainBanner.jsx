@@ -275,7 +275,7 @@ const CategoryCard = ({ category, isLoading = false }) => {
     {/* Related Products */}
     <div className="px-4 mt-16 mb-20">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-left text-xl md:text-2xl font-bold">Related Products</h1>
+        <h1 className="text-left text-xl md:text-2xl font-bold">For You</h1>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">

@@ -11,8 +11,14 @@ import categoryRoutes from './routes/Seller/category.routes.js';
 import employeeRoutes from './routes/Seller/employee.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
+
 import attendanceRoutes from './routes/Seller/attendance.routes.js';
 import salaryRoutes from './routes/Seller/salary.routes.js';
+
+
+import orderRoutes from './routes/OnlineEmployee/order.routes.js';
+
+
 
 const app = express();
 dotenv.config();
@@ -51,6 +57,8 @@ app.use('/api/user', userRoutes);
 
 // Start Server
 connectDB();
+
+app.use('/api/order', orderRoutes);
 
 
 // Default route
