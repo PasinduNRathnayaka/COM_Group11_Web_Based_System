@@ -57,6 +57,22 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   }
 });
 
+/** --- DELETE: Remove a Category --- */
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Category.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json({ message: 'Category deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
+});
+
 /** --- GET: Fetch All Categories --- */
 router.get('/', async (req, res) => {
   try {

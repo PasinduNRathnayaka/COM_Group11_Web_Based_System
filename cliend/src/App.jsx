@@ -34,7 +34,8 @@ import EmployeeList from './pages/seller/EmployeeList';
 import Orders from './pages/seller/Orders';
 import MarkAttendance from './pages/seller/MarkAttendence'; 
 import CategoryProductList from './pages/seller/CategoryProductList';
-
+import EditEmployeeForm from './pages/seller/EditEmployeeForm';
+import EditProductForm from './pages/seller/EditProductPage';
 
 // DEF01
 //new
@@ -55,6 +56,12 @@ import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
 import Attendance from "./pages/Employee/Attendance";
 
 import CheckPayment from "./pages/Employee/CheckPayment";
+
+
+import ApplyLeave from "./pages/Employee/ApplyLeave";
+
+import DownloadID from "./pages/Employee/DownloadID";
+
 
 
 //main
@@ -118,6 +125,8 @@ const handleSignInClick = () => {
             <Route path="employee-list" element={<EmployeeList />} />
             <Route path="orders" element={<Orders />} />
             <Route path="mark-attendence" element={<MarkAttendance />} />
+            <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
+            <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
 
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
@@ -137,6 +146,11 @@ const handleSignInClick = () => {
           
           <Route path="/employee/salary" element={<CheckPayment />} />
 
+          <Route path="/employee/leave" element={<ApplyLeave />} />
+
+          <Route path="/employee/download_id" element={<DownloadID />} />
+          
+          <Route path="attendance" element={<Viewattendance />} />
 
         </Route>
 
@@ -162,7 +176,16 @@ const handleSignInClick = () => {
          <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="edit-profile" element={<EditProfile />} />
+               
           <Route path="salary" element={<CheckPayment />} />
+
+          <Route path="leave" element={<ApplyLeave />} />
+
+          <Route path="download-id" element={<DownloadID />} />
+
+
+          <Route path="salary" element={<CheckPayment />} />
+
 
         </Route>
         </Routes>

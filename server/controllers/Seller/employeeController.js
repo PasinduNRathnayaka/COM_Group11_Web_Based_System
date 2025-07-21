@@ -1,11 +1,12 @@
 import Employee from '../../models/Seller/Employee.js';
 import { generateQR } from '../../utils/generateQR.js';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 export const createEmployee = async (req, res) => {
   try {
     const { empId, name, about, category, contact, rate, address, username, password, email } = req.body;
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const qrFilename = `${empId}_qr.png`;
     const qrCodePath = await generateQR(empId, qrFilename);
@@ -20,7 +21,7 @@ export const createEmployee = async (req, res) => {
       address,
       username,
       password: hashedPassword,
-      email: email || null, // ✅ safely set null if empty
+      email: email || null,
       image: req.file ? `/uploads/employees/${req.file.filename}` : '',
       qrCode: qrCodePath,
     });
@@ -39,5 +40,46 @@ export const getEmployees = async (req, res) => {
     res.json(employees);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch employees' });
+  }
+};
+
+export const getEmployeeById = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching employee by ID' });
+  }
+};
+
+export const updateEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    const fieldsToUpdate = ['name', 'about', 'category', 'contact', 'rate', 'address', 'username', 'email'];
+    fieldsToUpdate.forEach(field => {
+      if (req.body[field] !== undefined) employee[field] = req.body[field];
+    });
+
+    if (req.file) {
+      employee.image = `/uploads/employees/${req.file.filename}`;
+    }
+
+    await employee.save();
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update employee', error: err.message });
+  }
+};
+
+export const deleteEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findByIdAndDelete(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    res.json({ message: 'Employee deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete employee', error: err.message });
   }
 };

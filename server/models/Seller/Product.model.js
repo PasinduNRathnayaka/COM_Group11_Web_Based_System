@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
-  productId: String,
+  productId: { type: String, required: true, unique: true },
   productName: String,
   description: String,
   category: String,
@@ -13,7 +13,8 @@ const productSchema = new mongoose.Schema({
   tags: String,
   image: String,
   gallery: [String],
-});
+  qrPath: String, // ← ✅ NEW FIELD
+}, { timestamps: true });
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;
