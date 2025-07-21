@@ -2,17 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const AttendancePage = () => {
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [attendanceData, setAttendanceData] = useState([]); // main list (all employees for selected date)
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0]; // YYYY-MM-DD
   });
 
-  const [viewingEmployee, setViewingEmployee] = useState(null);
-  const [employeeHistory, setEmployeeHistory] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [viewingEmployee, setViewingEmployee] = useState(null); // employee currently viewing detailed attendance for
+  const [employeeHistory, setEmployeeHistory] = useState([]); // full attendance history of viewingEmployee
+  const [selectedMonth, setSelectedMonth] = useState("all"); // filter detailed by month
 
-  // Fetch attendance records for a specific date (main list)
+  // Fetch all employees' attendance records for selected date (main list)
   const fetchAttendance = async (date) => {
     try {
       const res = await axios.get(`http://localhost:4000/api/attendance?date=${date}`);
@@ -22,7 +22,7 @@ const AttendancePage = () => {
     }
   };
 
-  // Fetch full attendance history of a single employee (for "View Attendance")
+  // Fetch full attendance history for a single employee (detailed view)
   const fetchEmployeeAttendance = async (employeeId) => {
     try {
       const res = await axios.get(`http://localhost:4000/api/attendance?employeeId=${employeeId}`);
@@ -32,28 +32,54 @@ const AttendancePage = () => {
     }
   };
 
-  // Handle clicking "View Attendance" button: set employee and load their attendance
+  // When clicking "View Attendance" for an employee
   const handleViewAttendance = (employee) => {
     setViewingEmployee(employee);
     setSelectedMonth("all");
     fetchEmployeeAttendance(employee._id);
   };
 
-  // Handle going back to main attendance list
+  // Return to main list
   const handleBack = () => {
     setViewingEmployee(null);
     setEmployeeHistory([]);
   };
 
-  // Helper to get unique attendance per date (remove duplicate dates if any)
-  const getUniqueAttendanceByDate = (records) => {
-    const map = new Map();
-    records.forEach((record) => {
-      if (!map.has(record.date)) {
-        map.set(record.date, record);
+  // Aggregate employeeHistory: group records by date,
+  // find earliest checkIn and latest checkOut per day
+  const processEmployeeHistory = (records) => {
+    const grouped = {};
+
+    records.forEach(({ date, checkIn, checkOut }) => {
+      if (!grouped[date]) {
+        grouped[date] = {
+          date,
+          checkIn: checkIn || null,
+          checkOut: checkOut || null,
+        };
+      } else {
+        // Update earliest checkIn
+        if (checkIn) {
+          if (
+            !grouped[date].checkIn ||
+            new Date(`1970-01-01T${checkIn}`) < new Date(`1970-01-01T${grouped[date].checkIn}`)
+          ) {
+            grouped[date].checkIn = checkIn;
+          }
+        }
+        // Update latest checkOut
+        if (checkOut) {
+          if (
+            !grouped[date].checkOut ||
+            new Date(`1970-01-01T${checkOut}`) > new Date(`1970-01-01T${grouped[date].checkOut}`)
+          ) {
+            grouped[date].checkOut = checkOut;
+          }
+        }
       }
     });
-    return Array.from(map.values());
+
+    return Object.values(grouped).sort((a, b) => (a.date < b.date ? 1 : -1));
   };
 
   useEffect(() => {
@@ -62,7 +88,7 @@ const AttendancePage = () => {
 
   return (
     <div className="bg-[#f3f3f3] min-h-screen p-6">
-      {/* Top bar with title and date picker */}
+      {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold">Attendance</h2>
@@ -80,7 +106,7 @@ const AttendancePage = () => {
         </div>
       </div>
 
-      {/* If viewingEmployee is set, show detailed employee attendance */}
+      {/* Detailed employee attendance view */}
       {viewingEmployee ? (
         <div className="bg-white rounded-xl p-6 shadow">
           <div className="flex items-center justify-between mb-4">
@@ -105,7 +131,7 @@ const AttendancePage = () => {
             </button>
           </div>
 
-          {/* Month Filter Dropdown */}
+          {/* Month Filter */}
           <div className="flex items-center gap-2 mb-4">
             <label className="text-sm text-gray-600">Filter by Month:</label>
             <select
@@ -138,11 +164,11 @@ const AttendancePage = () => {
               </tr>
             </thead>
             <tbody>
-              {getUniqueAttendanceByDate(employeeHistory)
+              {processEmployeeHistory(employeeHistory)
                 .filter((record) => {
                   if (selectedMonth === "all") return true;
                   const month = new Date(record.date).getMonth() + 1;
-                  return month === parseInt(selectedMonth);
+                  return month === parseInt(selectedMonth, 10);
                 })
                 .map((record, i) => (
                   <tr key={i} className="border-t">
@@ -156,7 +182,7 @@ const AttendancePage = () => {
         </div>
       ) : (
         <>
-          {/* Employee Summary Cards */}
+          {/* Employee Summary Cards (without checkIn/checkOut badges) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             {attendanceData.map((att, index) => (
               <div
@@ -170,16 +196,8 @@ const AttendancePage = () => {
                 />
                 <p className="text-sm font-semibold">{att.employee.name}</p>
                 <p className="text-xs text-gray-500">{att.employee.category}</p>
-                <div className="flex gap-2 my-2">
-                  <span className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded">
-                    IN: {att.checkIn || "--"}
-                  </span>
-                  <span className="text-xs px-3 py-1 bg-red-100 text-red-800 rounded">
-                    OUT: {att.checkOut || "--"}
-                  </span>
-                </div>
                 <button
-                  className="text-xs text-blue-600 underline"
+                  className="text-xs text-blue-600 underline mt-2"
                   onClick={() => handleViewAttendance(att.employee)}
                 >
                   View Attendance
