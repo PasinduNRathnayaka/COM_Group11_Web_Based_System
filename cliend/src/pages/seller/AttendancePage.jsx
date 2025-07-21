@@ -2,17 +2,19 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const AttendancePage = () => {
-  const [attendanceData, setAttendanceData] = useState([]); // main list (all employees for selected date)
+  const [attendanceData, setAttendanceData] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split("T")[0]; // YYYY-MM-DD
+    return today.toISOString().split("T")[0];
   });
 
-  const [viewingEmployee, setViewingEmployee] = useState(null); // employee currently viewing detailed attendance for
-  const [employeeHistory, setEmployeeHistory] = useState([]); // full attendance history of viewingEmployee
-  const [selectedMonth, setSelectedMonth] = useState("all"); // filter detailed by month
+  const [viewingEmployee, setViewingEmployee] = useState(null);
+  const [employeeHistory, setEmployeeHistory] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
 
-  // Fetch all employees' attendance records for selected date (main list)
+  const currentYear = new Date().getFullYear();
+
   const fetchAttendance = async (date) => {
     try {
       const res = await axios.get(`http://localhost:4000/api/attendance?date=${date}`);
@@ -22,7 +24,6 @@ const AttendancePage = () => {
     }
   };
 
-  // Fetch full attendance history for a single employee (detailed view)
   const fetchEmployeeAttendance = async (employeeId) => {
     try {
       const res = await axios.get(`http://localhost:4000/api/attendance?employeeId=${employeeId}`);
@@ -32,24 +33,20 @@ const AttendancePage = () => {
     }
   };
 
-  // When clicking "View Attendance" for an employee
   const handleViewAttendance = (employee) => {
     setViewingEmployee(employee);
     setSelectedMonth("all");
+    setSelectedYear("all");
     fetchEmployeeAttendance(employee._id);
   };
 
-  // Return to main list
   const handleBack = () => {
     setViewingEmployee(null);
     setEmployeeHistory([]);
   };
 
-  // Aggregate employeeHistory: group records by date,
-  // find earliest checkIn and latest checkOut per day
   const processEmployeeHistory = (records) => {
     const grouped = {};
-
     records.forEach(({ date, checkIn, checkOut }) => {
       if (!grouped[date]) {
         grouped[date] = {
@@ -58,7 +55,6 @@ const AttendancePage = () => {
           checkOut: checkOut || null,
         };
       } else {
-        // Update earliest checkIn
         if (checkIn) {
           if (
             !grouped[date].checkIn ||
@@ -67,7 +63,6 @@ const AttendancePage = () => {
             grouped[date].checkIn = checkIn;
           }
         }
-        // Update latest checkOut
         if (checkOut) {
           if (
             !grouped[date].checkOut ||
@@ -88,13 +83,12 @@ const AttendancePage = () => {
 
   return (
     <div className="bg-[#f3f3f3] min-h-screen p-6">
-      {/* Top Bar */}
+      {/* Top bar */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold">Attendance</h2>
           <p className="text-sm text-gray-500">Home &gt; Attendance</p>
         </div>
-
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-700">Select Date:</label>
           <input
@@ -106,11 +100,9 @@ const AttendancePage = () => {
         </div>
       </div>
 
-      {/* Detailed employee attendance view */}
       {viewingEmployee ? (
         <div className="bg-white rounded-xl p-6 shadow">
           <div className="flex items-center justify-between mb-4">
-            {/* Employee Info */}
             <div className="flex items-center gap-4">
               <img
                 src={`http://localhost:4000${viewingEmployee.image}`}
@@ -122,7 +114,6 @@ const AttendancePage = () => {
                 <p className="text-sm text-gray-500">{viewingEmployee.category}</p>
               </div>
             </div>
-
             <button
               onClick={handleBack}
               className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
@@ -131,29 +122,50 @@ const AttendancePage = () => {
             </button>
           </div>
 
-          {/* Month Filter */}
-          <div className="flex items-center gap-2 mb-4">
-            <label className="text-sm text-gray-600">Filter by Month:</label>
-            <select
-              className="border rounded px-2 py-1 text-sm"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              <option value="all">All</option>
-              {[...Array(12)].map((_, i) => {
-                const monthName = new Date(0, i).toLocaleString("default", {
-                  month: "long",
-                });
-                return (
-                  <option key={i} value={i + 1}>
-                    {monthName}
-                  </option>
-                );
-              })}
-            </select>
+          {/* Filters */}
+          <div className="flex items-center gap-4 mb-4">
+            <div>
+              <label className="text-sm text-gray-600">Filter by Month:</label>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                <option value="all">All</option>
+                {[...Array(12)].map((_, i) => {
+                  const monthName = new Date(0, i).toLocaleString("default", {
+                    month: "long",
+                  });
+                  return (
+                    <option key={i} value={i + 1}>
+                      {monthName}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-600">Filter by Year:</label>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+              >
+                <option value="all">All</option>
+                {[...Array(5)].map((_, i) => {
+                  const year = currentYear - i;
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
 
-          {/* Attendance History Table */}
+          {/* History table */}
           <h3 className="text-lg font-semibold mb-3">Attendance History</h3>
           <table className="w-full table-auto text-sm">
             <thead className="border-b border-gray-300 text-left">
@@ -166,9 +178,16 @@ const AttendancePage = () => {
             <tbody>
               {processEmployeeHistory(employeeHistory)
                 .filter((record) => {
-                  if (selectedMonth === "all") return true;
-                  const month = new Date(record.date).getMonth() + 1;
-                  return month === parseInt(selectedMonth, 10);
+                  const recordDate = new Date(record.date);
+                  const month = recordDate.getMonth() + 1;
+                  const year = recordDate.getFullYear();
+
+                  const monthMatch =
+                    selectedMonth === "all" || parseInt(selectedMonth) === month;
+                  const yearMatch =
+                    selectedYear === "all" || parseInt(selectedYear) === year;
+
+                  return monthMatch && yearMatch;
                 })
                 .map((record, i) => (
                   <tr key={i} className="border-t">
@@ -182,7 +201,7 @@ const AttendancePage = () => {
         </div>
       ) : (
         <>
-          {/* Employee Summary Cards (without checkIn/checkOut badges) */}
+          {/* Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             {attendanceData.map((att, index) => (
               <div
@@ -206,7 +225,7 @@ const AttendancePage = () => {
             ))}
           </div>
 
-          {/* Main Attendance List Table */}
+          {/* Table view */}
           <div className="bg-white rounded-xl p-6 shadow">
             <h3 className="text-lg font-semibold mb-4">Attendance List</h3>
             <table className="w-full table-auto text-sm">
