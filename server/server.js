@@ -13,6 +13,8 @@ import employeeRoutes from './routes/Seller/employee.routes.js';
 import userRoutes from './routes/userRoutes.js';
 
 import orderRoutes from './routes/OnlineEmployee/order.routes.js';
+import messageRoutes from './routes/OnlineEmployee/message.routes.js';
+
 
 
 const app = express();
@@ -51,6 +53,7 @@ app.use('/api/user', userRoutes);
 connectDB();
 
 app.use('/api/order', orderRoutes);
+app.use('/api/message', messageRoutes);
 
 
 // Default route
