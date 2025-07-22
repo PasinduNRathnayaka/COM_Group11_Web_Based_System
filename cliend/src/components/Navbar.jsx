@@ -32,16 +32,18 @@ const Navbar = () => {
         </Link>
         <NavLink to="/contact">Contact</NavLink>
 
-
+   {/*
         <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
           <input className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500" type="text" placeholder="Search products" />
           <img src={assets.search} alt='search' className='w-4 h-4'/>
         </div>
 
+  */}
+
         <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
           <img src={assets.cart} alt='cart' className='w-6 opacity-80' />
           <button className="absolute -top-2 -right-3 text-xs text-white bg-primary w-[18px] h-[18px] rounded-full">3</button>
-        </div>
+        </div>   
 
         {/* ✅ FIXED: Replace profile image with My Profile and Logout */}
         {!user ? (
