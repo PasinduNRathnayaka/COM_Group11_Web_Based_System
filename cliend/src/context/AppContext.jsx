@@ -72,17 +72,20 @@ export const AppContextProvider = ({ children }) => {
   const [showUserLogin, setShowUserLogin] = useState(false);
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product, qty) => {
-    setCartItems((prev) => {
-      const found = prev.find((i) => i.id === product.id);
-      if (found) {
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + qty } : i
-        );
-      }
-      return [...prev, { ...product, quantity: qty }];
-    });
-  };
+  const addToCart = (product, quantity = 1) => {
+  setCartItems((prev) => {
+    const existing = prev.find((item) => item.id === product.id);
+    if (existing) {
+      return prev.map((item) =>
+        item.id === product.id
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      );
+    }
+    return [...prev, { ...product, quantity }];
+  });
+};
+
 
   return (
     <AppContext.Provider
