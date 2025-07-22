@@ -1,4 +1,3 @@
-// src/components/LoginModel.jsx
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { assets } from '../assets/assets';
@@ -9,15 +8,14 @@ import toast from 'react-hot-toast';
 const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   const { setUser } = useAppContext();
 
-  /* ---------- local state ---------- */
-  const [step, setStep] = useState(0);      // 0 = login, 1 = email, 2 = code, 3 = reset
+  const [step, setStep] = useState(0);     
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState(['', '', '', '']);
   const [newPwd, setNewPwd] = useState('');
   const [confirmNew, setConfirmNew] = useState('');
 
-  /* ---------- login handler ---------- */
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -27,14 +25,14 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         password,
       });
 
-      // ✅ UPDATED: Store complete user data including profilePic
+      //Store complete user data 
       const userData = {
         _id: data._id,
         name: data.name,
         email: data.email,
         number: data.number,
         address: data.address,
-        profilePic: data.profilePic, // ✅ Make sure this is included
+        profilePic: data.profilePic, 
         token: data.token
       };
 
@@ -51,7 +49,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     }
   };
 
-  /* ---------- forgot‑password helpers (kept minimal) ---------- */
+  
   const handleCodeChange = (i, val) => {
     const tmp = [...code];
     tmp[i] = val;
