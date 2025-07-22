@@ -156,8 +156,17 @@ const getImageUrl = (path) => {
       toast.error(`Only ${product.stock} items available.`);
       return;
     }
+
+    const cartItem = {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    quantity,
+    image: product.images?.[0] || '', // ✅ Use formatted image URL
+    desc: product.description,
+  };
     
-    addToCart(product, quantity);
+    addToCart(cartItem, quantity);
     toast.success('Added to cart!');
   };
 
