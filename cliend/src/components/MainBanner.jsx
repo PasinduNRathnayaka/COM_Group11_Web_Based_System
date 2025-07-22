@@ -151,10 +151,10 @@ const MainBanner = () => {
     const categorySlug = category.slug || category.category || category.name.toLowerCase();
 
     return (
-      <Link
-        to={`/products?category=${categorySlug}`}
-        className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col"
-      >
+      
+        
+        <div className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col">
+      
         <div className="flex-grow mb-2">
           <img
             src={categoryImage}
@@ -167,7 +167,7 @@ const MainBanner = () => {
           />
         </div>
         <p className="text-lg font-semibold">{category.name}</p>
-      </Link>
+      </div>
     );
   };
 
