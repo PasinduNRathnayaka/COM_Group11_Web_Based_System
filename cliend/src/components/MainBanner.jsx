@@ -234,7 +234,7 @@ const MainBanner = () => {
                   ))}
             </div>
             <div className="flex justify-end mt-6">
-              <Link to="/products" className="text-sm text-primary hover:underline font-semibold">
+              <Link to="/allproducts" className="text-sm text-primary hover:underline font-semibold">
                 View More →
               </Link>
             </div>

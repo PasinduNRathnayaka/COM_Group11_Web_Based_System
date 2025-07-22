@@ -25,49 +25,58 @@ const Navbar = () => {
       </NavLink>
 
       {/* ✅ Desktop Menu */}
-      <div className="hidden sm:flex items-center gap-8">
+      <div className="hidden sm:flex flex-1 justify-center gap-8 text-white font-medium">
         <NavLink to='/'>Home</NavLink>
-        <Link to="/product" className="font-medium">
+        <Link to="/allproducts" className="font-medium">
           All Products
         </Link>
         <NavLink to="/contact">Contact</NavLink>
+      </div>
 
-
+   {/*
         <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
           <input className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500" type="text" placeholder="Search products" />
           <img src={assets.search} alt='search' className='w-4 h-4'/>
         </div>
 
-        <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
-          <img src={assets.cart} alt='cart' className='w-6 opacity-80' />
-          <button className="absolute -top-2 -right-3 text-xs text-white bg-primary w-[18px] h-[18px] rounded-full">3</button>
-        </div>
+  */}
 
-        {/* ✅ FIXED: Replace profile image with My Profile and Logout */}
-        {!user ? (
-          <button onClick={() => setShowUserLogin(true)} className="cursor-pointer px-8 py-2 bg-primary hover:bg-primary-dull transition text-white rounded-full">
-            Login
-          </button>
-        ) : (
-          <>
-            {/* ✅ NEW: My Profile button */}
-            <button
-              onClick={() => navigate("/profile")}
-              className="px-6 py-2 bg-primary hover:bg-primary-dull text-white rounded-full transition"
-            >
-              My Profile
-            </button>
+       
+      <div className="hidden sm:flex items-center gap-6">
 
-            {/* ✅ NEW: Logout button */}
-            <button
-              onClick={logout}
-              className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full"
-            >
-              Logout
-            </button>
-          </>
-        )}
+  {/* 👤 Auth Buttons */}
+  {!user ? (
+    <button
+      onClick={() => setShowUserLogin(true)}
+      className="cursor-pointer px-8 py-2 bg-primary hover:bg-primary-dull transition text-white rounded-full"
+    >
+      Login
+    </button>
+  ) : (
+    <>
+      <button
+        onClick={() => navigate("/profile")}
+        className="px-6 py-2 bg-primary hover:bg-primary-dull text-white rounded-full transition"
+      >
+        My Profile
+      </button>
+      <button
+        onClick={logout}
+        className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full"
+      >
+        Logout
+      </button>
+    </>
+      )}
+
+      {/* 🛒 Cart Icon */}
+      <div onClick={() => navigate("/cart")} className="relative cursor-pointer -right-5">
+        <img src={assets.cart} alt='cart' className='w-6 opacity-80' />
+        <button className="absolute -top-2 -right-3 text-xs text-white bg-primary w-[18px] h-[18px] rounded-full">3</button>
       </div>
+
+    </div>
+      
 
       {/* Mobile Menu Toggle */}
       <button onClick={() => setOpen(!open)} aria-label="Menu" className="sm:hidden">

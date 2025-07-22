@@ -101,7 +101,7 @@ const handleSignInClick = () => {
 
            <Route path="/product/:id" element={<ProductDetails />} />
 
-          <Route path="/product" element={<AllProducts />} />
+          <Route path="/allproducts" element={<AllProducts />} />
 
           <Route path="/contact" element={<Contact />} />
 
