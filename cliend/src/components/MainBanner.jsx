@@ -64,7 +64,7 @@ const MainBanner = () => {
     }
   }, [user]);
 
-  const getStaticCategories = () => [
+  {/*const getStaticCategories = () => [
     { name: 'Engine', image: assets.Bugatti_Chiron_Engine, category: 'engine', _id: 'static-engine' },
     { name: 'Brakes', image: assets.brakes_suspension, category: 'brakes', _id: 'static-brakes' },
     { name: 'Tires', image: assets.Tires_and_Wheels, category: 'tires', _id: 'static-tires' },
@@ -73,7 +73,7 @@ const MainBanner = () => {
     { name: 'Filters', image: assets.Filters, category: 'filters', _id: 'static-filters' },
     { name: 'Lights', image: assets.lights, category: 'lights', _id: 'static-lights' },
     { name: 'Exhaust', image: assets.exhaust, category: 'exhaust', _id: 'static-exhaust' },
-  ];
+  ];*/}
 
   const getRandomProducts = (count = 12) => {
     if (products.length === 0) return [];
@@ -108,6 +108,7 @@ const MainBanner = () => {
     const productPrice = product.salePrice || product.regularPrice || 0;
     const productImage = product.image
       ? (product.image.startsWith('http') ? product.image : `http://localhost:5000/${product.image.replace(/^\/+/, '')}`)
+      
       : assets.Airfilter;
 
     return (
@@ -243,7 +244,7 @@ const MainBanner = () => {
 
       {!user && (
         <>
-          {/* Testimonials */}
+          {/* Happy customer */}
           <div className="px-4 mt-16 mb-20">
             <h1 className="text-left text-xl md:text-2xl font-bold mb-6">Our Happy Customers</h1>
             <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 pb-2">
