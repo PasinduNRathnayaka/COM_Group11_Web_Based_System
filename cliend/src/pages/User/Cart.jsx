@@ -17,25 +17,40 @@ const Cart = () => {
   // Get cart items from context
   const { cartItems, setCartItems } = useAppContext();
 
+  const getImageUrl = (path) => {
+    if (!path) return assets.Airfilter;
+    return path.startsWith('http') ? path : `http://localhost:5000${path}`;
+  };
+
+
   // Fetch related products from database
   useEffect(() => {
     const fetchRelatedProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/products/related', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user?.token || localStorage.getItem('token')}`, // Add auth if needed
-          },
-        });
+        // ✅ IMPROVED: Try to fetch all products first, then use random selection
+        const response = await fetch('/api/products');
 
         if (!response.ok) {
           throw new Error('Failed to fetch related products');
         }
 
         const data = await response.json();
-        setRelatedProducts(data.products || data); // Handle different response formats
+        
+        // ✅ IMPROVED: Transform products with proper image URLs and random selection
+        const transformedProducts = (data.products || data).map(product => ({
+          id: product._id || product.id,
+          name: product.productName || product.name,
+          price: product.salePrice || product.regularPrice || product.price,
+          image: getImageUrl(product.image), // Using helper function
+          rating: product.rating || Math.floor(Math.random() * 2) + 4, // Random 4-5 rating if not available
+          category: product.category || 'Auto Parts'
+        }));
+
+        // Shuffle and take first 8 products for variety
+        const shuffled = transformedProducts.sort(() => 0.5 - Math.random());
+        setRelatedProducts(shuffled.slice(0, 8));
+
       } catch (err) {
         console.error('Error fetching related products:', err);
         setError(err.message);
@@ -49,13 +64,35 @@ const Cart = () => {
             rating: 4,
             category: 'Air Filters'
           },
-          // Add more fallback products as needed
+          {
+            id: 2,
+            name: 'Engine Oil Filter',
+            price: 2500,
+            image: assets.Airfilter,
+            rating: 5,
+            category: 'Filters'
+          },
+          {
+            id: 3,
+            name: 'Brake Pads Set',
+            price: 6500,
+            image: assets.Airfilter,
+            rating: 4,
+            category: 'Brake Parts'
+          },
+          {
+            id: 4,
+            name: 'Car Battery',
+            price: 8900,
+            image: assets.Airfilter,
+            rating: 5,
+            category: 'Electrical'
+          }
         ]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchRelatedProducts();
   }, [user]);
 
@@ -174,7 +211,7 @@ const Cart = () => {
 
       {/* Related Products */}
       <div className="mt-16">
-        <h2 className="text-xl md:text-2xl font-bold mb-6">Related Products</h2>
+        <h2 className="text-xl md:text-2xl font-bold mb-6">Shop More</h2>
         
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

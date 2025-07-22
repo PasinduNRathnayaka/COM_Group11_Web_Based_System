@@ -104,7 +104,7 @@ const getImageUrl = (path) => {
                   id: p._id,
                   name: p.productName,
                   price: p.salePrice || p.regularPrice,
-                  image: p.image ? `http://localhost:5000${p.image}` : assets.wheel5,
+                   image: getImageUrl(p.image),
                 }));
               setRelatedProducts(related);
             }
@@ -388,7 +388,7 @@ const getImageUrl = (path) => {
                   alt={item.name} 
                   className="w-full h-28 object-contain mb-2"
                   onError={(e) => {
-                    e.target.src = assets.wheel5; // Fallback image
+                    e.target.src = assets.wheel1; // Fallback image
                   }}
                 />
                 <h3 className="text-sm font-semibold">{item.name}</h3>
