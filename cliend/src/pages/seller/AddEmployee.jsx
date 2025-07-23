@@ -17,6 +17,7 @@ const AddEmployeeForm = () => {
     image: null,
   });
 
+  const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +32,11 @@ const AddEmployeeForm = () => {
   };
 
   const handleFileChange = (e) => {
-    setFormData((prev) => ({ ...prev, image: e.target.files[0] }));
+    const file = e.target.files[0];
+    setFormData((prev) => ({ ...prev, image: file }));
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -79,6 +84,7 @@ const AddEmployeeForm = () => {
         confirmPassword: "",
         image: null,
       });
+      setPreview(null);
     } catch (err) {
       console.error("Failed to add employee:", err.response?.data || err.message);
       setMessage(`❌ Failed to add employee. ${err.response?.data?.message || ''}`);
@@ -90,19 +96,74 @@ const AddEmployeeForm = () => {
     <div className="p-6 max-w-4xl mx-auto bg-white rounded shadow">
       <h2 className="text-2xl font-semibold mb-6">Add New Employee</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4" encType="multipart/form-data">
-        {/* Input Fields */}
-        <input type="text" name="empId" value={formData.empId} readOnly className="w-full border rounded px-3 py-2 bg-gray-100" />
-        <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <textarea name="about" value={formData.about} onChange={handleChange} required className="w-full border rounded px-3 py-2 resize-none" />
-        <input type="text" name="category" value={formData.category} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="text" name="contact" value={formData.contact} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="number" name="rate" value={formData.rate} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="text" name="address" value={formData.address} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="text" name="username" value={formData.username} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        <input type="file" accept="image/*" onChange={handleFileChange} required className="w-full" />
+        
+        <div>
+          <label className="block mb-1 font-medium">Employee ID</label>
+          <input type="text" name="empId" value={formData.empId} readOnly className="w-full border rounded px-3 py-2 bg-gray-100" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Name</label>
+          <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">About</label>
+          <textarea name="about" value={formData.about} onChange={handleChange} required className="w-full border rounded px-3 py-2 resize-none" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Category</label>
+          <input type="text" name="category" value={formData.category} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Contact</label>
+          <input type="text" name="contact" value={formData.contact} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Hourly Rate</label>
+          <input type="number" name="rate" value={formData.rate} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Address</label>
+          <input type="text" name="address" value={formData.address} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Username</label>
+          <input type="text" name="username" value={formData.username} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Email</label>
+          <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Password</label>
+          <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Confirm Password</label>
+          <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Profile Image</label>
+          <input type="file" accept="image/*" onChange={handleFileChange} required className="w-full" />
+        </div>
+
+        {preview && (
+          <div className="md:col-span-2">
+            <label className="block mb-1 font-medium">Image Preview</label>
+            <img src={preview} alt="Preview" className="w-40 h-40 object-cover rounded border" />
+          </div>
+        )}
+
         <div className="md:col-span-2 flex justify-end">
           <button type="submit" disabled={loading} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
             {loading ? "Saving..." : "Save"}
