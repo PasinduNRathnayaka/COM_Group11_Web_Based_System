@@ -13,6 +13,9 @@ import employeeRoutes from './routes/Seller/employee.routes.js';
 import userRoutes from './routes/userRoutes.js';
 
 
+import attendanceRoutes from './routes/attendance.routes.js';
+
+
 const app = express();
 dotenv.config();
 
@@ -43,6 +46,9 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
 
 app.use('/api/user', userRoutes);
+
+app.use('/api/attendance', attendanceRoutes);
+
 
 
 // Start Server
