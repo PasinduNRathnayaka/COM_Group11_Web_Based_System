@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 const MonthlySalary = () => {
   const [salaryData, setSalaryData] = useState([]);
@@ -24,165 +22,210 @@ const MonthlySalary = () => {
     }
   };
 
-  const downloadPDF = async () => {
+  const downloadPDF = () => {
     try {
-      setLoading(true);
-      
-      // Fetch detailed report data
-      const response = await axios.get(`http://localhost:4000/api/salary/report?month=${selectedMonth}`);
-      const reportData = response.data;
+      if (salaryData.length === 0) {
+        alert("No data available to generate PDF");
+        return;
+      }
 
-      // Create PDF
-      const pdf = new jsPDF();
-      const pageWidth = pdf.internal.pageSize.width;
-      
-      // Header
-      pdf.setFontSize(20);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("KAMAL AUTO PARTS", pageWidth / 2, 20, { align: "center" });
-      
-      pdf.setFontSize(16);
-      pdf.text("Monthly Salary Report", pageWidth / 2, 30, { align: "center" });
-      
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "normal");
+      // Create HTML content for PDF
       const monthYear = new Date(selectedMonth + "-01").toLocaleDateString("en-US", { 
         month: "long", 
         year: "numeric" 
       });
-      pdf.text(`Period: ${monthYear}`, pageWidth / 2, 40, { align: "center" });
-      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 48, { align: "center" });
+
+      const totals = calculateTotals();
       
-      // Summary section
-      pdf.setFontSize(14);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Summary", 14, 65);
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Salary Report - ${monthYear}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              line-height: 1.4;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 20px;
+            }
+            .company-name {
+              font-size: 24px;
+              font-weight: bold;
+              color: #333;
+              margin-bottom: 5px;
+            }
+            .report-title {
+              font-size: 18px;
+              color: #666;
+              margin-bottom: 10px;
+            }
+            .period {
+              font-size: 14px;
+              color: #888;
+            }
+            .summary {
+              background-color: #f8f9fa;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+            }
+            .summary-item {
+              text-align: center;
+              padding: 10px;
+              background: white;
+              border-radius: 5px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .summary-value {
+              font-size: 18px;
+              font-weight: bold;
+              color: #2c5aa0;
+            }
+            .summary-label {
+              font-size: 12px;
+              color: #666;
+              margin-top: 5px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              font-size: 12px;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #2c5aa0;
+              color: white;
+              font-weight: bold;
+            }
+            tr:nth-child(even) {
+              background-color: #f2f2f2;
+            }
+            .total-row {
+              background-color: #e8f4f8 !important;
+              font-weight: bold;
+              border-top: 2px solid #2c5aa0;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 10px;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 10px;
+            }
+            @media print {
+              body { margin: 10px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">KAMAL AUTO PARTS</div>
+            <div class="report-title">Monthly Salary Report</div>
+            <div class="period">Period: ${monthYear}</div>
+            <div class="period">Generated on: ${new Date().toLocaleDateString()}</div>
+          </div>
+
+          <div class="summary">
+            <div class="summary-item">
+              <div class="summary-value">${totals.totalEmployees}</div>
+              <div class="summary-label">Total Employees</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-value">Rs. ${parseFloat(totals.totalSalary).toLocaleString()}</div>
+              <div class="summary-label">Total Salary</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-value">${totals.totalHours}</div>
+              <div class="summary-label">Total Hours</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-value">Rs. ${parseFloat(totals.averageSalary).toLocaleString()}</div>
+              <div class="summary-label">Average Salary</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Hourly Rate</th>
+                <th>Total Hours</th>
+                <th>Present Days</th>
+                <th>Complete Days</th>
+                <th>Salary</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${salaryData.map(emp => `
+                <tr>
+                  <td>${emp.empId}</td>
+                  <td>${emp.name}</td>
+                  <td>${emp.category || 'N/A'}</td>
+                  <td>Rs. ${emp.hourlyRate || emp.rate || 0}</td>
+                  <td>${emp.totalHours || 0}</td>
+                  <td>${emp.presentDays || 0}</td>
+                  <td>${emp.completeDays || 0}</td>
+                  <td>Rs. ${(emp.salary || 0).toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td colspan="4"><strong>TOTAL</strong></td>
+                <td><strong>${totals.totalHours}</strong></td>
+                <td><strong>-</strong></td>
+                <td><strong>-</strong></td>
+                <td><strong>Rs. ${parseFloat(totals.totalSalary).toLocaleString()}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>This report was generated automatically by Kamal Auto Parts Payroll System</p>
+            <p>For any discrepancies, please contact the HR department</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create a new window and print
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
       
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(`Total Employees: ${reportData.summary.totalEmployees}`, 14, 75);
-      pdf.text(`Total Company Salary: Rs. ${reportData.summary.totalCompanySalary.toLocaleString()}`, 14, 82);
-      pdf.text(`Average Salary: Rs. ${reportData.summary.averageSalary.toLocaleString()}`, 14, 89);
+      // Wait for content to load then print
+      printWindow.onload = function() {
+        printWindow.focus();
+        printWindow.print();
+        // Close the window after printing (optional)
+        // printWindow.close();
+      };
 
-      // Employee salary table
-      const tableData = reportData.employees.map(emp => [
-        emp.empId,
-        emp.name,
-        emp.category || 'N/A',
-        `Rs. ${emp.hourlyRate}`,
-        emp.totalHours.toString(),
-        emp.presentDays.toString(),
-        emp.completeDays.toString(),
-        `Rs. ${emp.salary.toLocaleString()}`
-      ]);
-
-      pdf.autoTable({
-        startY: 100,
-        head: [['Emp ID', 'Name', 'Category', 'Rate/Hr', 'Total Hrs', 'Present Days', 'Complete Days', 'Salary']],
-        body: tableData,
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245],
-        },
-        columnStyles: {
-          0: { cellWidth: 20 }, // Emp ID
-          1: { cellWidth: 30 }, // Name
-          2: { cellWidth: 25 }, // Category
-          3: { cellWidth: 20 }, // Rate
-          4: { cellWidth: 20 }, // Hours
-          5: { cellWidth: 20 }, // Present
-          6: { cellWidth: 20 }, // Complete
-          7: { cellWidth: 25 }, // Salary
-        },
-      });
-
-      // Add detailed attendance for each employee (if space allows)
-      let currentY = pdf.lastAutoTable.finalY + 20;
-      
-      reportData.employees.forEach((emp, index) => {
-        // Check if we need a new page
-        if (currentY > 250) {
-          pdf.addPage();
-          currentY = 20;
-        }
-
-        pdf.setFontSize(12);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(`${emp.name} (${emp.empId}) - Detailed Attendance`, 14, currentY);
-        
-        // Create attendance table for this employee
-        const attendanceData = emp.dailyRecords
-          .filter(record => record.status !== 'Absent') // Only show days with attendance
-          .map(record => [
-            record.date,
-            record.checkIn,
-            record.checkOut,
-            record.hours.toString(),
-            record.status
-          ]);
-
-        if (attendanceData.length > 0) {
-          pdf.autoTable({
-            startY: currentY + 5,
-            head: [['Date', 'Check In', 'Check Out', 'Hours', 'Status']],
-            body: attendanceData,
-            styles: {
-              fontSize: 7,
-              cellPadding: 1,
-            },
-            headStyles: {
-              fillColor: [52, 152, 219],
-              textColor: 255,
-            },
-            margin: { left: 14, right: 14 },
-          });
-          
-          currentY = pdf.lastAutoTable.finalY + 15;
-        } else {
-          pdf.setFontSize(10);
-          pdf.setFont("helvetica", "italic");
-          pdf.text("No attendance records found", 14, currentY + 10);
-          currentY += 25;
-        }
-      });
-
-      // Footer
-      const totalPages = pdf.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(8);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(
-          `Page ${i} of ${totalPages}`,
-          pageWidth / 2,
-          pdf.internal.pageSize.height - 10,
-          { align: "center" }
-        );
-      }
-
-      // Save the PDF
-      const fileName = `Salary_Report_${monthYear.replace(' ', '_')}.pdf`;
-      pdf.save(fileName);
-      
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF report. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
   const calculateTotals = () => {
-    const totalSalary = salaryData.reduce((sum, emp) => sum + emp.salary, 0);
-    const totalHours = salaryData.reduce((sum, emp) => sum + emp.totalHours, 0);
+    const totalSalary = salaryData.reduce((sum, emp) => sum + (emp.salary || 0), 0);
+    const totalHours = salaryData.reduce((sum, emp) => sum + (emp.totalHours || 0), 0);
     const averageSalary = salaryData.length > 0 ? totalSalary / salaryData.length : 0;
     
     return {
@@ -228,7 +271,7 @@ const MonthlySalary = () => {
               </>
             ) : (
               <>
-                📄 Download PDF
+                📄 Print/Save PDF
               </>
             )}
           </button>
@@ -278,10 +321,10 @@ const MonthlySalary = () => {
             <p className="text-sm text-gray-500">ID: {emp.empId}</p>
             <p className="text-sm text-gray-600">{emp.category}</p>
             <div className="mt-2 space-y-1">
-              <p className="text-xs text-gray-600">Rate: Rs. {emp.hourlyRate}/hr</p>
-              <p className="text-xs text-gray-600">Hours: {emp.totalHours}</p>
-              <p className="text-xs text-gray-600">Present: {emp.presentDays} days</p>
-              <p className="text-sm font-bold text-green-700">Salary: Rs. {emp.salary.toLocaleString()}</p>
+              <p className="text-xs text-gray-600">Rate: Rs. {emp.hourlyRate || emp.rate || 0}/hr</p>
+              <p className="text-xs text-gray-600">Hours: {emp.totalHours || 0}</p>
+              <p className="text-xs text-gray-600">Present: {emp.presentDays || 0} days</p>
+              <p className="text-sm font-bold text-green-700">Salary: Rs. {(emp.salary || 0).toLocaleString()}</p>
             </div>
           </div>
         ))}
@@ -326,11 +369,11 @@ const MonthlySalary = () => {
                     {emp.name}
                   </td>
                   <td className="py-2">{emp.category || 'N/A'}</td>
-                  <td className="py-2">Rs. {emp.hourlyRate}</td>
-                  <td className="py-2">{emp.totalHours}</td>
-                  <td className="py-2">{emp.presentDays}</td>
-                  <td className="py-2">{emp.completeDays}</td>
-                  <td className="py-2 font-bold text-green-700">Rs. {emp.salary.toLocaleString()}</td>
+                  <td className="py-2">Rs. {emp.hourlyRate || emp.rate || 0}</td>
+                  <td className="py-2">{emp.totalHours || 0}</td>
+                  <td className="py-2">{emp.presentDays || 0}</td>
+                  <td className="py-2">{emp.completeDays || 0}</td>
+                  <td className="py-2 font-bold text-green-700">Rs. {(emp.salary || 0).toLocaleString()}</td>
                 </tr>
               ))}
               
