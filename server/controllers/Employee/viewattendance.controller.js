@@ -1,4 +1,7 @@
-import Attendance from "../models/attendance.model.js";
+import ViewAttendance from '../../models/Employee/viewattendance.model.js';
+
+
+
 
 export const getAttendanceByEmployee = async (req, res) => {
   try {
