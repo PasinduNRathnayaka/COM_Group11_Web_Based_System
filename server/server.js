@@ -20,9 +20,9 @@ import orderRoutes from './routes/OnlineEmployee/order.routes.js';
 import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 
+import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
 
-import attendanceRoutes from './routes/attendance.routes.js';
 
 
 const app = express();
@@ -59,7 +59,9 @@ app.use('/api/salary', salaryRoutes);
 
 app.use('/api/user', userRoutes);
 
-app.use('/api/attendance', attendanceRoutes);
+
+
+app.use('/api/attendance', viewAttendanceRoutes);
 
 
 
