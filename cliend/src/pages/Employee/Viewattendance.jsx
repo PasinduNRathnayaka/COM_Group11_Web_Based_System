@@ -1,28 +1,42 @@
-// src/pages/Employee/Viewattendance.jsx
-import React, { useState } from "react";
-import { FaCalendarAlt } from "react-icons/fa";
-
-const attendanceData = [
-  { date: "01/06/2025", checkIn: "09:13", checkOut: "18:27", totalHours: "7", status: "Present" },
-  { date: "02/06/2025", checkIn: "09:27", checkOut: "18:34", totalHours: "7", status: "Present" },
-  { date: "03/06/2025", checkIn: "09:15", checkOut: "18:31", totalHours: "7", status: "Present" },
-  { date: "03/06/2025", checkIn: "-", checkOut: "-", totalHours: "-", status: "Absent" },
-  { date: "03/06/2025", checkIn: "09:18", checkOut: "18:30", totalHours: "7", status: "Present" },
-  { date: "03/06/2025", checkIn: "09:02", checkOut: "18:05", totalHours: "7", status: "Present" },
-  { date: "03/06/2025", checkIn: "09:07", checkOut: "18:15", totalHours: "7", status: "Present" },
-];
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Viewattendance = () => {
-  const [selectedDate, setSelectedDate] = useState("");
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [month, setMonth] = useState("07");
+  const [year, setYear] = useState("2025");
+  const employeeId = "687b9a5a87b84e56c311df78"; // TODO: Replace with actual logged-in employee ID
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:4000/api/attendance/${employeeId}?month=${month}&year=${year}`
+        );
+        setAttendanceData(res.data);
+      } catch (err) {
+        console.error("Failed to fetch attendance", err);
+      }
+    };
+    fetchAttendance();
+  }, [employeeId, month, year]);
+
+  const calculateHours = (checkIn, checkOut) => {
+    try {
+      const [h1, m1, s1] = checkIn.split(".").map(Number);
+      const [h2, m2, s2] = checkOut.split(".").map(Number);
+      const start = new Date(0, 0, 0, h1, m1, s1);
+      const end = new Date(0, 0, 0, h2, m2, s2);
+      const diff = (end - start) / 1000 / 60 / 60;
+      return diff.toFixed(2);
+    } catch {
+      return "-";
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      
-
-      {/* Main Content */}
       <main className="flex-1 p-8">
-        {/* Top Navbar */}
         <header className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-xl font-semibold">Attendance</h2>
@@ -30,7 +44,6 @@ const Viewattendance = () => {
           </div>
         </header>
 
-        {/* Profile Section */}
         <section className="text-center">
           <img
             src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
@@ -39,17 +52,36 @@ const Viewattendance = () => {
           />
           <h3 className="text-lg font-semibold mb-4">My Attendance</h3>
 
-          {/* Date Picker */}
-          <div className="flex justify-end mb-2">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="border px-2 py-1 rounded text-sm"
-            />
+          {/* Filters */}
+          <div className="flex justify-center gap-4 mb-4">
+            <div>
+              <label className="text-sm">Year</label>
+              <select
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="border px-2 py-1 rounded"
+              >
+                {[2023, 2024, 2025].map((y) => (
+                  <option key={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm">Month</label>
+              <select
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="border px-2 py-1 rounded"
+              >
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
+                    {new Date(0, i).toLocaleString("default", { month: "short" })}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* Attendance Table */}
           <div className="bg-white shadow-md rounded p-4 max-w-4xl mx-auto">
             <table className="w-full text-sm">
               <thead>
@@ -63,53 +95,19 @@ const Viewattendance = () => {
               </thead>
               <tbody>
                 {attendanceData.map((entry, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-2">{entry.date}</td>
-                    <td>{entry.checkIn}</td>
-                    <td>{entry.checkOut}</td>
-                    <td>{entry.totalHours}</td>
-                    <td className={entry.status === "Absent" ? "text-red-500" : "text-green-600"}>{entry.status}</td>
+                  <tr key={index} className="border-b hover:bg-gray-50 text-center">
+                      <td className="py-2">{entry.date}</td>
+                      <td>{entry.checkIn.replaceAll(".", ":")}</td>
+                      <td>{entry.checkOut.replaceAll(".", ":")}</td>
+                      <td>{calculateHours(entry.checkIn, entry.checkOut)}</td>
+                      <td className="text-green-600 font-semibold">Present</td>
                   </tr>
+
                 ))}
               </tbody>
             </table>
           </div>
-
-          {/* Monthly Attendance */}
-          <div className="mt-8 text-left max-w-4xl mx-auto">
-            <h4 className="text-sm font-semibold mb-2">Monthly Attendance</h4>
-            <div className="flex gap-4 items-center">
-              <input
-                type="text"
-                placeholder=""
-                className="border px-2 py-1 rounded w-1/3"
-              />
-              <div className="flex items-center gap-2">
-                <label className="text-sm">Year</label>
-                <select className="border rounded px-2 py-1 text-sm">
-                  <option>2021</option>
-                  <option>2022</option>
-                  <option>2023</option>
-                  <option>2024</option>
-                  <option>2025</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm">Month</label>
-                <select className="border rounded px-2 py-1 text-sm">
-                  {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
-                    <option key={i} value={i + 1}>{m}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
         </section>
-
-        {/* Footer */}
-        <footer className="mt-12 text-center text-xs text-gray-500">
-          © 2025 · Employee Dashboard
-        </footer>
       </main>
     </div>
   );
