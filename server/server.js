@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 import connectDB from './configs/db.js';
 import productRoutes from './routes/Seller/product.routes.js';
@@ -22,7 +23,7 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 
 
-import attendanceRoutes from './routes/attendance.routes.js';
+//import attendanceRoutes from './routes/attendance.routes.js';
 
 
 const app = express();
@@ -32,6 +33,7 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 // Middlewares
 app.use(cors());
@@ -59,7 +61,7 @@ app.use('/api/salary', salaryRoutes);
 
 app.use('/api/user', userRoutes);
 
-app.use('/api/attendance', attendanceRoutes);
+//app.use('/api/attendance', attendanceRoutes);
 
 
 
