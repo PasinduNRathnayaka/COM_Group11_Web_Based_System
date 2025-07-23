@@ -46,6 +46,7 @@ import SidebarLayout from "./components/SidebarLayout";
 import CustomerReplies from "./pages/OnlineEmployee/CustomerReplies";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
 import OrderList from "./pages/OnlineEmployee/OrderList";
+import ChatBox from "./components/ChatBox"
 
 import EmployeeProfile from "./pages/Employee/Profile";
 import EditProfile from "./pages/Employee/EditProfile";
@@ -195,6 +196,10 @@ const handleSignInClick = () => {
         </Route>
         </Routes>
       </div>
+
+      <div className="App">
+      <ChatBox />
+    </div>
 
       {/* new online Employee */}
 
