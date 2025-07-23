@@ -22,6 +22,9 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 
 
+import attendanceRoutes from './routes/attendance.routes.js';
+
+
 const app = express();
 dotenv.config();
 
@@ -55,6 +58,9 @@ app.use('/api/salary', salaryRoutes);
 
 
 app.use('/api/user', userRoutes);
+
+app.use('/api/attendance', attendanceRoutes);
+
 
 
 // Start Server
