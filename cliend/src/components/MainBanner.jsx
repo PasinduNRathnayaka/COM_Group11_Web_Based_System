@@ -21,6 +21,7 @@ const MainBanner = () => {
       const res = await fetch('/api/reviews');
       if (res.ok) {
         const data = await res.json();
+        console.log('Reviews data:', data.reviews);
         setReviews(data.reviews || []);
       } else {
         console.error('Failed to fetch reviews');
@@ -274,7 +275,7 @@ const MainBanner = () => {
                     {'★'.repeat(cust.rating || 5)}{'☆'.repeat(5 - (cust.rating || 5))}
                   </p>
                   <p className="text-sm italic mb-2">"{cust.review}"</p>
-                  <p className="text-sm font-semibold">{cust.userName || 'Anonymous'}</p>
+                  <p className="text-sm font-semibold">{cust.user?.name || 'Anonymous'}</p>
                 </div>
               ))
             ) : (
