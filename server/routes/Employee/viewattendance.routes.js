@@ -1,8 +1,5 @@
 import express from "express";
-import {
-  getAttendanceByEmployee,
-  createAttendance,
-} from "../controllers/attendance.controller.js";
+import { getAttendanceByEmployee, createAttendance } from "../../controllers/Employee/viewattendance.controller.js";
 
 const router = express.Router();
 

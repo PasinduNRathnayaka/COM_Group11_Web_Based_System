@@ -20,6 +20,5 @@ const attendanceSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-const Attendance = mongoose.model('Attendance', attendanceSchema);
-
-export default Attendance;
+const ViewAttendance = mongoose.model('ViewAttendance', attendanceSchema);
+export default ViewAttendance;
