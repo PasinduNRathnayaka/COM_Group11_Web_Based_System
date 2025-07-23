@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import toast from 'react-hot-toast';
 
 const RateUsPopup = ({ onClose }) => {
   const [rating, setRating] = useState(0);
@@ -80,7 +81,7 @@ const RateUsPopup = ({ onClose }) => {
         }, 500);
         
         // Optional: Show success toast
-        // toast.success('Thank you for your review!');
+        toast.success('Thank you for your review!');
         
       } else {
         setError(result.message || 'Failed to submit review. Please try again.');
