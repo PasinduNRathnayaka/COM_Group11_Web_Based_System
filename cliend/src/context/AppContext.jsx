@@ -8,6 +8,9 @@ export const AppContext = createContext();
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
 
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+
+
   // Load user from localStorage on initial render
   const stored = JSON.parse(localStorage.getItem('user') || 'null');
   const initialUser = stored && stored.token ? stored : null;
@@ -100,6 +103,7 @@ export const AppContextProvider = ({ children }) => {
         cartItems,
         setCartItems,
         addToCart,
+        backendUrl,
       }}
     >
       {children}
