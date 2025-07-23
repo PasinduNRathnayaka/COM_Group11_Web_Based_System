@@ -1,9 +1,13 @@
 // routes/Seller/salary.routes.js
 import express from 'express';
-import { getMonthlySalary } from '../../controllers/Seller/salaryController.js';
+import { getMonthlySalary, getSalaryReport } from '../../controllers/Seller/salaryController.js';
 
 const router = express.Router();
 
-router.get('/monthly-salary', getMonthlySalary);
+// Get monthly salary summary
+router.get('/monthly', getMonthlySalary);
+
+// Get detailed salary report for PDF generation
+router.get('/report', getSalaryReport);
 
 export default router;

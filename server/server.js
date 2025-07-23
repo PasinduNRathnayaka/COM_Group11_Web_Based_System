@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 import connectDB from './configs/db.js';
 import productRoutes from './routes/Seller/product.routes.js';
@@ -24,8 +25,6 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
 
-
-
 const app = express();
 dotenv.config();
 
@@ -33,6 +32,7 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 // Middlewares
 app.use(cors());
@@ -63,8 +63,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/order', orderRoutes);
 
 
-
 app.use('/api/attendance', viewAttendanceRoutes);
+
 
 
 

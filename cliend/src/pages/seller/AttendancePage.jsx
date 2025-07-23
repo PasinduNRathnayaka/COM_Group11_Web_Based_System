@@ -21,6 +21,7 @@ const AttendancePage = () => {
       setAttendanceData(res.data);
     } catch (err) {
       console.error("Failed to fetch attendance:", err);
+      setAttendanceData([]);
     }
   };
 
@@ -30,6 +31,7 @@ const AttendancePage = () => {
       setEmployeeHistory(res.data);
     } catch (err) {
       console.error("Failed to fetch employee attendance history:", err);
+      setEmployeeHistory([]);
     }
   };
 
@@ -55,19 +57,14 @@ const AttendancePage = () => {
           checkOut: checkOut || null,
         };
       } else {
+        // If multiple records exist for same date, take earliest checkIn and latest checkOut
         if (checkIn) {
-          if (
-            !grouped[date].checkIn ||
-            new Date(`1970-01-01T${checkIn}`) < new Date(`1970-01-01T${grouped[date].checkIn}`)
-          ) {
+          if (!grouped[date].checkIn || checkIn < grouped[date].checkIn) {
             grouped[date].checkIn = checkIn;
           }
         }
         if (checkOut) {
-          if (
-            !grouped[date].checkOut ||
-            new Date(`1970-01-01T${checkOut}`) > new Date(`1970-01-01T${grouped[date].checkOut}`)
-          ) {
+          if (!grouped[date].checkOut || checkOut > grouped[date].checkOut) {
             grouped[date].checkOut = checkOut;
           }
         }
@@ -75,6 +72,39 @@ const AttendancePage = () => {
     });
 
     return Object.values(grouped).sort((a, b) => (a.date < b.date ? 1 : -1));
+  };
+
+  const calculateHours = (checkIn, checkOut) => {
+    if (!checkIn || !checkOut) return "--";
+
+    try {
+      // Parse time strings in HH:MM:SS format
+      const [inH, inM, inS = 0] = checkIn.split(":").map(Number);
+      const [outH, outM, outS = 0] = checkOut.split(":").map(Number);
+
+      // Convert to minutes for easier calculation
+      const checkInMinutes = inH * 60 + inM + inS / 60;
+      const checkOutMinutes = outH * 60 + outM + outS / 60;
+
+      let durationMinutes = checkOutMinutes - checkInMinutes;
+
+      // Handle overnight shifts (checkout next day)
+      if (durationMinutes < 0) {
+        durationMinutes += 24 * 60; // Add 24 hours in minutes
+      }
+
+      const hours = durationMinutes / 60;
+
+      // Validate reasonable working hours (0-24 hours)
+      if (isNaN(hours) || hours < 0 || hours > 24) {
+        return "--";
+      }
+
+      return hours.toFixed(2);
+    } catch (err) {
+      console.error("Error calculating hours:", err);
+      return "--";
+    }
   };
 
   useEffect(() => {
@@ -108,6 +138,9 @@ const AttendancePage = () => {
                 src={`http://localhost:4000${viewingEmployee.image}`}
                 alt={viewingEmployee.name}
                 className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => {
+                  e.target.src = "/default-avatar.png"; // fallback image
+                }}
               />
               <div>
                 <p className="text-base font-medium">{viewingEmployee.name}</p>
@@ -127,7 +160,7 @@ const AttendancePage = () => {
             <div>
               <label className="text-sm text-gray-600">Filter by Month:</label>
               <select
-                className="border rounded px-2 py-1 text-sm"
+                className="border rounded px-2 py-1 text-sm ml-2"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
               >
@@ -148,7 +181,7 @@ const AttendancePage = () => {
             <div>
               <label className="text-sm text-gray-600">Filter by Year:</label>
               <select
-                className="border rounded px-2 py-1 text-sm"
+                className="border rounded px-2 py-1 text-sm ml-2"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
@@ -167,17 +200,41 @@ const AttendancePage = () => {
 
           {/* History table */}
           <h3 className="text-lg font-semibold mb-3">Attendance History</h3>
-          <table className="w-full table-auto text-sm">
-            <thead className="border-b border-gray-300 text-left">
-              <tr>
-                <th className="py-2">Date</th>
-                <th className="py-2">Check In</th>
-                <th className="py-2">Check Out</th>
-              </tr>
-            </thead>
-            <tbody>
-              {processEmployeeHistory(employeeHistory)
-                .filter((record) => {
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto text-sm">
+              <thead className="border-b border-gray-300 text-left">
+                <tr>
+                  <th className="py-2">Date</th>
+                  <th className="py-2">Check In</th>
+                  <th className="py-2">Check Out</th>
+                  <th className="py-2">Total Hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                {processEmployeeHistory(employeeHistory)
+                  .filter((record) => {
+                    const recordDate = new Date(record.date);
+                    const month = recordDate.getMonth() + 1;
+                    const year = recordDate.getFullYear();
+
+                    const monthMatch =
+                      selectedMonth === "all" || parseInt(selectedMonth) === month;
+                    const yearMatch =
+                      selectedYear === "all" || parseInt(selectedYear) === year;
+
+                    return monthMatch && yearMatch;
+                  })
+                  .map((record, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="py-2">{record.date}</td>
+                      <td className="py-2">{record.checkIn || "--"}</td>
+                      <td className="py-2">{record.checkOut || "--"}</td>
+                      <td className="py-2">
+                        {calculateHours(record.checkIn, record.checkOut)}
+                      </td>
+                    </tr>
+                  ))}
+                {processEmployeeHistory(employeeHistory).filter((record) => {
                   const recordDate = new Date(record.date);
                   const month = recordDate.getMonth() + 1;
                   const year = recordDate.getFullYear();
@@ -188,16 +245,16 @@ const AttendancePage = () => {
                     selectedYear === "all" || parseInt(selectedYear) === year;
 
                   return monthMatch && yearMatch;
-                })
-                .map((record, i) => (
-                  <tr key={i} className="border-t">
-                    <td className="py-2">{record.date}</td>
-                    <td className="py-2">{record.checkIn || "--"}</td>
-                    <td className="py-2">{record.checkOut || "--"}</td>
+                }).length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="py-4 text-center text-gray-500">
+                      No attendance records found for the selected period.
+                    </td>
                   </tr>
-                ))}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <>
@@ -212,60 +269,82 @@ const AttendancePage = () => {
                   src={`http://localhost:4000${att.employee.image}`}
                   alt={att.employee.name}
                   className="w-16 h-16 rounded-full mb-2 object-cover"
+                  onError={(e) => {
+                    e.target.src = "/default-avatar.png"; // fallback image
+                  }}
                 />
                 <p className="text-sm font-semibold">{att.employee.name}</p>
                 <p className="text-xs text-gray-500">{att.employee.category}</p>
                 <button
-                  className="text-xs text-blue-600 underline mt-2"
+                  className="text-xs text-blue-600 underline mt-2 hover:text-blue-800"
                   onClick={() => handleViewAttendance(att.employee)}
                 >
                   View Attendance
                 </button>
               </div>
             ))}
+            {attendanceData.length === 0 && (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                No attendance records found for {selectedDate}
+              </div>
+            )}
           </div>
 
           {/* Table view */}
           <div className="bg-white rounded-xl p-6 shadow">
             <h3 className="text-lg font-semibold mb-4">Attendance List</h3>
-            <table className="w-full table-auto text-sm">
-              <thead className="border-b border-gray-300 text-left">
-                <tr>
-                  <th className="py-2">Employee Number</th>
-                  <th className="py-2">Employee Name</th>
-                  <th className="py-2">Date</th>
-                  <th className="py-2">Check in</th>
-                  <th className="py-2">Check out</th>
-                  <th className="py-2">Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceData.map((att, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="py-2">{att.employee.empId}</td>
-                    <td className="py-2 flex items-center gap-2">
-                      <img
-                        src={`http://localhost:4000${att.employee.image}`}
-                        alt="avatar"
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                      {att.employee.name}
-                    </td>
-                    <td className="py-2">{att.date}</td>
-                    <td className="py-2">{att.checkIn || "--"}</td>
-                    <td className="py-2">{att.checkOut || "--"}</td>
-                    <td className="py-2">
-                      <button
-                        className="text-xs text-blue-600 underline"
-                        onClick={() => handleViewAttendance(att.employee)}
-                      >
-                        View Attendance
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto text-sm">
+                <thead className="border-b border-gray-300 text-left">
+                  <tr>
+                    <th className="py-2">Employee Number</th>
+                    <th className="py-2">Employee Name</th>
+                    <th className="py-2">Date</th>
+                    <th className="py-2">Check in</th>
+                    <th className="py-2">Check out</th>
+                    <th className="py-2">Total Hours</th>
+                    <th className="py-2">Details</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {attendanceData.map((att, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="py-2">{att.employee.empId}</td>
+                      <td className="py-2 flex items-center gap-2">
+                        <img
+                          src={`http://localhost:4000${att.employee.image}`}
+                          alt="avatar"
+                          className="w-6 h-6 rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "/default-avatar.png"; // fallback image
+                          }}
+                        />
+                        {att.employee.name}
+                      </td>
+                      <td className="py-2">{att.date}</td>
+                      <td className="py-2">{att.checkIn || "--"}</td>
+                      <td className="py-2">{att.checkOut || "--"}</td>
+                      <td className="py-2">{calculateHours(att.checkIn, att.checkOut)}</td>
+                      <td className="py-2">
+                        <button
+                          className="text-xs text-blue-600 underline hover:text-blue-800"
+                          onClick={() => handleViewAttendance(att.employee)}
+                        >
+                          View Attendance
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {attendanceData.length === 0 && (
+                    <tr>
+                      <td colSpan="7" className="py-4 text-center text-gray-500">
+                        No attendance records found for {selectedDate}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}

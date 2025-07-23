@@ -20,13 +20,15 @@ export const markAttendance = async (req, res) => {
       if (!attendance) {
         attendance = new Attendance({ employee: employee._id, date: today });
       }
-      attendance.checkIn = new Date().toLocaleTimeString();
+      const now = new Date();
+      attendance.checkIn = now.toTimeString().split(' ')[0]; // HH:MM:SS (24hr)
     }
 
     if (type === 'checkOut') {
       if (!attendance) return res.status(400).json({ message: 'Check-in first before checking out' });
       if (attendance.checkOut) return res.status(400).json({ message: 'Already checked out today' });
-      attendance.checkOut = new Date().toLocaleTimeString();
+      const now = new Date();
+      attendance.checkOut = now.toTimeString().split(' ')[0]; // HH:MM:SS (24hr)
     }
 
     await attendance.save();
@@ -37,13 +39,22 @@ export const markAttendance = async (req, res) => {
   }
 };
 
-// --- GET ALL OR FILTERED BY DATE ------------------------------
+// --- GET ALL OR FILTERED BY DATE OR BY EMPLOYEE ID --------------
 export const getAllAttendance = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, employeeId } = req.query;
 
     let filter = {};
-    if (date) filter.date = date;
+    
+    // If employeeId is provided, filter by employee
+    if (employeeId) {
+      filter.employee = employeeId;
+    }
+    
+    // If date is provided, filter by date
+    if (date) {
+      filter.date = date;
+    }
 
     const records = await Attendance.find(filter)
       .populate('employee')
@@ -56,7 +67,7 @@ export const getAllAttendance = async (req, res) => {
   }
 };
 
-// --- GET BY EMPLOYEE ------------------------------------------
+// --- GET BY EMPLOYEE (Alternative endpoint) ------------------
 export const getAttendanceByEmployee = async (req, res) => {
   try {
     const { empId } = req.params;
@@ -92,34 +103,51 @@ export const getMonthlySalaryReport = async (req, res) => {
 
     const report = [];
 
-    employees.forEach(emp => {
+    for (const emp of employees) {
       const empRecords = attendanceRecords.filter(r => r.employee._id.toString() === emp._id.toString());
 
       let totalHours = 0;
+
       empRecords.forEach(r => {
         if (r.checkIn && r.checkOut) {
-          const [inH, inM, inS] = r.checkIn.split(':').map(Number);
-          const [outH, outM, outS] = r.checkOut.split(':').map(Number);
-          const checkInDate = new Date(2000, 0, 1, inH, inM, inS);
-          const checkOutDate = new Date(2000, 0, 1, outH, outM, outS);
-
-          const durationMs = checkOutDate - checkInDate;
-          const hours = durationMs / (1000 * 60 * 60); // ms to hours
-          if (hours > 0) totalHours += hours;
+          try {
+            // Parse time strings (HH:MM:SS format)
+            const [inH, inM, inS = 0] = r.checkIn.split(':').map(Number);
+            const [outH, outM, outS = 0] = r.checkOut.split(':').map(Number);
+            
+            const checkInMinutes = inH * 60 + inM + inS / 60;
+            const checkOutMinutes = outH * 60 + outM + outS / 60;
+            
+            let duration = checkOutMinutes - checkInMinutes;
+            
+            // Handle overnight shifts
+            if (duration < 0) {
+              duration += 24 * 60; // Add 24 hours in minutes
+            }
+            
+            const hours = duration / 60;
+            
+            if (!isNaN(hours) && hours > 0 && hours <= 24) {
+              totalHours += hours;
+            }
+          } catch (error) {
+            console.error('Error calculating hours for record:', r, error);
+          }
         }
       });
 
-      const salary = Math.round(totalHours * emp.rate);
+      const salary = Math.round(totalHours * (emp.rate || 0));
+
       report.push({
         empId: emp.empId,
         name: emp.name,
         category: emp.category,
         totalHours: totalHours.toFixed(2),
-        hourlyRate: emp.rate,
-         image: employee.image,
+        hourlyRate: emp.rate || 0,
+        image: emp.image,
         salary,
       });
-    });
+    }
 
     res.json(report);
   } catch (err) {
@@ -127,7 +155,6 @@ export const getMonthlySalaryReport = async (req, res) => {
     res.status(500).json({ message: 'Failed to generate salary report' });
   }
 };
-
 
 // GET MONTHLY SUMMARY FOR ALL EMPLOYEES
 export const getMonthlySummary = async (req, res) => {
@@ -148,20 +175,39 @@ export const getMonthlySummary = async (req, res) => {
 
     for (let record of records) {
       const empId = record.employee._id.toString();
-      const checkIn = new Date(`${record.date}T${record.checkIn}`);
-      const checkOut = new Date(`${record.date}T${record.checkOut}`);
-      const hours = (checkOut - checkIn) / (1000 * 60 * 60); // convert ms to hours
+      
+      try {
+        // Parse time strings (HH:MM:SS format)
+        const [inH, inM, inS = 0] = record.checkIn.split(':').map(Number);
+        const [outH, outM, outS = 0] = record.checkOut.split(':').map(Number);
+        
+        const checkInMinutes = inH * 60 + inM + inS / 60;
+        const checkOutMinutes = outH * 60 + outM + outS / 60;
+        
+        let duration = checkOutMinutes - checkInMinutes;
+        
+        // Handle overnight shifts
+        if (duration < 0) {
+          duration += 24 * 60; // Add 24 hours in minutes
+        }
+        
+        const hours = duration / 60;
 
-      if (!summary[empId]) {
-        summary[empId] = {
-          empId: record.employee.empId,
-          name: record.employee.name,
-          rate: record.employee.rate || 0,
-          totalHours: 0,
-        };
+        if (!summary[empId]) {
+          summary[empId] = {
+            empId: record.employee.empId,
+            name: record.employee.name,
+            rate: record.employee.rate || 0,
+            totalHours: 0,
+          };
+        }
+
+        if (!isNaN(hours) && hours > 0 && hours <= 24) {
+          summary[empId].totalHours += hours;
+        }
+      } catch (error) {
+        console.error('Error calculating hours for record:', record, error);
       }
-
-      summary[empId].totalHours += hours;
     }
 
     const result = Object.values(summary).map(emp => ({
