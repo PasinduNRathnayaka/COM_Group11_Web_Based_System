@@ -11,6 +11,7 @@ import categoryRoutes from './routes/Seller/category.routes.js';
 import employeeRoutes from './routes/Seller/employee.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 
 import attendanceRoutes from './routes/Seller/attendance.routes.js';
 import salaryRoutes from './routes/Seller/salary.routes.js';
@@ -58,6 +59,8 @@ app.use('/api/salary', salaryRoutes);
 
 
 app.use('/api/user', userRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/order', orderRoutes);
 
 app.use('/api/attendance', attendanceRoutes);
 
@@ -66,9 +69,8 @@ app.use('/api/attendance', attendanceRoutes);
 // Start Server
 connectDB();
 
-app.use('/api/order', orderRoutes);
+//app.use('/api/order', orderRoutes);
 app.use('/api/message', messageRoutes);
-
 
 // Default route
 app.get('/', (req, res) => {
