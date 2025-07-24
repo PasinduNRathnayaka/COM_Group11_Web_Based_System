@@ -335,8 +335,8 @@ const fetchProductReviews = async (productId) => {
               bValue = b.salePrice || b.regularPrice || b.price || 0;
               break;
             case 'rating':
-              aValue = a.rating || 0;
-              bValue = b.rating || 0;
+              aValue = a.averageRating || 0;
+              bValue = b.averageRating || 0;
               break;
             case 'createdAt':
               aValue = new Date(a.createdAt || a.dateAdded || 0);
