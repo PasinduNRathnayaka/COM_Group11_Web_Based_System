@@ -34,9 +34,73 @@ const AllProducts = () => {
     ).join('');
   };
 
+  // Add this function after the existing renderStarRating function (around line 30)
+// Render compact star rating for product cards (copied from ProductDetails.jsx)
+const renderCompactStarRating = (rating, reviewCount) => {
+  if (reviewCount === 0) {
+    return (
+      <div className="flex items-center justify-center mt-1">
+        <div className="flex text-gray-300 text-xs">
+          {'★'.repeat(5)}
+        </div>
+        <span className="text-xs text-gray-400 ml-1">(0)</span>
+      </div>
+    );
+  }
+
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center justify-center mt-1">
+      <div className="flex text-yellow-500 text-xs">
+        {/* Full stars */}
+        {Array(fullStars).fill().map((_, i) => (
+          <span key={`full-${i}`}>★</span>
+        ))}
+        {/* Half star */}
+        {hasHalfStar && <span>★</span>}
+        {/* Empty stars */}
+        {Array(emptyStars).fill().map((_, i) => (
+          <span key={`empty-${i}`} className="text-gray-300">★</span>
+        ))}
+      </div>
+      <span className="text-xs text-gray-500 ml-1">
+        ({rating}) • {reviewCount}
+      </span>
+    </div>
+  );
+};
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-LK').format(price);
   };
+
+  // Add this function after the formatPrice function (around line 50)
+// Fetch reviews for a single product
+const fetchProductReviews = async (productId) => {
+  try {
+    const response = await fetch(`/api/product-reviews/product/${productId}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.reviews && Array.isArray(data.reviews)) {
+        const reviews = data.reviews;
+        const averageRating = reviews.length > 0 
+          ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
+          : 0;
+        return {
+          averageRating: parseFloat(averageRating),
+          reviewCount: reviews.length
+        };
+      }
+    }
+    return { averageRating: 0, reviewCount: 0 };
+  } catch (err) {
+    console.warn(`Failed to fetch reviews for product ${productId}:`, err);
+    return { averageRating: 0, reviewCount: 0 };
+  }
+};
 
   // Simple Product Card matching MainBanner's "For You" section style
   const ProductCard = ({ product, isLoading = false }) => {
@@ -73,7 +137,8 @@ const AllProducts = () => {
             {product.productName || product.name || 'Unknown Product'}
           </p>
           <p className="text-sm text-gray-600 mt-1">Rs {formatPrice(productPrice)}</p>
-          <p className="text-yellow-500 text-sm">{renderStarRating(product.rating)}</p>
+          {/* Real Rating Display */}
+          {renderCompactStarRating(product.averageRating || 0, product.reviewCount || 0)}
         </Link>
       </div>
     );
@@ -241,6 +306,20 @@ const AllProducts = () => {
             return price <= maxPrice;
           });
         }
+
+        console.log('Fetching ratings for products...');
+        const productsWithRatings = await Promise.all(
+          productsData.map(async (product) => {
+            const ratings = await fetchProductReviews(product._id || product.id);
+            return {
+              ...product,
+              averageRating: ratings.averageRating,
+              reviewCount: ratings.reviewCount
+            };
+          })
+        );
+
+        productsData = productsWithRatings;
 
         // Apply sorting
         productsData.sort((a, b) => {
@@ -446,6 +525,7 @@ const AllProducts = () => {
             <option value="price-asc">Price (Low to High)</option>
             <option value="price-desc">Price (High to Low)</option>
             <option value="rating-desc">Rating (High to Low)</option>
+            <option value="rating-asc">Rating (Low to High)</option>
             <option value="createdAt-desc">Newest First</option>
             <option value="createdAt-asc">Oldest First</option>
           </select>
