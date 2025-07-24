@@ -194,4 +194,46 @@ router.get('/user', verifyToken, async (req, res) => {
   }
 });
 
+// DELETE /api/user-orders/:orderId
+router.delete('/:orderId', verifyToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user.id;
+
+    // Find and delete the order (make sure it belongs to the user)
+    // Try to find by MongoDB _id first, then by orderId field
+    let deletedOrder = await UserOrder.findOneAndDelete({
+      _id: orderId,
+      userId: userId
+    });
+
+    // If not found by _id, try by orderId field
+    if (!deletedOrder) {
+      deletedOrder = await UserOrder.findOneAndDelete({
+        orderId: orderId,
+        userId: userId
+      });
+    }
+
+    if (!deletedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found or you do not have permission to delete this order'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Order deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete order'
+    });
+  }
+});
+
 export default router;
