@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -12,6 +12,8 @@ const Checkout = () => {
   // ✅ Get checkout items (either from cart or buy now)
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [isBuyNow, setIsBuyNow] = useState(false);
+
+  const orderPlacedRef = useRef(false);
 
   // Form state with auto-fill from user profile
   const [formData, setFormData] = useState({
@@ -76,6 +78,10 @@ const Checkout = () => {
     if (location.state?.isBuyNow) {
       return; // Skip cart validation for buy now
     }
+
+    if (orderPlacedRef.current) {
+    return;
+}
     
     // For cart checkout, check if cart is empty
     if (!cartItems || cartItems.length === 0) {
@@ -153,6 +159,9 @@ const Checkout = () => {
 
       if (result.success) {
         // ✅ Clear cart only if it was a cart checkout, not buy now
+        
+        orderPlacedRef.current = true;
+
         if (!isBuyNow) {
           setCartItems([]);
         }
