@@ -62,8 +62,8 @@ const Profile = () => {
     useEffect(() => {
       if (location.state?.orderPlaced) {
         setActiveTab("orders");
-        if (location.state?.orderId) {
-          toast.success(`Order ${location.state.orderId} placed successfully!`);
+         if (location.state?.orderId && !location.state?.skipToast) {
+      toast.success(`Order ${location.state.orderId} placed successfully!`);
         }
       }
     }, [location.state]);
