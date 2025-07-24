@@ -194,10 +194,7 @@ const fetchProductReviews = async (productId) => {
 
   if (!user) return <Navigate to="/" replace />;
 
-  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const discount = 15;
-  const delivery = 15;
-  const total = subtotal - discount + delivery;
+  const total = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
     <div className="px-4 md:px-10 py-10">
@@ -258,18 +255,6 @@ const fetchProductReviews = async (productId) => {
         {/* Order Summary */}
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-bold mb-4">Order Summary</h2>
-          <div className="text-sm text-gray-700 mb-2 flex justify-between">
-            <span>Subtotal</span>
-            <span>Rs.{subtotal}</span>
-          </div>
-          <div className="text-sm text-gray-700 mb-2 flex justify-between">
-            <span>Discount</span>
-            <span className="text-red-500">-Rs.{discount}</span>
-          </div>
-          <div className="text-sm text-gray-700 mb-2 flex justify-between">
-            <span>Delivery Fee</span>
-            <span>Rs.{delivery}</span>
-          </div>
           <div className="text-md font-bold flex justify-between mt-4">
             <span>Total</span>
             <span>Rs.{total}</span>
@@ -333,4 +318,3 @@ const fetchProductReviews = async (productId) => {
 };
 
 export default Cart;
-
