@@ -157,6 +157,8 @@ const Checkout = () => {
           setCartItems([]);
         }
         
+        toast.dismiss();
+
         // Show success message
         toast.success(`Order placed successfully! Order ID: ${result.order.orderId}`);
         
@@ -164,7 +166,8 @@ const Checkout = () => {
         navigate('/profile', { 
           state: { 
             orderPlaced: true, 
-            orderId: result.order.orderId 
+            orderId: result.order.orderId,
+            skipToast: true
           } 
         });
       } else {
