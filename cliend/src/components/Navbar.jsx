@@ -25,7 +25,7 @@ const Navbar = () => {
       </NavLink>
 
       {/* ✅ Desktop Menu */}
-      <div className="hidden sm:flex flex-1 justify-center gap-12 text-white font-medium">
+      <div className="hidden sm:flex flex-1 justify-center gap-12 text-white font-medium pl-100">
         <NavLink to='/'>Home</NavLink>
         <Link to="/allproducts" className="font-medium">
           All Products
