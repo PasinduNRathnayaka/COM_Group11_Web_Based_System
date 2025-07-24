@@ -298,10 +298,11 @@ const fetchProductReviews = async (productId) => {
                 Shop Now
                 <img className='w-4 transition group-hover:translate-x-1' src={assets.arrow} alt="arrow" />
               </Link>
-              <Link to="/allproducts" className='group flex items-center gap-2 px-9 py-3 bg-primary hover:bg-primary-dull transition rounded text-white cursor-pointer'>
+             {/* <Link to="/allproducts" className='group flex items-center gap-2 px-9 py-3 bg-primary hover:bg-primary-dull transition rounded text-white cursor-pointer'>
                 Explore Deals
                 <img className='w-4 transition group-hover:translate-x-1' src={assets.arrow} alt="arrow" />
               </Link>
+              */}
             </div>
             {showRatePopup && <RateUsPopup onClose={() => setShowRatePopup(false)} />}
           </>
