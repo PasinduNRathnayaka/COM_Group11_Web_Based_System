@@ -45,144 +45,263 @@ const EmployeeCard = ({ employee, onDelete }) => {
     });
   };
 
+  // Professional PDF generation with custom design
   const handleDownloadPDF = async () => {
-    if (!cardRef.current) return;
+    if (!employee) {
+      alert("Employee data not found!");
+      return;
+    }
 
     setIsDownloading(true);
-    
-    try {
-      // Wait a bit to ensure all content is rendered
-      await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("Starting professional PDF generation...");
 
-      // Configure html2canvas with better options
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 3, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        width: cardRef.current.offsetWidth,
-        height: cardRef.current.offsetHeight,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
+    try {
+      // Create PDF with ID card dimensions (similar to credit card size but larger)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [85.60, 53.98] // Standard ID card size (3.375" x 2.125") scaled up
       });
 
-      // Create PDF with proper dimensions
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
+      // Set background color
+      pdf.setFillColor(255, 255, 255); // White background
+      pdf.rect(0, 0, 85.60, 53.98, 'F');
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      let position = 0;
+      // Header section - Company background
+      pdf.setFillColor(30, 58, 138); // Blue-800
+      pdf.rect(0, 0, 85.60, 16, 'F');
 
-      // Add the canvas as image to PDF
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      // Company name
+      pdf.setTextColor(255, 255, 255); // White text
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('KAMAL AUTO PARTS', 42.8, 8, { align: 'center' });
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Employee Identification Card', 42.8, 12, { align: 'center' });
 
-      // Add new pages if content is longer than one page
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // Try to load and add employee image
+      try {
+        const imageUrl = `http://localhost:4000${employee.image}`;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        await new Promise((resolve, reject) => {
+          img.onload = () => {
+            canvas.width = 60;
+            canvas.height = 60;
+            ctx.drawImage(img, 0, 0, 60, 60);
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Add circular image background
+            pdf.setFillColor(219, 234, 254); // Blue-100
+            pdf.circle(21, 30, 8, 'F');
+            
+            // Add employee image
+            pdf.addImage(imgData, 'JPEG', 13, 22, 16, 16);
+            resolve();
+          };
+          img.onerror = () => {
+            console.log('Image failed to load, using placeholder');
+            // Add placeholder circle
+            pdf.setFillColor(156, 163, 175); // Gray-400
+            pdf.circle(21, 30, 8, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(8);
+            pdf.text('NO', 21, 28, { align: 'center' });
+            pdf.text('IMG', 21, 32, { align: 'center' });
+            resolve();
+          };
+          img.src = imageUrl;
+        });
+      } catch (error) {
+        console.log('Error loading image:', error);
       }
 
-      // Save the PDF
-      const fileName = `${employee.name.replace(/[^a-zA-Z0-9]/g, '_')}_ID_Card.pdf`;
+      // Employee details section
+      pdf.setTextColor(0, 0, 0); // Black text
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      
+      // Employee name
+      const name = employee.name || 'N/A';
+      pdf.text(name.toUpperCase(), 35, 25);
+      
+      // Employee details
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(75, 85, 99); // Gray-600
+      
+      pdf.text(`ID: ${employee.empId || 'N/A'}`, 35, 29);
+      pdf.text(`Category: ${employee.category || 'N/A'}`, 35, 32);
+      pdf.text(`Contact: ${employee.contact || 'N/A'}`, 35, 35);
+      
+      // Address (truncate if too long)
+      const address = employee.address || 'N/A';
+      const truncatedAddress = address.length > 25 ? address.substring(0, 25) + '...' : address;
+      pdf.text(`Address: ${truncatedAddress}`, 35, 38);
+
+      // Add QR code if available
+      try {
+        if (employee.qrCode) {
+          const qrUrl = `http://localhost:4000${employee.qrCode}`;
+          const qrCanvas = document.createElement('canvas');
+          const qrCtx = qrCanvas.getContext('2d');
+          const qrImg = new Image();
+          qrImg.crossOrigin = 'anonymous';
+          
+          await new Promise((resolve, reject) => {
+            qrImg.onload = () => {
+              qrCanvas.width = 40;
+              qrCanvas.height = 40;
+              qrCtx.drawImage(qrImg, 0, 0, 40, 40);
+              const qrData = qrCanvas.toDataURL('image/jpeg', 0.8);
+              
+              // Add QR code
+              pdf.addImage(qrData, 'JPEG', 65, 28, 12, 12);
+              
+              // QR label
+              pdf.setFontSize(4);
+              pdf.setTextColor(107, 114, 128); // Gray-500
+              pdf.text('Scan for details', 71, 43, { align: 'center' });
+              resolve();
+            };
+            qrImg.onerror = () => {
+              console.log('QR code failed to load');
+              resolve();
+            };
+            qrImg.src = qrUrl;
+          });
+        }
+      } catch (error) {
+        console.log('Error loading QR code:', error);
+      }
+
+      // Footer section
+      pdf.setFillColor(241, 245, 249); // Gray-100
+      pdf.rect(0, 45, 85.60, 8.98, 'F');
+      
+      pdf.setFontSize(4);
+      pdf.setTextColor(107, 114, 128); // Gray-500
+      pdf.text('This card is property of Kamal Auto Parts', 42.8, 48, { align: 'center' });
+      pdf.text(`Issued: ${new Date().toLocaleDateString()}`, 42.8, 51, { align: 'center' });
+
+      // Generate filename and save
+      const fileName = `${employee.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_')}_ID_Card.pdf`;
+      
+      console.log("Saving professional PDF:", fileName);
       pdf.save(fileName);
+      
+      console.log("Professional PDF saved successfully!");
 
     } catch (error) {
-      console.error("❌ PDF Download Failed:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error("❌ Professional PDF Generation Failed:", error);
+      alert(`Failed to generate PDF: ${error.message}`);
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // Alternative PDF generation method using better image handling
-  const handleDownloadPDFAlternative = async () => {
-    if (!cardRef.current) return;
+  // Enhanced print function with better styling
+  const handlePrintCard = () => {
+    const printWindow = window.open('', '_blank');
+    
+    const cardHtml = `
+      <div style="
+        width: 350px;
+        margin: 20px auto;
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        font-family: 'Arial', sans-serif;
+      ">
+        <!-- Header -->
+        <div style="
+          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          color: white;
+          text-align: center;
+          padding: 15px;
+        ">
+          <h2 style="margin: 0; font-size: 18px; font-weight: bold;">KAMAL AUTO PARTS</h2>
+          <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">Employee Identification Card</p>
+        </div>
 
-    setIsDownloading(true);
+        <!-- Body -->
+        <div style="padding: 20px; text-align: center;">
+          <div style="margin-bottom: 15px;">
+            <img src="http://localhost:4000${employee.image}" 
+                 style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid #dbeafe; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
+                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNGM0Y0RjYiLz4KPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZCNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5PIElNRzwvdGV4dD4KPC9zdmc+'" />
+          </div>
+          
+          <h3 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 20px;">${employee.name}</h3>
+          
+          <div style="text-align: center; background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <p style="margin: 3px 0; color: #374151;"><strong>ID:</strong> ${employee.empId}</p>
+            <p style="margin: 3px 0; color: #374151;"><strong>Category:</strong> ${employee.category}</p>
+            <p style="margin: 3px 0; color: #374151;"><strong>Contact:</strong> ${employee.contact}</p>
+            <p style="margin: 3px 0; color: #374151;"><strong>Address:</strong> ${employee.address}</p>
+          </div>
 
-    try {
-      // Create a clone of the card for PDF generation
-      const originalCard = cardRef.current;
-      const clonedCard = originalCard.cloneNode(true);
-      
-      // Set up the clone for rendering
-      clonedCard.style.position = 'absolute';
-      clonedCard.style.top = '-9999px';
-      clonedCard.style.left = '-9999px';
-      clonedCard.style.width = '320px';
-      clonedCard.style.backgroundColor = 'white';
-      
-      document.body.appendChild(clonedCard);
+          ${employee.qrCode ? `
+          <div style="margin-top: 15px;">
+            <img src="http://localhost:4000${employee.qrCode}" 
+                 style="width: 60px; height: 60px;" />
+            <p style="margin: 5px 0 0 0; font-size: 10px; color: #6b7280;">Scan for details</p>
+          </div>
+          ` : ''}
+        </div>
 
-      // Wait for images to load in clone
-      const images = clonedCard.querySelectorAll('img');
-      await Promise.all(Array.from(images).map(img => {
-        return new Promise((resolve) => {
-          if (img.complete) {
-            resolve();
-          } else {
-            img.onload = resolve;
-            img.onerror = resolve;
-          }
-        });
-      }));
-
-      // Generate canvas from clone
-      const canvas = await html2canvas(clonedCard, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      // Remove clone
-      document.body.removeChild(clonedCard);
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      // Calculate dimensions to fit the card properly
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasAspectRatio = canvas.height / canvas.width;
-      
-      let imgWidth = pdfWidth - 20; // 10mm margin on each side
-      let imgHeight = imgWidth * canvasAspectRatio;
-      
-      // If image is too tall, scale it down
-      if (imgHeight > pdfHeight - 20) {
-        imgHeight = pdfHeight - 20;
-        imgWidth = imgHeight / canvasAspectRatio;
-      }
-      
-      const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
-
-      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-      
-      const fileName = `${employee.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_')}_ID_Card.pdf`;
-      pdf.save(fileName);
-
-    } catch (error) {
-      console.error("❌ PDF Download Failed:", error);
-      alert("Failed to generate PDF. Please try again.");
-    } finally {
-      setIsDownloading(false);
-    }
+        <!-- Footer -->
+        <div style="
+          background: #f1f5f9;
+          text-align: center;
+          padding: 10px;
+          font-size: 10px;
+          color: #6b7280;
+          border-top: 1px solid #e5e7eb;
+        ">
+          <p style="margin: 0;">© ${new Date().getFullYear()} Kamal Auto Parts - Official Employee ID</p>
+          <p style="margin: 2px 0 0 0;">Issued: ${new Date().toLocaleDateString()}</p>
+        </div>
+      </div>
+    `;
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Employee ID Card - ${employee.name}</title>
+          <style>
+            @media print {
+              body { margin: 0; padding: 0; }
+              @page { margin: 0.5in; }
+            }
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: Arial, sans-serif;
+              background: #f3f4f6;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+            }
+          </style>
+        </head>
+        <body>
+          ${cardHtml}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   return (
@@ -244,42 +363,26 @@ const EmployeeCard = ({ employee, onDelete }) => {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
+  
         <button
-          onClick={handleDownloadPDFAlternative}
-          disabled={isDownloading}
-          className={`${
-            isDownloading 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-red-600 hover:bg-red-700'
-          } text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2`}
+          onClick={handlePrintCard}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
         >
-          {isDownloading ? (
-            <>
-              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Generating...
-            </>
-          ) : (
-            <>
-               Download PDF
-            </>
-          )}
+          Print Card
         </button>
         
         <button
           onClick={() => navigate(`/seller/edit-employee/${employee._id}`)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
         >
-          ✏️ Edit
+          Edit
         </button>
         
         <button
           onClick={handleDelete}
           className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
         >
-           Delete
+          Delete
         </button>
       </div>
     </div>
