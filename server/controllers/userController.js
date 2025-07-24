@@ -272,3 +272,161 @@ export const getUserProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 });
+
+// Add these functions to your userController.js
+
+// Get user's cart
+export const getCart = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('cart');
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    res.json({
+      success: true,
+      cart: user.cart || []
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Failed to get cart');
+  }
+});
+
+// Add item to cart
+export const addToCart = asyncHandler(async (req, res) => {
+  try {
+    const { productId, name, price, image, quantity = 1, description } = req.body;
+    
+    if (!productId || !name || !price) {
+      res.status(400);
+      throw new Error('Product ID, name, and price are required');
+    }
+
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    // Check if item already exists in cart
+    const existingItemIndex = user.cart.findIndex(item => item.productId === productId);
+    
+    if (existingItemIndex > -1) {
+      // Update quantity if item exists
+      user.cart[existingItemIndex].quantity += quantity;
+    } else {
+      // Add new item to cart
+      user.cart.push({
+        productId,
+        name,
+        price,
+        image,
+        quantity,
+        description
+      });
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Item added to cart',
+      cart: user.cart
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Failed to add item to cart');
+  }
+});
+
+// Update cart item quantity
+export const updateCartItem = asyncHandler(async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    
+    if (!productId || !quantity || quantity < 1) {
+      res.status(400);
+      throw new Error('Valid product ID and quantity are required');
+    }
+
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    const itemIndex = user.cart.findIndex(item => item.productId === productId);
+    
+    if (itemIndex === -1) {
+      res.status(404);
+      throw new Error('Item not found in cart');
+    }
+
+    user.cart[itemIndex].quantity = quantity;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Cart updated',
+      cart: user.cart
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Failed to update cart');
+  }
+});
+
+// Remove item from cart
+export const removeFromCart = asyncHandler(async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    user.cart = user.cart.filter(item => item.productId !== productId);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Item removed from cart',
+      cart: user.cart
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Failed to remove item from cart');
+  }
+});
+
+// Clear entire cart
+export const clearCart = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    user.cart = [];
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Cart cleared',
+      cart: []
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Failed to clear cart');
+  }
+});
