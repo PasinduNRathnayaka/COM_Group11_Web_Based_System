@@ -14,6 +14,7 @@ const Checkout = () => {
   const [isBuyNow, setIsBuyNow] = useState(false);
 
   const orderPlacedRef = useRef(false);
+  const emptyCartMessageShown = useRef(false);
 
   // Form state with auto-fill from user profile
   const [formData, setFormData] = useState({
@@ -83,13 +84,21 @@ const Checkout = () => {
     return;
 }
     
-    // For cart checkout, check if cart is empty
+        // For cart checkout, check if cart is empty
     if (!cartItems || cartItems.length === 0) {
-      toast.error('Your cart is empty');
-      navigate('/cart');
+      if (!emptyCartMessageShown.current) {
+        emptyCartMessageShown.current = true;
+        toast.error('Your cart is empty');
+        navigate('/cart');
+      }
       return;
+    } else {
+      // Reset flag when cart has items
+      emptyCartMessageShown.current = false;
     }
-  }, [user, cartItems, navigate, location.state]);
+    }, 
+
+    [user, cartItems, navigate, location.state]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
