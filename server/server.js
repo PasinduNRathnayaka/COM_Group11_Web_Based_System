@@ -15,6 +15,7 @@ import userRoutes from './routes/userRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import productReviewRoutes from './routes/productReviewRoutes.js';
 
+import contactRoutes from './routes/contact.js';
 
 import attendanceRoutes from './routes/Seller/attendance.routes.js';
 import salaryRoutes from './routes/Seller/salary.routes.js';
@@ -67,7 +68,7 @@ app.use('/api/product-reviews', productReviewRoutes);
 
 app.use('/api/attendance', viewAttendanceRoutes);
 
-
+app.use('/api/contact', contactRoutes);
 
 
 // Start Server
