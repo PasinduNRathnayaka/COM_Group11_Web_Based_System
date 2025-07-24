@@ -4,20 +4,16 @@ import { useNavigate } from 'react-router-dom';
 const OrderSummaryPopup = ({ product, quantity, onClose }) => {
   const navigate = useNavigate();
 
-  const discount = 15;
-  const delivery = 15;
-  const subtotal = product.price * quantity;
-  const total = subtotal - discount + delivery;
+  const total = product.price * quantity;
 
   const handleCheckout = () => {
-    onClose(); // Close popup
-    navigate('/checkout'); // Redirect to checkout
+    onClose();
+    navigate('/checkout');
   };
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl w-[90%] max-w-md p-6 relative shadow-lg">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-black text-lg"
@@ -35,18 +31,6 @@ const OrderSummaryPopup = ({ product, quantity, onClose }) => {
           <div className="flex justify-between">
             <span>Quantity:</span>
             <span>{quantity}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Subtotal:</span>
-            <span>Rs {subtotal}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Discount:</span>
-            <span className="text-red-500">-Rs {discount}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Delivery Fee:</span>
-            <span>Rs {delivery}</span>
           </div>
           <div className="flex justify-between font-bold pt-2 border-t">
             <span>Total:</span>
@@ -74,9 +58,3 @@ const OrderSummaryPopup = ({ product, quantity, onClose }) => {
 };
 
 export default OrderSummaryPopup;
-
-
-
-
-
-
