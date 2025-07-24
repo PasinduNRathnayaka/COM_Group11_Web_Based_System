@@ -566,12 +566,12 @@ const ProductDetails = () => {
           >
             Ratings & Reviews ({reviews.length})
           </button>
-          <button
+          {/*<button
             onClick={() => setActiveTab('faq')}
             className={`pb-2 ${activeTab === 'faq' ? 'border-b-2 border-primary font-semibold' : ''}`}
           >
             FAQs
-          </button>
+          </button>*/}
         </div>
 
         {/* Tab Content */}
