@@ -5,9 +5,16 @@ import getCroppedImg from "./cropImage";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { useLocation } from "react-router-dom";
+
+
 const Profile = () => {
   const { user, setUser } = useAppContext();
   const [activeTab, setActiveTab] = useState("account");
+
+  const location = useLocation();
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   // ✅ Helper function to get the correct image URL
   const getImageUrl = (profilePic) => {
@@ -50,6 +57,47 @@ const Profile = () => {
       });
     }
   }, [user]);
+
+  // Check if user just placed an order and switch to orders tab
+    useEffect(() => {
+      if (location.state?.orderPlaced) {
+        setActiveTab("orders");
+        if (location.state?.orderId) {
+          toast.success(`Order ${location.state.orderId} placed successfully!`);
+        }
+      }
+    }, [location.state]);
+
+    // Fetch user orders
+    const fetchOrders = async () => {
+      if (!user) return;
+      
+      setOrdersLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/user-orders/user', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.data.success) {
+          setOrders(response.data.orders);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching orders:', error);
+        toast.error('Failed to load order history');
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    // Fetch orders when orders tab is active
+    useEffect(() => {
+      if (activeTab === "orders" && user) {
+        fetchOrders();
+      }
+    }, [activeTab, user]);
 
   // Password form state
   const [passwordData, setPasswordData] = useState({
@@ -298,13 +346,104 @@ const Profile = () => {
             </form>
           </div>
         );
-      case "orders":
-        return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">My Orders</h2>
-            <p className="text-gray-500">You haven't placed any orders yet.</p>
-          </div>
-        );
+     case "orders":
+  return (
+    <div>
+      <h2 className="text-xl font-bold mb-4">My Orders</h2>
+      {ordersLoading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2">Loading orders...</span>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p>You haven't placed any orders yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <div key={order.id} className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-lg">Order #{order.orderId}</h3>
+                  <p className="text-sm text-gray-600">
+                    Placed on {new Date(order.orderDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                    order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
+                    order.status === 'shipped' ? 'bg-orange-100 text-orange-800' :
+                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <h4 className="font-medium mb-2">Items ({order.items.length})</h4>
+                  <div className="space-y-2">
+                    {order.items.slice(0, 2).map((item, index) => (
+                      <div key={index} className="flex items-center gap-3">
+                        <img 
+                          src={item.image} 
+                          alt={item.productName} 
+                          className="w-12 h-12 object-contain rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{item.productName}</p>
+                          <p className="text-xs text-gray-600">
+                            Qty: {item.quantity} × Rs.{item.price.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {order.items.length > 2 && (
+                      <p className="text-xs text-gray-500">
+                        + {order.items.length - 2} more items
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">Delivery Address</h4>
+                  <div className="text-sm text-gray-600">
+                    <p>{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
+                    <p>{order.shippingAddress.streetAddress}</p>
+                    <p>{order.shippingAddress.city}, {order.shippingAddress.zipCode}</p>
+                    <p>{order.shippingAddress.country}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center pt-3 border-t">
+                <div>
+                  <span className="text-sm text-gray-600">Payment: </span>
+                  <span className="font-medium">
+                    {order.paymentMethod === 'cash' ? 'Cash on Delivery' : 'Online Payment'}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold">Rs.{order.totalAmount.toLocaleString()}</p>
+                  {order.estimatedDelivery && (
+                    <p className="text-xs text-gray-500">
+                      Est. delivery: {new Date(order.estimatedDelivery).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
       case "password":
         return (
           <div>
