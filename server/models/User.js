@@ -33,6 +33,22 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: '', // placeholder until user uploads
     },
+     // ✅ NEW: Cart field to store user's cart items
+    cart: [{
+      productId: {
+        type: String,
+        required: true
+      },
+      name: String,
+      price: Number,
+      image: String,
+      quantity: {
+        type: Number,
+        default: 1,
+        min: 1
+      },
+      description: String
+    }]
   },
   { timestamps: true }
 );
