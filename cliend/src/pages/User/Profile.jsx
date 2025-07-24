@@ -92,6 +92,33 @@ const Profile = () => {
       }
     };
 
+      // Delete order function
+      const deleteOrder = async (orderId) => {
+      if (!window.confirm('Are you sure you want to delete this order?')) {
+       return;
+     }
+
+    try {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(`/api/user-orders/${orderId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.data.success) {
+      // Remove the deleted order from the local state
+      setOrders(orders.filter(order => order.id !== orderId));
+      toast.success('Order deleted successfully!');
+    } else {
+      toast.error(response.data.message || 'Failed to delete order');
+    }
+    } catch (error) {
+    console.error('❌ Error deleting order:', error);
+    toast.error(error.response?.data?.message || 'Failed to delete order');
+    }
+  };
+
     // Fetch orders when orders tab is active
     useEffect(() => {
       if (activeTab === "orders" && user) {
@@ -363,26 +390,45 @@ const Profile = () => {
         <div className="space-y-4">
           {orders.map((order) => (
             <div key={order.id} className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-semibold text-lg">Order #{order.orderId}</h3>
-                  <p className="text-sm text-gray-600">
-                    Placed on {new Date(order.orderDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
-                    order.status === 'shipped' ? 'bg-orange-100 text-orange-800' :
-                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </span>
-                </div>
-              </div>
+             <div className="flex justify-between items-start mb-3">
+            <div>
+              <h3 className="font-semibold text-lg">Order #{order.orderId}</h3>
+              <p className="text-sm text-gray-600">
+                Placed on {new Date(order.orderDate).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
+                order.status === 'shipped' ? 'bg-orange-100 text-orange-800' :
+                order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+              </span>
+              <button
+                onClick={() => deleteOrder(order.id)}
+                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+                title="Delete Order"
+              >
+                <svg 
+                  className="w-5 h-5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
