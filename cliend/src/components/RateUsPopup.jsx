@@ -186,8 +186,6 @@ const RateUsPopup = ({ onClose }) => {
             <option value="service">Customer Service</option>
             <option value="delivery">Delivery & Shipping</option>
             <option value="products">Product Quality</option>
-            <option value="website">Website Experience</option>
-            <option value="overall">Overall Experience</option>
           </select>
         </div>
 
