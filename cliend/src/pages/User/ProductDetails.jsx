@@ -30,6 +30,42 @@ const ProductDetails = () => {
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
   };
 
+  // Calculate average rating from reviews
+  const calculateAverageRating = () => {
+    if (!reviews || reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return (sum / reviews.length).toFixed(1);
+  };
+
+  // Render star rating display
+  const renderStarRating = (rating, showNumber = true) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <div className="flex items-center gap-1">
+        <div className="flex text-yellow-500">
+          {/* Full stars */}
+          {Array(fullStars).fill().map((_, i) => (
+            <span key={`full-${i}`}>★</span>
+          ))}
+          {/* Half star */}
+          {hasHalfStar && <span>★</span>}
+          {/* Empty stars */}
+          {Array(emptyStars).fill().map((_, i) => (
+            <span key={`empty-${i}`} className="text-gray-300">★</span>
+          ))}
+        </div>
+        {showNumber && (
+          <span className="text-sm text-gray-600 ml-1">
+            ({rating}) • {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   // Fetch user's existing review for this product
   const fetchUserReview = async (productId) => {
     if (!user || !productId) return;
@@ -322,6 +358,8 @@ const ProductDetails = () => {
     );
   }
 
+  const averageRating = calculateAverageRating();
+
   return (
     <div className="px-4 md:px-10 py-10">
       {/* Product Top Section */}
@@ -368,6 +406,22 @@ const ProductDetails = () => {
             }`}>
               {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
             </span>
+          </div>
+
+          {/* Average Rating - NEW ADDITION */}
+          <div className="mb-4">
+            {reviews.length > 0 ? (
+              <div className="flex items-center">
+                {renderStarRating(averageRating)}
+              </div>
+            ) : (
+              <div className="flex items-center text-gray-400">
+                <div className="flex text-gray-300">
+                  {'★'.repeat(5)}
+                </div>
+                <span className="text-sm text-gray-500 ml-1">No reviews yet</span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 items-center mb-4">
@@ -540,10 +594,10 @@ const ProductDetails = () => {
       {/* Review Popup */}
       {showReviewPopup && (
         <ProductReviewPopup
-          productId={product.id} // ✅ THIS WAS MISSING - The actual fix!
+          productId={product.id}
           onClose={() => setShowReviewPopup(false)}
           onSubmit={handleReviewSubmit}
-          existingReview={userExistingReview} // Pass existing review for editing
+          existingReview={userExistingReview}
         />
       )}
     </div>
