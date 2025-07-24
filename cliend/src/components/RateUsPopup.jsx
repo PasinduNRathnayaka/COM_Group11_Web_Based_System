@@ -29,6 +29,11 @@ const RateUsPopup = ({ onClose }) => {
       return;
     }
 
+     if (!user || !user.token) {
+    setError('You must be logged in to submit a review.');
+    return;
+  }
+
     setIsSubmitting(true);
     setError('');
 
