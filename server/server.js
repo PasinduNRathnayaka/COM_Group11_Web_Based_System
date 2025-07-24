@@ -13,6 +13,8 @@ import employeeRoutes from './routes/Seller/employee.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import productReviewRoutes from './routes/productReviewRoutes.js';
+
 
 import attendanceRoutes from './routes/Seller/attendance.routes.js';
 import salaryRoutes from './routes/Seller/salary.routes.js';
@@ -61,7 +63,7 @@ app.use('/api/salary', salaryRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/order', orderRoutes);
-
+app.use('/api/product-reviews', productReviewRoutes);
 
 app.use('/api/attendance', viewAttendanceRoutes);
 

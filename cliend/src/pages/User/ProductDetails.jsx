@@ -22,19 +22,88 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState('details');
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showReviewPopup, setShowReviewPopup] = useState(false);
-  const [reviews, setReviews] = useState([]); // local review state
+  const [reviews, setReviews] = useState([]);
+  const [userExistingReview, setUserExistingReview] = useState(null);
 
-const getImageUrl = (path) => {
+  const getImageUrl = (path) => {
     if (!path) return assets.wheel1;
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
   };
 
+  // Fetch user's existing review for this product
+  const fetchUserReview = async (productId) => {
+    if (!user || !productId) return;
+    
+    try {
+      const response = await fetch(`/api/product-reviews/user/${productId}`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('User review data:', data); // Debug log
+        if (data.success && data.review) {
+          setUserExistingReview(data.review);
+        } else {
+          setUserExistingReview(null);
+        }
+      } else {
+        setUserExistingReview(null);
+      }
+    } catch (err) {
+      console.error('Error fetching user review:', err);
+      setUserExistingReview(null);
+    }
+  };
+
+  // Fetch product reviews
+  const fetchProductReviews = async (productId) => {
+    try {
+      const response = await fetch(`/api/product-reviews/product/${productId}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched reviews data:', data); // Debug log
+        if (data.success && data.reviews && Array.isArray(data.reviews)) {
+          const formattedReviews = data.reviews.map(review => ({
+            id: review._id,
+            name: review.user?.name || 'Anonymous',
+            rating: review.rating,
+            comment: review.review,
+            date: new Date(review.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+          }));
+          console.log('Formatted reviews:', formattedReviews); // Debug log
+          setReviews(formattedReviews);
+          return;
+        }
+      }
+      // If API fails, set empty reviews array
+      console.log('No reviews found or API failed');
+      setReviews([]);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setReviews([]);
+    }
+  };
 
   // Fetch product by ID
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        
+        // Reset state when changing products
+        setReviews([]);
+        setUserExistingReview(null);
+        setSelectedImage(0);
+        setQuantity(1);
+        setActiveTab('details');
+        setShowAllReviews(false);
         
         // First, fetch all products
         const response = await fetch('/api/products');
@@ -67,7 +136,7 @@ const getImageUrl = (path) => {
           images: [
             getImageUrl(foundProduct.image),
             ...(foundProduct.gallery?.map(getImageUrl) || []),
-            ...(foundProduct.gallery?.length < 2 ? [{/*assets.wheel2, assets.wheel3*/}] : [])
+            ...(foundProduct.gallery?.length < 2 ? [assets.wheel2, assets.wheel3] : [])
           ],
           description: foundProduct.description || 'No description available',
           specs: [
@@ -75,11 +144,6 @@ const getImageUrl = (path) => {
             { key: 'Category', value: foundProduct.category || 'Automotive Parts' },
             { key: 'Product Code', value: foundProduct.code || 'N/A' },
             { key: 'Stock', value: `${foundProduct.stock || 0} units available` },
-          ],
-          // Default reviews (you can replace this with actual reviews from database later)
-          reviews: [
-            { name: 'John D.', rating: 5, comment: 'Great product! Highly recommended.', date: 'June 15, 2025' },
-            { name: 'Sarah M.', rating: 4, comment: 'Good quality, fast delivery.', date: 'June 10, 2025' },
           ],
           faqs: [
             { question: 'Is this product genuine?', answer: 'Yes, all our products are genuine and come with warranty.' },
@@ -89,7 +153,20 @@ const getImageUrl = (path) => {
         };
 
         setProduct(transformedProduct);
-        setReviews(transformedProduct.reviews);
+        
+        // Reset reviews to empty array first (important for product-specific reviews)
+        setReviews([]);
+        setUserExistingReview(null);
+        
+        // Fetch reviews for this specific product first
+        await fetchProductReviews(foundProduct._id);
+        
+        // Then fetch user's existing review if logged in
+        if (user) {
+          await fetchUserReview(foundProduct._id);
+        }
+        
+        console.log('Product loaded:', foundProduct._id); // Debug log
 
         // Fetch related products from the same category
         if (foundProduct.category) {
@@ -104,7 +181,7 @@ const getImageUrl = (path) => {
                   id: p._id,
                   name: p.productName,
                   price: p.salePrice || p.regularPrice,
-                   image: getImageUrl(p.image),
+                  image: getImageUrl(p.image),
                 }));
               setRelatedProducts(related);
             }
@@ -139,7 +216,20 @@ const getImageUrl = (path) => {
     if (id) {
       fetchProduct();
     }
-  }, [id]);
+  }, [id, user]);
+
+  // Additional effect to refetch reviews when user login status changes
+  useEffect(() => {
+    if (product && product.id) {
+      // Refetch reviews when user logs in/out
+      fetchProductReviews(product.id);
+      if (user) {
+        fetchUserReview(product.id);
+      } else {
+        setUserExistingReview(null);
+      }
+    }
+  }, [user?.token]); // Only run when user token changes
 
   const handleAddToCart = () => {
     if (!user) {
@@ -158,16 +248,47 @@ const getImageUrl = (path) => {
     }
 
     const cartItem = {
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    quantity,
-    image: product.images?.[0] || '', // ✅ Use formatted image URL
-    desc: product.description,
-  };
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      image: product.images?.[0] || '',
+      desc: product.description,
+    };
     
     addToCart(cartItem, quantity);
     toast.success('Added to cart!');
+  };
+
+  const handleReviewSubmit = (result) => {
+    if (result.success) {
+      // Create the review object for local state
+      const reviewForDisplay = {
+        id: result.review._id,
+        name: result.review.user?.name || user?.name || 'Anonymous',
+        rating: result.review.rating,
+        comment: result.review.review,
+        date: new Date(result.review.createdAt || result.review.updatedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+      };
+
+      if (result.isUpdate) {
+        // Update existing review in the list
+        setReviews(prev => prev.map(review => 
+          review.id === result.review._id ? reviewForDisplay : review
+        ));
+        setUserExistingReview(result.review);
+        toast.success('Review updated successfully!');
+      } else {
+        // Add new review to the beginning of the list
+        setReviews(prev => [reviewForDisplay, ...prev]);
+        setUserExistingReview(result.review);
+        toast.success('Review submitted successfully!');
+      }
+    }
   };
 
   // Loading state
@@ -311,7 +432,7 @@ const getImageUrl = (path) => {
             onClick={() => setActiveTab('reviews')}
             className={`pb-2 ${activeTab === 'reviews' ? 'border-b-2 border-primary font-semibold' : ''}`}
           >
-            Ratings & Reviews
+            Ratings & Reviews ({reviews.length})
           </button>
           <button
             onClick={() => setActiveTab('faq')}
@@ -335,24 +456,32 @@ const getImageUrl = (path) => {
 
         {activeTab === 'reviews' && (
           <div className="py-6 space-y-4">
-            {(showAllReviews ? reviews : reviews.slice(0, 2)).map((r, i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <p className="font-semibold">{r.name}</p>
-                <p className="text-yellow-500">{'★'.repeat(r.rating)}</p>
-                <p className="text-gray-700">{r.comment}</p>
-                <p className="text-xs text-gray-500">{r.date}</p>
+            {reviews.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No reviews yet. Be the first to review this product!</p>
               </div>
-            ))}
+            ) : (
+              <>
+                {(showAllReviews ? reviews : reviews.slice(0, 2)).map((r, i) => (
+                  <div key={r.id || i} className="border rounded-lg p-4">
+                    <p className="font-semibold">{r.name}</p>
+                    <p className="text-yellow-500">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</p>
+                    <p className="text-gray-700 mt-2">{r.comment}</p>
+                    <p className="text-xs text-gray-500 mt-2">{r.date}</p>
+                  </div>
+                ))}
 
-            {reviews.length > 2 && (
-              <div className="text-right mt-4">
-                <button
-                  onClick={() => setShowAllReviews((prev) => !prev)}
-                  className="text-sm font-semibold text-primary hover:underline"
-                >
-                  {showAllReviews ? 'See Less' : 'See More'}
-                </button>
-              </div>
+                {reviews.length > 2 && (
+                  <div className="text-right mt-4">
+                    <button
+                      onClick={() => setShowAllReviews((prev) => !prev)}
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      {showAllReviews ? 'See Less' : 'See More'}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Leave a Review Button (only for logged in users) */}
@@ -362,7 +491,7 @@ const getImageUrl = (path) => {
                   onClick={() => setShowReviewPopup(true)}
                   className="text-sm font-semibold text-black border border-black px-4 py-2 rounded hover:bg-gray-100 transition"
                 >
-                  Leave a Review
+                  {userExistingReview ? 'Update Your Review' : 'Leave a Review'}
                 </button>
               </div>
             )}
@@ -372,8 +501,8 @@ const getImageUrl = (path) => {
         {activeTab === 'faq' && (
           <div className="py-6">
             {product.faqs.map((f, i) => (
-              <div key={i} className="mb-3">
-                <p className="font-semibold">Q: {f.question}</p>
+              <div key={i} className="mb-4 pb-4 border-b border-gray-200 last:border-b-0">
+                <p className="font-semibold text-lg mb-2">Q: {f.question}</p>
                 <p className="ml-4 text-gray-700">A: {f.answer}</p>
               </div>
             ))}
@@ -408,25 +537,13 @@ const getImageUrl = (path) => {
         </div>
       )}
 
+      {/* Review Popup */}
       {showReviewPopup && (
         <ProductReviewPopup
+          productId={product.id} // ✅ THIS WAS MISSING - The actual fix!
           onClose={() => setShowReviewPopup(false)}
-          onSubmit={(newReview) => {
-            const today = new Date().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            });
-            setReviews((prev) => [
-              ...prev,
-              {
-                name: user?.name || 'Anonymous',
-                ...newReview,
-                date: today,
-              },
-            ]);
-            toast.success('Review submitted successfully!');
-          }}
+          onSubmit={handleReviewSubmit}
+          existingReview={userExistingReview} // Pass existing review for editing
         />
       )}
     </div>
@@ -434,4 +551,3 @@ const getImageUrl = (path) => {
 };
 
 export default ProductDetails;
-
