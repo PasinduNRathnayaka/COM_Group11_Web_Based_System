@@ -18,10 +18,10 @@ const AddProductForm = () => {
     regularPrice: "",
     salePrice: "",
     tags: "",
-    imagePreview: null,
   });
 
-  const [mainImageFile, setMainImageFile] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   // Fetch categories
   useEffect(() => {
@@ -37,25 +37,55 @@ const AddProductForm = () => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setMainImageFile(file);
-      setForm((prev) => ({ ...prev, imagePreview: URL.createObjectURL(file) }));
+    const files = Array.from(e.target.files);
+    
+    // Limit to maximum 4 images
+    if (files.length > 4) {
+      alert("❗ You can upload maximum 4 images only.");
+      return;
+    }
+
+    setSelectedImages(files);
+    
+    // Create previews
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
+  const removeImage = (index) => {
+    const newImages = selectedImages.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    
+    setSelectedImages(newImages);
+    setImagePreviews(newPreviews);
+    
+    // Update file input
+    if (fileInputRef.current) {
+      const dt = new DataTransfer();
+      newImages.forEach(file => dt.items.add(file));
+      fileInputRef.current.files = dt.files;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!mainImageFile) {
-      alert("❗ Please upload a main image.");
+    
+    if (selectedImages.length === 0) {
+      alert("❗ Please upload at least one image.");
       return;
     }
 
     const formData = new FormData();
+    
+    // Append form fields
     Object.entries(form).forEach(([key, val]) => {
-      if (key !== "imagePreview") formData.append(key, val);
+      formData.append(key, val);
     });
-    formData.append("image", mainImageFile);
+
+    // Append images
+    selectedImages.forEach((file, index) => {
+      formData.append('images', file);
+    });
 
     try {
       const res = await fetch("http://localhost:4000/api/products", {
@@ -79,9 +109,9 @@ const AddProductForm = () => {
         regularPrice: "",
         salePrice: "",
         tags: "",
-        imagePreview: null,
       });
-      setMainImageFile(null);
+      setSelectedImages([]);
+      setImagePreviews([]);
       if (fileInputRef.current) fileInputRef.current.value = null;
     } catch (err) {
       console.error(err);
@@ -233,26 +263,64 @@ const AddProductForm = () => {
             </div>
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload Section */}
           <div className="space-y-6">
-            <div className="h-60 bg-gray-200 flex items-center justify-center rounded-lg">
-              {form.imagePreview ? (
-                <img src={form.imagePreview} alt="Preview" className="h-full object-contain" />
-              ) : (
-                <span className="text-gray-500">Main Image Preview</span>
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Upload Product Images (1-4 images, JPG or PNG)
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  multiple
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  className="block mt-2"
+                />
+              </label>
+              
+              {selectedImages.length > 0 && (
+                <div className="text-sm text-gray-600">
+                  {selectedImages.length} image{selectedImages.length > 1 ? 's' : ''} selected
+                </div>
               )}
             </div>
 
-            <label className="block text-sm font-medium text-gray-700">
-              Upload Main Image (JPG or PNG)
-              <input
-                type="file"
-                accept="image/png, image/jpeg"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                className="block mt-2"
-              />
-            </label>
+            {/* Image Previews Grid */}
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-2 gap-4">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                      <img 
+                        src={preview} 
+                        alt={`Preview ${index + 1}`} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      Remove
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                      {index === 0 ? 'Main' : `Image ${index + 1}`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {imagePreviews.length === 0 && (
+              <div className="h-60 bg-gray-200 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-center">
+                  <span className="text-gray-500 block">No images selected</span>
+                  <span className="text-sm text-gray-400">Upload 1-4 product images</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
