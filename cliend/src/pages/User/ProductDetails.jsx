@@ -66,6 +66,44 @@ const ProductDetails = () => {
     );
   };
 
+  // Render compact star rating for product cards
+  const renderCompactStarRating = (rating, reviewCount) => {
+    if (reviewCount === 0) {
+      return (
+        <div className="flex items-center justify-center mt-1">
+          <div className="flex text-gray-300 text-xs">
+            {'★'.repeat(5)}
+          </div>
+          <span className="text-xs text-gray-400 ml-1">(0)</span>
+        </div>
+      );
+    }
+
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <div className="flex items-center justify-center mt-1">
+        <div className="flex text-yellow-500 text-xs">
+          {/* Full stars */}
+          {Array(fullStars).fill().map((_, i) => (
+            <span key={`full-${i}`}>★</span>
+          ))}
+          {/* Half star */}
+          {hasHalfStar && <span>★</span>}
+          {/* Empty stars */}
+          {Array(emptyStars).fill().map((_, i) => (
+            <span key={`empty-${i}`} className="text-gray-300">★</span>
+          ))}
+        </div>
+        <span className="text-xs text-gray-500 ml-1">
+          ({rating}) • {reviewCount}
+        </span>
+      </div>
+    );
+  };
+
   // Fetch user's existing review for this product
   const fetchUserReview = async (productId) => {
     if (!user || !productId) return;
@@ -210,7 +248,7 @@ const ProductDetails = () => {
             const relatedResponse = await fetch(`/api/products/category/${foundProduct.category}`);
             if (relatedResponse.ok) {
               const relatedData = await relatedResponse.json();
-              const related = relatedData
+              const relatedProductsBase = relatedData
                 .filter(p => p._id !== foundProduct._id) // Exclude current product
                 .slice(0, 8) // Limit to 8 products
                 .map(p => ({
@@ -219,7 +257,43 @@ const ProductDetails = () => {
                   price: p.salePrice || p.regularPrice,
                   image: getImageUrl(p.image),
                 }));
-              setRelatedProducts(related);
+
+              // Fetch reviews for each related product
+              const relatedWithRatings = await Promise.all(
+                relatedProductsBase.map(async (product) => {
+                  try {
+                    const reviewsResponse = await fetch(`/api/product-reviews/product/${product.id}`);
+                    if (reviewsResponse.ok) {
+                      const reviewsData = await reviewsResponse.json();
+                      if (reviewsData.success && reviewsData.reviews && Array.isArray(reviewsData.reviews)) {
+                        const reviews = reviewsData.reviews;
+                        const averageRating = reviews.length > 0 
+                          ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
+                          : 0;
+                        return {
+                          ...product,
+                          averageRating: parseFloat(averageRating),
+                          reviewCount: reviews.length
+                        };
+                      }
+                    }
+                    return {
+                      ...product,
+                      averageRating: 0,
+                      reviewCount: 0
+                    };
+                  } catch (err) {
+                    console.warn(`Failed to fetch reviews for product ${product.id}:`, err);
+                    return {
+                      ...product,
+                      averageRating: 0,
+                      reviewCount: 0
+                    };
+                  }
+                })
+              );
+
+              setRelatedProducts(relatedWithRatings);
             }
           } catch (err) {
             console.warn('Failed to fetch related products:', err);
@@ -230,12 +304,16 @@ const ProductDetails = () => {
                 name: 'Related Product 1',
                 price: 25000,
                 image: assets.wheel5,
+                averageRating: 0,
+                reviewCount: 0,
               },
               {
                 id: 'fallback-2',
                 name: 'Related Product 2',
                 price: 30000,
                 image: assets.wheel5,
+                averageRating: 0,
+                reviewCount: 0,
               },
             ]);
           }
@@ -584,7 +662,9 @@ const ProductDetails = () => {
                   }}
                 />
                 <h3 className="text-sm font-semibold">{item.name}</h3>
-                <p className="text-sm text-gray-600">Rs {item.price.toLocaleString()}</p>
+                {/* Rating Display */}
+                {renderCompactStarRating(item.averageRating || 0, item.reviewCount || 0)}
+                <p className="text-sm text-gray-600 mt-1">Rs {item.price.toLocaleString()}</p>
               </div>
             ))}
           </div>
