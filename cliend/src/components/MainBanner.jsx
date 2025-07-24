@@ -15,6 +15,68 @@ const MainBanner = () => {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
 
+  // Render compact star rating for product cards (copied from your other components)
+const renderCompactStarRating = (rating, reviewCount) => {
+  if (reviewCount === 0) {
+    return (
+      <div className="flex items-center justify-center mt-1">
+        <div className="flex text-gray-300 text-xs">
+          {'★'.repeat(5)}
+        </div>
+        <span className="text-xs text-gray-400 ml-1">(0)</span>
+      </div>
+    );
+  }
+
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center justify-center mt-1">
+      <div className="flex text-yellow-500 text-xs">
+        {/* Full stars */}
+        {Array(fullStars).fill().map((_, i) => (
+          <span key={`full-${i}`}>★</span>
+        ))}
+        {/* Half star */}
+        {hasHalfStar && <span>★</span>}
+        {/* Empty stars */}
+        {Array(emptyStars).fill().map((_, i) => (
+          <span key={`empty-${i}`} className="text-gray-300">★</span>
+        ))}
+      </div>
+      <span className="text-xs text-gray-500 ml-1">
+        ({rating}) • {reviewCount}
+      </span>
+    </div>
+  );
+};
+
+// Fetch reviews for a single product
+const fetchProductReviews = async (productId) => {
+  try {
+    const response = await fetch(`/api/product-reviews/product/${productId}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.reviews && Array.isArray(data.reviews)) {
+        const reviews = data.reviews;
+        const averageRating = reviews.length > 0 
+          ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
+          : 0;
+        return {
+          averageRating: parseFloat(averageRating),
+          reviewCount: reviews.length
+        };
+      }
+    }
+    return { averageRating: 0, reviewCount: 0 };
+  } catch (err) {
+    console.warn(`Failed to fetch reviews for product ${productId}:`, err);
+    return { averageRating: 0, reviewCount: 0 };
+  }
+};
+
   useEffect(() => {
   const fetchReviews = async () => {
     try {
@@ -37,21 +99,40 @@ const MainBanner = () => {
   // Fetch products from database
   useEffect(() => {
     const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products');
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data);
-        } else {
-          console.error('Failed to fetch products');
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
+  try {
+    setLoading(true);
+    const response = await fetch('/api/products');
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch products');
+    }
+    
+    const data = await response.json();
+    const productsArray = Array.isArray(data) ? data : data.products || [];
+    
+    console.log('Fetching ratings for products...');
+    
+    // Fetch ratings for each product
+    const productsWithRatings = await Promise.all(
+      productsArray.map(async (product) => {
+        const ratings = await fetchProductReviews(product._id || product.id);
+        return {
+          ...product,
+          averageRating: ratings.averageRating,
+          reviewCount: ratings.reviewCount
+        };
+      })
+    );
+    
+    setProducts(productsWithRatings);
+        
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products');
       } finally {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -112,45 +193,45 @@ const MainBanner = () => {
   };
 
   const ProductCard = ({ product, isLoading = false }) => {
-    if (isLoading) {
-      return (
-        <div className="bg-white rounded-xl shadow p-4 text-center">
-          <div className="w-24 h-24 mx-auto mb-3 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-4 bg-gray-200 animate-pulse rounded mb-2"></div>
-          <div className="h-3 bg-gray-200 animate-pulse rounded mb-1"></div>
-          <div className="h-3 bg-gray-200 animate-pulse rounded w-16 mx-auto"></div>
-        </div>
-      );
-    }
-
-    if (!product) return null;
-
-    const productPrice = product.salePrice || product.regularPrice || 0;
-    const productImage = product.image
-      ? (product.image.startsWith('http') ? product.image : `http://localhost:5000/${product.image.replace(/^\/+/, '')}`)
-      
-      : assets.Airfilter;
-
+  if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer">
-        <Link to={`/product/${product._id}`}>
-          <img
-            src={productImage}
-            alt={product.productName || 'Product'}
-            className="w-24 h-24 mx-auto mb-3 object-contain"
-            onError={(e) => {
-              e.target.src = assets.Airfilter;
-            }}
-          />
-          <p className="font-medium text-sm line-clamp-2" title={product.productName}>
-            {product.productName || 'Unknown Product'}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">Rs {formatPrice(productPrice)}</p>
-          <p className="text-yellow-500 text-sm">{renderStarRating()}</p>
-        </Link>
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="w-24 h-24 mx-auto mb-3 bg-gray-200 animate-pulse rounded"></div>
+        <div className="h-4 bg-gray-200 animate-pulse rounded mb-2"></div>
+        <div className="h-3 bg-gray-200 animate-pulse rounded mb-1"></div>
+        <div className="h-3 bg-gray-200 animate-pulse rounded w-16 mx-auto"></div>
       </div>
     );
-  };
+  }
+
+  if (!product) return null;
+
+  const productPrice = product.salePrice || product.regularPrice || product.price || 0;
+  const productImage = product.image
+    ? (product.image.startsWith('http') ? product.image : `http://localhost:5000/${product.image.replace(/^\/+/, '')}`)
+    : assets.Airfilter;
+
+  return (
+    <div className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer">
+      <Link to={`/product/${product._id || product.id}`}>
+        <img
+          src={productImage}
+          alt={product.productName || product.name || 'Product'}
+          className="w-24 h-24 mx-auto mb-3 object-contain"
+          onError={(e) => {
+            e.target.src = assets.Airfilter;
+          }}
+        />
+        <p className="font-medium text-sm line-clamp-2" title={product.productName || product.name}>
+          {product.productName || product.name || 'Unknown Product'}
+        </p>
+        <p className="text-sm text-gray-600 mt-1">Rs {formatPrice(productPrice)}</p>
+        {/* Real Rating Display - NEW ADDITION */}
+        {renderCompactStarRating(product.averageRating || 0, product.reviewCount || 0)}
+      </Link>
+    </div>
+  );
+};
 
   const CategoryCard = ({ category, isLoading = false }) => {
     if (isLoading) {

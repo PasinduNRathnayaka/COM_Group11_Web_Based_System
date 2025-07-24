@@ -22,6 +22,68 @@ const Cart = () => {
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
   };
 
+  // Render compact star rating for product cards
+const renderCompactStarRating = (rating, reviewCount) => {
+  if (reviewCount === 0) {
+    return (
+      <div className="flex items-center justify-center mt-1">
+        <div className="flex text-gray-300 text-xs">
+          {'★'.repeat(5)}
+        </div>
+        <span className="text-xs text-gray-400 ml-1">(0)</span>
+      </div>
+    );
+  }
+
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center justify-center mt-1">
+      <div className="flex text-yellow-500 text-xs">
+        {/* Full stars */}
+        {Array(fullStars).fill().map((_, i) => (
+          <span key={`full-${i}`}>★</span>
+        ))}
+        {/* Half star */}
+        {hasHalfStar && <span>★</span>}
+        {/* Empty stars */}
+        {Array(emptyStars).fill().map((_, i) => (
+          <span key={`empty-${i}`} className="text-gray-300">★</span>
+        ))}
+      </div>
+      <span className="text-xs text-gray-500 ml-1">
+        ({rating}) • {reviewCount}
+      </span>
+    </div>
+  );
+};
+
+// Add this function after the renderCompactStarRating function
+// Fetch reviews for a single product
+const fetchProductReviews = async (productId) => {
+  try {
+    const response = await fetch(`/api/product-reviews/product/${productId}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.reviews && Array.isArray(data.reviews)) {
+        const reviews = data.reviews;
+        const averageRating = reviews.length > 0 
+          ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
+          : 0;
+        return {
+          averageRating: parseFloat(averageRating),
+          reviewCount: reviews.length
+        };
+      }
+    }
+    return { averageRating: 0, reviewCount: 0 };
+  } catch (err) {
+    console.warn(`Failed to fetch reviews for product ${productId}:`, err);
+    return { averageRating: 0, reviewCount: 0 };
+  }
+};
 
   // Fetch related products from database
   useEffect(() => {
@@ -38,14 +100,22 @@ const Cart = () => {
         const data = await response.json();
         
         // ✅ IMPROVED: Transform products with proper image URLs and random selection
-        const transformedProducts = (data.products || data).map(product => ({
-          id: product._id || product.id,
-          name: product.productName || product.name,
-          price: product.salePrice || product.regularPrice || product.price,
-          image: getImageUrl(product.image), // Using helper function
-          rating: product.rating || Math.floor(Math.random() * 2) + 4, // Random 4-5 rating if not available
-          category: product.category || 'Auto Parts'
-        }));
+       const transformedProducts = await Promise.all(
+          (data.products || data).map(async (product) => {
+            // Fetch ratings for each product
+            const ratings = await fetchProductReviews(product._id || product.id);
+            
+            return {
+              id: product._id || product.id,
+              name: product.productName || product.name,
+              price: product.salePrice || product.regularPrice || product.price,
+              image: getImageUrl(product.image),
+              averageRating: ratings.averageRating,
+              reviewCount: ratings.reviewCount,
+              category: product.category || 'Auto Parts'
+            };
+          })
+        );
 
         // Shuffle and take first 8 products for variety
         const shuffled = transformedProducts.sort(() => 0.5 - Math.random());
@@ -61,7 +131,8 @@ const Cart = () => {
             name: 'BMW i8 Air Filter',
             price: 4500,
             image: assets.Airfilter,
-            rating: 4,
+            averageRating: 0,
+            reviewCount: 0,
             category: 'Air Filters'
           },
           {
@@ -69,7 +140,8 @@ const Cart = () => {
             name: 'Engine Oil Filter',
             price: 2500,
             image: assets.Airfilter,
-            rating: 5,
+            averageRating: 0,
+            reviewCount: 0,
             category: 'Filters'
           },
           {
@@ -77,7 +149,8 @@ const Cart = () => {
             name: 'Brake Pads Set',
             price: 6500,
             image: assets.Airfilter,
-            rating: 4,
+            averageRating: 0,
+            reviewCount: 0,
             category: 'Brake Parts'
           },
           {
@@ -85,7 +158,8 @@ const Cart = () => {
             name: 'Car Battery',
             price: 8900,
             image: assets.Airfilter,
-            rating: 5,
+            averageRating: 0,
+            reviewCount: 0,
             category: 'Electrical'
           }
         ]);
@@ -240,9 +314,8 @@ const Cart = () => {
                   />
                   <p className="text-sm font-semibold">{product.name}</p>
                   <p className="text-sm text-gray-600">Rs.{product.price}</p>
-                  <p className="text-yellow-500 text-sm">
-                    {'★'.repeat(product.rating || 0)}{'☆'.repeat(5 - (product.rating || 0))}
-                  </p>
+                  {/* Real Rating Display */}
+                  {renderCompactStarRating(product.averageRating || 0, product.reviewCount || 0)}
                 </Link>
               </div>
             ))}
