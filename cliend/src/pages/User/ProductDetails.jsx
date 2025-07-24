@@ -374,6 +374,42 @@ const ProductDetails = () => {
     toast.success('Added to cart!');
   };
 
+  
+const handleBuyNow = () => {
+  if (!user) {
+    toast.error('Please log in first.');
+    return;
+  }
+  
+  if (product.stock <= 0) {
+    toast.error('Product is out of stock.');
+    return;
+  }
+  
+  if (quantity > product.stock) {
+    toast.error(`Only ${product.stock} items available.`);
+    return;
+  }
+
+  // Create the item for direct checkout
+  const buyNowItem = {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    quantity,
+    image: product.images?.[0] || '',
+  };
+
+  // Navigate to checkout with the buy now item
+  navigate('/checkout', { 
+    state: { 
+      buyNowItem: buyNowItem,
+      isBuyNow: true 
+    } 
+  });
+};
+
+
   const handleReviewSubmit = (result) => {
     if (result.success) {
       // Create the review object for local state
@@ -540,10 +576,7 @@ const ProductDetails = () => {
             <button
               className="border border-black px-6 py-2 rounded hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={product.stock <= 0}
-              onClick={() => {
-                if (!user) return toast.error('Please log in');
-                navigate('/checkout');
-              }}
+              onClick={handleBuyNow} // ✅ Updated to use handleBuyNow
             >
               Buy Now
             </button>
