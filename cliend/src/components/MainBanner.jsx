@@ -234,28 +234,30 @@ const fetchProductReviews = async (productId) => {
 };
 
   const CategoryCard = ({ category, isLoading = false }) => {
-    if (isLoading) {
-      return (
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <div className="w-full bg-gray-200 animate-pulse rounded mb-2" style={{ height: '150px' }}></div>
-          <div className="h-6 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-      );
-    }
-
-    if (!category) return null;
-
-    const categoryImage = category.image
-      ? (category.image.startsWith('http') ? category.image : `http://localhost:5000/${category.image.replace(/^\/+/, '')}`)
-      : assets.Airfilter;
-
-    const categorySlug = category.slug || category.category || category.name.toLowerCase();
-
+  if (isLoading) {
     return (
-      
-        
-        <div className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col">
-      
+      <div className="bg-white rounded-lg shadow p-4 text-center">
+        <div className="w-full bg-gray-200 animate-pulse rounded mb-2" style={{ height: '150px' }}></div>
+        <div className="h-6 bg-gray-200 animate-pulse rounded"></div>
+      </div>
+    );
+  }
+
+  if (!category) return null;
+
+  const categoryImage = category.image
+    ? (category.image.startsWith('http') ? category.image : `http://localhost:5000/${category.image.replace(/^\/+/, '')}`)
+    : assets.Airfilter;
+
+  // Create consistent category slug for URL
+  const categorySlug = category.slug || category.category || category.name.toLowerCase().replace(/\s+/g, '-');
+
+  return (
+    <Link 
+      to={`/allproducts`}
+      className="block" // Add block class for proper link behavior
+    >
+      <div className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer flex flex-col">
         <div className="flex-grow mb-2">
           <img
             src={categoryImage}
@@ -269,8 +271,9 @@ const fetchProductReviews = async (productId) => {
         </div>
         <p className="text-lg font-semibold">{category.name}</p>
       </div>
-    );
-  };
+    </Link>
+  );
+};
 
   return (
     <>
