@@ -4,6 +4,9 @@ import Navbar from './components/Navbar';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useAppContext } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 // import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import EmployeeScanner from './pages/QRScanner/EmployeeScanner';
@@ -73,12 +76,32 @@ import DownloadID from "./pages/Employee/DownloadID";
 const App = () => {
   const location = useLocation();
   const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee")  || location.pathname.startsWith("/attendance-scanner");
-  const { isSeller, showUserLogin, navigate, setShowUserLogin } = useAppContext(); //new
+  const { isSeller, showUserLogin, navigate, setShowUserLogin, user, setUser  } = useAppContext(); //new
+  
 //new
 const handleSignInClick = () => {     
     setShowUserLogin(false)  // Close login modal
     navigate('/signup')      // Redirect to /signup page
   }
+
+
+  useEffect(() => {
+  // Delay logout if invalid user is on "/" — prevent interfering with initial login redirects
+  let timeout;
+  
+  if (location.pathname === '/' && user && user.userType !== 'user') {
+    timeout = setTimeout(() => {
+      localStorage.removeItem('userData');
+      setUser(null);
+      navigate('/', { replace: true });
+    }, 300); // Give time for redirects to seller/employee/etc.
+  }
+
+  return () => {
+    if (timeout) clearTimeout(timeout);
+  };
+}, [location.pathname, user]);
+
 //new
 
   return (
