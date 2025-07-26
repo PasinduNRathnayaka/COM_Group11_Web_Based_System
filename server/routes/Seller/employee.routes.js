@@ -9,6 +9,7 @@ import {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
+  loginEmployee 
 } from '../../controllers/Seller/employeeController.js';
 
 const router = express.Router();
@@ -33,5 +34,6 @@ router.get('/', getEmployees);
 router.get('/:id', getEmployeeById);
 router.put('/:id', upload.single('image'), updateEmployee);
 router.delete('/:id', deleteEmployee);
+router.post('/login', loginEmployee);
 
 export default router;
