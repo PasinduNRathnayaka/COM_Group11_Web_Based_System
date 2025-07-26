@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import axios from "axios";
 import dayjs from "dayjs";
 
@@ -13,26 +13,33 @@ const ApplyLeave = () => {
   const [reason, setReason] = useState("");
   const [noOfDays, setNoOfDays] = useState("");
 
+  // ✅ TEMPORARY: Replace with actual logged-in employee ID
+  // This will come from login context after we implement login
+  const currentEmployeeId = "EMP123456"; // This should come from login system
+
   // Fetch stats and announcements
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [statsRes, announceRes] = await Promise.all([
-          axios.get("/api/employee/leave-stats"),
-          axios.get("/api/employee/announcements"),
+          axios.get(`http://localhost:4000/api/employee/leave-stats/${currentEmployeeId}`),
+          axios.get("http://localhost:4000/api/employee/announcements"),
         ]);
-        setStats(statsRes.data);
-        setAnnouncements(announceRes.data);
+        
+        // ✅ Updated to handle new API response structure
+        setStats(statsRes.data.data);
+        setAnnouncements(announceRes.data.data);
       } catch (error) {
         console.error("Error fetching data", error);
       }
     };
     fetchData();
-  }, []);
+  }, [currentEmployeeId]);
 
   const handleApplyLeave = async () => {
     try {
       const payload = {
+        employeeId: currentEmployeeId, // ✅ Uses empId for identification
         type: leaveType,
         from: fromDate,
         to: toDate,
@@ -40,10 +47,20 @@ const ApplyLeave = () => {
         reason,
         days: noOfDays,
       };
-      await axios.post("/api/employee/apply-leave", payload);
-      alert("Leave applied successfully!");
+      
+      const response = await axios.post("http://localhost:4000/api/employee/apply-leave", payload);
+      
+      if (response.data.success) {
+        alert("Leave applied successfully!");
+        handleCancel(); // Reset form
+        
+        // ✅ Refresh stats after successful application
+        const statsRes = await axios.get(`http://localhost:4000/api/employee/leave-stats/${currentEmployeeId}`);
+        setStats(statsRes.data.data);
+      }
     } catch (error) {
-      alert("Error applying leave.");
+      console.error("Error applying leave:", error);
+      alert(error.response?.data?.message || "Error applying leave.");
     }
   };
 
