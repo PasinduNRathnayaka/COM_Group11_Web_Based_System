@@ -17,6 +17,9 @@ const Cart = () => {
   // Get cart items from context
   const { cartItems, setCartItems } = useAppContext();
 
+  // Get additional cart functions from context
+  const { removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount, isCartLoading } = useAppContext();
+
   const getImageUrl = (path) => {
     if (!path) return assets.Airfilter;
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
@@ -171,40 +174,54 @@ const fetchProductReviews = async (productId) => {
   }, [user]);
 
   const handleIncrease = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map(item =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
+    const item = cartItems.find(item => item.id === id);
+    if (item) {
+      updateQuantity(id, item.quantity + 1);
+    }
   };
 
   const handleDecrease = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map(item =>
-        item.id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-    );
+    const item = cartItems.find(item => item.id === id);
+    if (item && item.quantity > 1) {
+      updateQuantity(id, item.quantity - 1);
+    }
   };
 
   const handleRemove = (id) => {
-    setCartItems((prevItems) => prevItems.filter(item => item.id !== id));
+    removeFromCart(id);
   };
 
   if (!user) return <Navigate to="/" replace />;
 
-  const total = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const total = getCartTotal();
 
   return (
     <div className="px-4 md:px-10 py-10">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">Your Cart</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Your Cart</h1>
+        {cartItems.length > 0 && (
+          <button
+            onClick={clearCart}
+            className="text-red-600 hover:text-red-800 text-sm underline"
+          >
+            Clear Cart
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="md:col-span-2 bg-white shadow rounded-lg p-6">
           {cartItems.length === 0 ? (
-            <p className="text-gray-500">Your cart is empty.</p>
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">Your cart is empty.</p>
+              <Link 
+                to="/allproducts" 
+                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-900 transition"
+              >
+                Start Shopping
+              </Link>
+            </div>
           ) : (
             cartItems.map((item) => (
               <div key={item.id} className="flex items-center justify-between border-b py-4">
@@ -255,13 +272,26 @@ const fetchProductReviews = async (productId) => {
         {/* Order Summary */}
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-bold mb-4">Order Summary</h2>
-          <div className="text-md font-bold flex justify-between mt-4">
-            <span>Total</span>
-            <span>Rs.{total}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Items ({cartItems.length})</span>
+              <span>Rs.{total}</span>
+            </div>
+            <div className="border-t pt-2">
+              <div className="text-md font-bold flex justify-between">
+                <span>Total</span>
+                <span>Rs.{total}</span>
+              </div>
+            </div>
           </div>
           <button
-            className="w-full mt-6 bg-black text-white py-2 rounded hover:bg-gray-900 transition"
+            className={`w-full mt-6 py-2 rounded transition ${
+              cartItems.length === 0 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-black text-white hover:bg-gray-900'
+            }`}
             onClick={() => navigate('/checkout')}
+            disabled={cartItems.length === 0}
           >
             Go to Checkout →
           </button>
