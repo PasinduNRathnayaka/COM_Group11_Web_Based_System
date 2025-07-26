@@ -10,7 +10,6 @@ export const AppContextProvider = ({ children }) => {
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
-
   // Load user from localStorage on initial render
   const stored = JSON.parse(localStorage.getItem('user') || 'null');
   const initialUser = stored && stored.token ? stored : null;
@@ -73,22 +72,107 @@ export const AppContextProvider = ({ children }) => {
   // Other states
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  
+  // Cart state with localStorage persistence
+  const [cartItems, _setCartItems] = useState([]);
+  const [isCartLoading, setIsCartLoading] = useState(true);
 
-  const addToCart = (product, quantity = 1) => {
-  setCartItems((prev) => {
-    const existing = prev.find((item) => item.id === product.id);
-    if (existing) {
-      return prev.map((item) =>
-        item.id === product.id
-          ? { ...item, quantity: item.quantity + quantity }
-          : item
-      );
+  // Load cart items from localStorage on initial render
+  useEffect(() => {
+    const loadCartFromStorage = () => {
+      try {
+        const savedCartItems = localStorage.getItem('cartItems');
+        if (savedCartItems) {
+          const parsedItems = JSON.parse(savedCartItems);
+          if (Array.isArray(parsedItems)) {
+            _setCartItems(parsedItems);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error);
+        localStorage.removeItem('cartItems');
+      } finally {
+        setIsCartLoading(false);
+      }
+    };
+
+    loadCartFromStorage();
+  }, []);
+
+  // Wrapped cart setter: keeps localStorage in sync
+  const setCartItems = (newCartItems) => {
+    if (typeof newCartItems === 'function') {
+      _setCartItems(prevItems => {
+        const updatedItems = newCartItems(prevItems);
+        if (!isCartLoading) {
+          localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+        }
+        return updatedItems;
+      });
+    } else {
+      _setCartItems(newCartItems);
+      if (!isCartLoading) {
+        localStorage.setItem('cartItems', JSON.stringify(newCartItems));
+      }
     }
-    return [...prev, { ...product, quantity }];
-  });
-};
+  };
 
+  // Enhanced addToCart function
+  const addToCart = (product, quantity = 1) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+      return [...prev, { ...product, quantity }];
+    });
+  };
+
+  // Remove item from cart function
+  const removeFromCart = (productId) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+  };
+
+  // Update item quantity function
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === productId 
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+  };
+
+  // Clear entire cart function
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem('cartItems');
+  };
+
+  // Get cart total function
+  const getCartTotal = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  // Get cart item count function
+  const getCartItemCount = () => {
+    return cartItems.reduce((count, item) => count + item.quantity, 0);
+  };
+
+  // Check if item is in cart function
+  const isInCart = (productId) => {
+    return cartItems.some(item => item.id === productId);
+  };
 
   return (
     <AppContext.Provider
@@ -103,6 +187,13 @@ export const AppContextProvider = ({ children }) => {
         cartItems,
         setCartItems,
         addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        getCartTotal,
+        getCartItemCount,
+        isInCart,
+        isCartLoading,
         backendUrl,
       }}
     >
