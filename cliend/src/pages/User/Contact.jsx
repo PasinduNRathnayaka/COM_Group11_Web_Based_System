@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { assets } from '../../assets/assets'; 
 import { useAppContext } from '../../context/AppContext';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -19,6 +19,34 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
 
   if (!user) return <Navigate to="/" replace />;
+
+  // Autofill form data with user information when component mounts
+  useEffect(() => {
+    if (user) {
+      // Extract first and last name from user object
+      // Adjust these field names based on your user object structure
+      const firstName = user.firstName || user.first_name || '';
+      const lastName = user.lastName || user.last_name || '';
+      const email = user.email || '';
+      
+      // Alternative: If user has a full name field, split it
+      let extractedFirstName = firstName;
+      let extractedLastName = lastName;
+      
+      if (!firstName && !lastName && user.name) {
+        const nameParts = user.name.trim().split(' ');
+        extractedFirstName = nameParts[0] || '';
+        extractedLastName = nameParts.slice(1).join(' ') || '';
+      }
+
+      setFormData(prevData => ({
+        ...prevData,
+        firstName: extractedFirstName,
+        lastName: extractedLastName,
+        email: email
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,13 +69,12 @@ const Contact = () => {
 
       if (response.ok) {
         toast.success('Message sent successfully!');
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
+        // Reset only subject and message, keep user info
+        setFormData(prevData => ({
+          ...prevData,
           subject: '',
           message: ''
-        });
+        }));
       } else {
         toast.error(result.message || 'Failed to send message');
       }
@@ -63,7 +90,7 @@ const Contact = () => {
       {/* 🔷 Top Blue Section with Contact Info */}
       <div className="bg-blue-500 text-white py-10 px-4 sm:px-6 md:px-12 lg:px-20 xl:px-28 rounded-b-2xl">
         <h1 className="text-3xl font-bold mb-2">KAMAL AUTO PARTS</h1>
-        <p className="mb-6 text-sm md:text-base">We’d love to hear from you. Let’s get in touch.</p>
+        <p className="mb-6 text-sm md:text-base">We'd love to hear from you. Let's get in touch.</p>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
           <div>
