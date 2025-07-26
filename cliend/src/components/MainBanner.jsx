@@ -2,7 +2,7 @@ import { assets } from '../assets/assets'
 import { Link } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
 import RateUsPopup from '../components/RateUsPopup'; 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const MainBanner = () => {
 
@@ -14,6 +14,11 @@ const MainBanner = () => {
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
+  
+  // Auto-sliding carousel state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const intervalRef = useRef(null);
+  const carouselRef = useRef(null);
 
   // Render compact star rating for product cards (copied from your other components)
 const renderCompactStarRating = (rating, reviewCount) => {
@@ -165,6 +170,64 @@ const fetchProductReviews = async (productId) => {
     }
   }, [user]);
 
+  // Auto-sliding carousel effect
+  useEffect(() => {
+    if (products.length === 0) return;
+
+    const itemsPerSlide = getItemsPerSlide();
+    const maxSlides = Math.ceil(products.length / itemsPerSlide);
+
+    const startAutoSlide = () => {
+      intervalRef.current = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % maxSlides);
+      }, 4000); // Slide every 4 seconds
+    };
+
+    startAutoSlide();
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [products.length]);
+
+  // Get items per slide based on screen size
+  const getItemsPerSlide = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 768) return 4; // md screens and up
+      if (window.innerWidth >= 640) return 3; // sm screens
+      return 2; // mobile
+    }
+    return 4; // default
+  };
+
+  // Handle manual slide navigation
+  const goToSlide = (slideIndex) => {
+    setCurrentSlide(slideIndex);
+    // Reset auto-slide timer
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    const itemsPerSlide = getItemsPerSlide();
+    const maxSlides = Math.ceil(products.length / itemsPerSlide);
+    intervalRef.current = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % maxSlides);
+    }, 4000);
+  };
+
+  const nextSlide = () => {
+    const itemsPerSlide = getItemsPerSlide();
+    const maxSlides = Math.ceil(products.length / itemsPerSlide);
+    goToSlide((currentSlide + 1) % maxSlides);
+  };
+
+  const prevSlide = () => {
+    const itemsPerSlide = getItemsPerSlide();
+    const maxSlides = Math.ceil(products.length / itemsPerSlide);
+    goToSlide(currentSlide === 0 ? maxSlides - 1 : currentSlide - 1);
+  };
+
   {/*const getStaticCategories = () => [
     { name: 'Engine', image: assets.Bugatti_Chiron_Engine, category: 'engine', _id: 'static-engine' },
     { name: 'Brakes', image: assets.brakes_suspension, category: 'brakes', _id: 'static-brakes' },
@@ -175,12 +238,6 @@ const fetchProductReviews = async (productId) => {
     { name: 'Lights', image: assets.lights, category: 'lights', _id: 'static-lights' },
     { name: 'Exhaust', image: assets.exhaust, category: 'exhaust', _id: 'static-exhaust' },
   ];*/}
-
-  const getRandomProducts = (count = 12) => {
-    if (products.length === 0) return [];
-    const shuffled = [...products].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  };
 
   const renderStarRating = (rating = 4) => {
     return Array.from({ length: 5 }, (_, i) =>
@@ -195,7 +252,7 @@ const fetchProductReviews = async (productId) => {
   const ProductCard = ({ product, isLoading = false }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow p-4 text-center">
+      <div className="bg-white rounded-xl shadow p-4 text-center min-w-[180px] flex-shrink-0">
         <div className="w-24 h-24 mx-auto mb-3 bg-gray-200 animate-pulse rounded"></div>
         <div className="h-4 bg-gray-200 animate-pulse rounded mb-2"></div>
         <div className="h-3 bg-gray-200 animate-pulse rounded mb-1"></div>
@@ -212,7 +269,7 @@ const fetchProductReviews = async (productId) => {
     : assets.Airfilter;
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer">
+    <div className="bg-white rounded-xl shadow p-4 text-center hover:shadow-md transition cursor-pointer min-w-[180px] flex-shrink-0">
       <Link to={`/product/${product._id || product.id}`}>
         <img
           src={productImage}
@@ -326,18 +383,85 @@ const fetchProductReviews = async (productId) => {
             </div>
           </div>
 
-          {/* For You Section */}
+          {/* For You Section - Updated with Auto-sliding Carousel */}
           <div className="px-4 mt-16 mb-20">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-left text-xl md:text-2xl font-bold">For You</h1>
+              <div className="flex items-center gap-2">
+                {/* Navigation arrows */}
+                <button 
+                  onClick={prevSlide}
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  aria-label="Previous slide"
+                >
+                  <svg className="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={nextSlide}
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  aria-label="Next slide"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {loading
-                ? Array(12).fill(0).map((_, i) => <ProductCard key={i} isLoading={true} />)
-                : getRandomProducts(12).map((product, i) => (
-                    <ProductCard key={product._id || i} product={product} />
-                  ))}
+            
+            {/* Carousel Container */}
+            <div className="relative overflow-hidden" ref={carouselRef}>
+              <div 
+                className="flex transition-transform duration-500 ease-in-out gap-6"
+                style={{
+                  transform: `translateX(-${currentSlide * 100}%)`,
+                  width: `${Math.ceil(products.length / getItemsPerSlide()) * 100}%`
+                }}
+              >
+                {loading ? (
+                  // Loading skeleton
+                  Array(12).fill(0).map((_, i) => (
+                    <div key={i} style={{ width: `${100 / getItemsPerSlide()}%` }} className="flex-shrink-0">
+                      <ProductCard isLoading={true} />
+                    </div>
+                  ))
+                ) : (
+                  // Group products into slides
+                  (() => {
+                    const itemsPerSlide = getItemsPerSlide();
+                    const slides = [];
+                    for (let i = 0; i < products.length; i += itemsPerSlide) {
+                      slides.push(products.slice(i, i + itemsPerSlide));
+                    }
+                    return slides.map((slideProducts, slideIndex) => (
+                      <div key={slideIndex} className="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                        {slideProducts.map((product) => (
+                          <ProductCard key={product._id || product.id} product={product} />
+                        ))}
+                      </div>
+                    ));
+                  })()
+                )}
+              </div>
             </div>
+
+            {/* Slide indicators */}
+            {!loading && products.length > 0 && (
+              <div className="flex justify-center mt-6 gap-2">
+                {Array(Math.ceil(products.length / getItemsPerSlide())).fill(0).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`w-3 h-3 rounded-full transition-colors ${
+                      currentSlide === index ? 'bg-primary' : 'bg-gray-300'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="flex justify-end mt-6">
               <Link to="/allproducts" className="text-sm text-primary hover:underline font-semibold">
                 View More →
