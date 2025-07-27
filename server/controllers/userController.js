@@ -153,7 +153,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
     await user.save();
 
     // Send email with reset code
-    await sendPasswordResetEmail(user.email, resetCode, user.name);
+    await sendPasswordResetEmail(user.email, resetCode, user.name, 'user');
 
     res.json({
       success: true,
@@ -231,7 +231,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
     // Send success notification email (don't throw error if this fails)
     try {
-      await sendPasswordResetSuccessEmail(user.email, user.name);
+      await sendPasswordResetSuccessEmail(user.email, user.name, 'user');
     } catch (emailError) {
       console.error('Failed to send success email:', emailError);
     }
