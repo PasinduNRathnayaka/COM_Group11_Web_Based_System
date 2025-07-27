@@ -1,9 +1,16 @@
+// controllers/Seller/employeeController.js - Complete with forgot password
 import Employee from '../../models/Seller/Employee.js';
 import { generateQR } from '../../utils/generateQR.js';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
+import { 
+  sendPasswordResetEmail, 
+  sendPasswordResetSuccessEmail,
+  generateResetCode, 
+  generateResetToken 
+} from '../../utils/emailService.js';
 
 // Create Employee
 export const createEmployee = async (req, res) => {
@@ -36,7 +43,7 @@ export const createEmployee = async (req, res) => {
   }
 };
 
-// Login Employee (Updated with user type detection)
+// Login Employee
 export const loginEmployee = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -71,10 +78,10 @@ export const loginEmployee = async (req, res) => {
     res.json({
       _id: employee._id,
       name: employee.name,
-      email: employee.email || employee.username, // Return email or username
+      email: employee.email || employee.username,
       empId: employee.empId,
-      category: employee.category, // This field will help determine user type
-      role: employee.role, // Alternative field for user type
+      category: employee.category,
+      role: employee.role,
       contact: employee.contact,
       address: employee.address,
       image: employee.image,
@@ -87,6 +94,222 @@ export const loginEmployee = async (req, res) => {
   } catch (error) {
     console.error('Employee login error:', error);
     res.status(500).json({ message: 'Server error during login' });
+  }
+};
+
+// 🔑 NEW: Request password reset for employee
+export const requestEmployeePasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Find employee by email or username
+    let employee = await Employee.findOne({ 
+      $or: [
+        { email: email.toLowerCase().trim() },
+        { username: email.toLowerCase().trim() }
+      ]
+    });
+    
+    if (!employee) {
+      // Don't reveal if email/username exists or not for security
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset code has been sent.'
+      });
+    }
+
+    // Check if employee doesn't have email
+    if (!employee.email) {
+      return res.status(400).json({ 
+        message: 'This account does not have an email address associated. Please contact your administrator.' 
+      });
+    }
+
+    // Check if employee is currently locked out
+    if (employee.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((employee.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      return res.status(429).json({ 
+        message: `Too many failed attempts. Please try again in ${lockTimeRemaining} minutes.` 
+      });
+    }
+
+    // Generate reset code and token
+    const resetCode = generateResetCode();
+    const resetToken = generateResetToken();
+    
+    // Set reset fields (expires in 15 minutes)
+    employee.resetPasswordCode = resetCode;
+    employee.resetPasswordToken = resetToken;
+    employee.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+    
+    await employee.save();
+
+    // Send email with reset code
+    await sendPasswordResetEmail(employee.email, resetCode, employee.name);
+
+    res.json({
+      success: true,
+      message: 'Password reset code has been sent to your email.',
+      ...(process.env.NODE_ENV === 'development' && { resetCode })
+    });
+
+  } catch (error) {
+    console.error('Employee password reset request error:', error);
+    
+    if (error.message.includes('Too many failed attempts')) {
+      return res.status(429).json({ message: error.message });
+    }
+    
+    res.status(500).json({ message: 'Error sending password reset email. Please try again later.' });
+  }
+};
+
+// 🔑 NEW: Reset employee password
+export const resetEmployeePassword = async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ 
+        message: 'Email, reset code, and new password are required' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        message: 'New password must be at least 6 characters long' 
+      });
+    }
+
+    // Find employee with valid reset code and not expired
+    const employee = await Employee.findOne({
+      $or: [
+        { email: email.toLowerCase().trim() },
+        { username: email.toLowerCase().trim() }
+      ],
+      resetPasswordCode: resetCode,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!employee) {
+      // Try to find employee by email to increment attempts
+      const employeeByEmail = await Employee.findOne({ 
+        $or: [
+          { email: email.toLowerCase().trim() },
+          { username: email.toLowerCase().trim() }
+        ]
+      });
+      
+      if (employeeByEmail) {
+        await employeeByEmail.incrementResetAttempts();
+        
+        if (employeeByEmail.resetPasswordAttempts >= 4) {
+          return res.status(429).json({ 
+            message: 'Too many failed attempts. Your account has been temporarily locked for 30 minutes.' 
+          });
+        }
+      }
+      
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    // Check if employee is locked out
+    if (employee.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((employee.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      return res.status(429).json({ 
+        message: `Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.` 
+      });
+    }
+
+    // Reset password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    employee.password = hashedPassword;
+    employee.clearResetPasswordFields();
+    
+    await employee.save();
+
+    // Send success notification email
+    if (employee.email) {
+      try {
+        await sendPasswordResetSuccessEmail(employee.email, employee.name);
+      } catch (emailError) {
+        console.error('Failed to send success email:', emailError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now log in with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Employee password reset error:', error);
+    
+    if (error.message.includes('Too many failed attempts') || 
+        error.message.includes('temporarily locked') ||
+        error.message.includes('Invalid or expired')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    res.status(500).json({ message: 'Error resetting password. Please try again later.' });
+  }
+};
+
+// 🔑 NEW: Verify employee reset code
+export const verifyEmployeeResetCode = async (req, res) => {
+  try {
+    const { email, resetCode } = req.body;
+
+    if (!email || !resetCode) {
+      return res.status(400).json({ message: 'Email and reset code are required' });
+    }
+
+    const employee = await Employee.findOne({
+      $or: [
+        { email: email.toLowerCase().trim() },
+        { username: email.toLowerCase().trim() }
+      ],
+      resetPasswordCode: resetCode,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!employee) {
+      const employeeByEmail = await Employee.findOne({ 
+        $or: [
+          { email: email.toLowerCase().trim() },
+          { username: email.toLowerCase().trim() }
+        ]
+      });
+      
+      if (employeeByEmail) {
+        await employeeByEmail.incrementResetAttempts();
+      }
+      
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    // Check if employee is locked out
+    if (employee.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((employee.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      return res.status(429).json({ 
+        message: `Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.` 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Reset code verified successfully. You can now set your new password.',
+      token: employee.resetPasswordToken
+    });
+
+  } catch (error) {
+    console.error('Employee reset code verification error:', error);
+    res.status(500).json({ message: 'Error verifying reset code. Please try again later.' });
   }
 };
 
