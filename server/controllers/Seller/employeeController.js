@@ -97,24 +97,28 @@ export const loginEmployee = async (req, res) => {
   }
 };
 
-// 🔑 NEW: Request password reset for employee
+// 🔑 FIXED: Enhanced request password reset for employee
 export const requestEmployeePasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+      return res.status(400).json({ message: 'Email or username is required' });
     }
 
-    // Find employee by email or username
-    let employee = await Employee.findOne({ 
+    console.log(`🔍 Looking for employee with email/username: ${email}`);
+
+    // ✅ FIXED: Better search logic with proper trimming and case handling
+    const searchValue = email.toLowerCase().trim();
+    const employee = await Employee.findOne({ 
       $or: [
-        { email: email.toLowerCase().trim() },
-        { username: email.toLowerCase().trim() }
+        { email: searchValue },
+        { username: searchValue }
       ]
     });
     
     if (!employee) {
+      console.log('❌ Employee not found');
       // Don't reveal if email/username exists or not for security
       return res.json({
         success: true,
@@ -122,16 +126,32 @@ export const requestEmployeePasswordReset = async (req, res) => {
       });
     }
 
-    // Check if employee doesn't have email
-    if (!employee.email) {
+    console.log('✅ Employee found:', {
+      empId: employee.empId,
+      name: employee.name,
+      category: employee.category,
+      hasEmail: !!employee.email,
+      email: employee.email
+    });
+
+    // ✅ FIXED: Better email validation using the new method
+    if (!employee.canReceiveEmails()) {
+      console.log('❌ Employee has no valid email address');
       return res.status(400).json({ 
-        message: 'This account does not have an email address associated. Please contact your administrator.' 
+        message: 'This account does not have a valid email address associated. Please contact your administrator to add an email address to your account.',
+        details: {
+          empId: employee.empId,
+          name: employee.name,
+          category: employee.category,
+          hasEmailField: !!employee.email
+        }
       });
     }
 
     // Check if employee is currently locked out
     if (employee.isResetLocked()) {
       const lockTimeRemaining = Math.ceil((employee.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      console.log(`⏰ Employee is locked for ${lockTimeRemaining} minutes`);
       return res.status(429).json({ 
         message: `Too many failed attempts. Please try again in ${lockTimeRemaining} minutes.` 
       });
@@ -147,27 +167,70 @@ export const requestEmployeePasswordReset = async (req, res) => {
     employee.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
     
     await employee.save();
+    console.log('💾 Reset fields saved to employee');
+
+    // ✅ FIXED: Use the new getUserType method for consistent user type detection
+    const userType = employee.getUserType();
+
+    console.log(`📧 Sending email to ${employee.email} as ${userType}`);
 
     // Send email with reset code
-    await sendPasswordResetEmail(employee.email, resetCode, employee.name);
+    const emailResult = await sendPasswordResetEmail(
+      employee.email, 
+      resetCode, 
+      employee.name, 
+      userType
+    );
+
+    console.log('✅ Email sent successfully:', emailResult);
 
     res.json({
       success: true,
       message: 'Password reset code has been sent to your email.',
-      ...(process.env.NODE_ENV === 'development' && { resetCode })
+      userType: userType,
+      employeeCategory: employee.category,
+      // Development info (remove in production)
+      ...(process.env.NODE_ENV === 'development' && { 
+        resetCode,
+        employeeInfo: {
+          empId: employee.empId,
+          name: employee.name,
+          category: employee.category,
+          email: employee.email,
+          userType: userType
+        }
+      })
     });
 
   } catch (error) {
-    console.error('Employee password reset request error:', error);
+    console.error('❌ Employee password reset request error:', error);
     
     if (error.message.includes('Too many failed attempts')) {
       return res.status(429).json({ message: error.message });
     }
     
-    res.status(500).json({ message: 'Error sending password reset email. Please try again later.' });
+    // Provide more specific error messages
+    let errorMessage = 'Error sending password reset email. Please try again later.';
+    
+    if (error.message.includes('authentication failed') || error.code === 'EAUTH') {
+      errorMessage = 'Email service authentication failed. Please contact administrator.';
+    } else if (error.message.includes('Invalid email') || error.code === 'ENOTFOUND') {
+      errorMessage = 'Email service configuration error. Please contact administrator.';
+    } else if (error.message.includes('Invalid login')) {
+      errorMessage = 'Invalid email credentials. Please verify EMAIL_USER and EMAIL_PASS';
+    }
+    
+    res.status(500).json({ 
+      message: errorMessage,
+      category: 'EMAIL_SERVICE_ERROR',
+      debug: process.env.NODE_ENV === 'development' ? {
+        originalError: error.message,
+        code: error.code,
+        stack: error.stack
+      } : undefined
+    });
   }
 };
-
 // 🔑 NEW: Reset employee password
 export const resetEmployeePassword = async (req, res) => {
   try {
