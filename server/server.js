@@ -18,7 +18,7 @@ import salaryRoutes from './routes/Seller/salary.routes.js';
 
 import orderRoutes from './routes/OnlineEmployee/order.routes.js';
 import messageRoutes from './routes/OnlineEmployee/message.routes.js';
-
+import orderDetailsRoutes from './routes/OnlineEmployee/orderDetails.routes.js';
 
 
 
@@ -57,12 +57,13 @@ app.use('/api/salary', salaryRoutes);
 app.use('/api/user', userRoutes);
 
 
-// Start Server
-connectDB();
-
 app.use('/api/order', orderRoutes);
 app.use('/api/message', messageRoutes);
+app.use("/api/orderdetails", orderDetailsRoutes);
 
+
+// Start Server
+connectDB();
 
 // Default route
 app.get('/', (req, res) => {
