@@ -9,9 +9,11 @@ const Checkout = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   
-  // ✅ Get checkout items (either from cart or buy now)
+  // ✅ Get checkout items (either from cart, selected items, or buy now)
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [isBuyNow, setIsBuyNow] = useState(false);
+  const [isCartCheckout, setIsCartCheckout] = useState(false);
+  const [isSelectedItemsCheckout, setIsSelectedItemsCheckout] = useState(false);
 
   const orderPlacedRef = useRef(false);
   const emptyCartMessageShown = useRef(false);
@@ -31,20 +33,32 @@ const Checkout = () => {
     orderNotes: ''
   });
 
-  // ✅ Set checkout items based on whether it's buy now or cart checkout
+  // ✅ Set checkout items based on the type of checkout
   useEffect(() => {
     if (location.state?.isBuyNow && location.state?.buyNowItem) {
       // Buy Now scenario
       setCheckoutItems([location.state.buyNowItem]);
       setIsBuyNow(true);
+      setIsCartCheckout(false);
+      setIsSelectedItemsCheckout(false);
+    } else if (location.state?.isCartCheckout && location.state?.selectedItems) {
+      // Cart checkout with selected items
+      setCheckoutItems(location.state.selectedItems);
+      setIsBuyNow(false);
+      setIsCartCheckout(true);
+      setIsSelectedItemsCheckout(true);
     } else if (cartItems && cartItems.length > 0) {
-      // Cart checkout scenario
+      // Fallback: use all cart items if no specific selection
       setCheckoutItems(cartItems);
       setIsBuyNow(false);
+      setIsCartCheckout(true);
+      setIsSelectedItemsCheckout(false);
     } else {
       // No items to checkout
       setCheckoutItems([]);
       setIsBuyNow(false);
+      setIsCartCheckout(false);
+      setIsSelectedItemsCheckout(false);
     }
   }, [location.state, cartItems]);
 
@@ -80,11 +94,16 @@ const Checkout = () => {
       return; // Skip cart validation for buy now
     }
 
+    // For cart checkout with selected items, we don't need to check full cart
+    if (location.state?.isCartCheckout && location.state?.selectedItems) {
+      return; // Skip cart validation for selected items checkout
+    }
+
     if (orderPlacedRef.current) {
-    return;
-}
+      return;
+    }
     
-        // For cart checkout, check if cart is empty
+    // For full cart checkout, check if cart is empty
     if (!cartItems || cartItems.length === 0) {
       if (!emptyCartMessageShown.current) {
         emptyCartMessageShown.current = true;
@@ -96,9 +115,7 @@ const Checkout = () => {
       // Reset flag when cart has items
       emptyCartMessageShown.current = false;
     }
-    }, 
-
-    [user, cartItems, navigate, location.state]);
+  }, [user, cartItems, navigate, location.state]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -110,6 +127,20 @@ const Checkout = () => {
 
   const calculateTotal = () => {
     return checkoutItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  // Helper function to remove checked out items from cart
+  const removeCheckedOutItemsFromCart = () => {
+    if (isSelectedItemsCheckout) {
+      // Remove only the selected items that were checked out
+      const checkedOutItemIds = new Set(checkoutItems.map(item => item.id));
+      const remainingCartItems = cartItems.filter(item => !checkedOutItemIds.has(item.id));
+      setCartItems(remainingCartItems);
+    } else if (isCartCheckout && !isBuyNow) {
+      // Clear entire cart for full cart checkout
+      setCartItems([]);
+    }
+    // For buy now, don't modify cart at all
   };
 
   const handleSubmit = async (e) => {
@@ -139,6 +170,7 @@ const Checkout = () => {
           image: item.image
         })),
         totalAmount,
+        orderType: isBuyNow ? 'buy_now' : (isSelectedItemsCheckout ? 'selected_items' : 'full_cart'),
         ...formData
       };
 
@@ -167,24 +199,29 @@ const Checkout = () => {
       console.log('Server response:', result);
 
       if (result.success) {
-        // ✅ Clear cart only if it was a cart checkout, not buy now
-        
+        // ✅ Handle cart updates based on checkout type
         orderPlacedRef.current = true;
 
-        if (!isBuyNow) {
-          setCartItems([]);
-        }
+        // Remove checked out items from cart
+        removeCheckedOutItemsFromCart();
         
         toast.dismiss();
 
-        // Show success message
-        toast.success(`Order placed successfully! Order ID: ${result.order.orderId}`);
+        // Show success message with checkout type info
+        let successMessage = `Order placed successfully! Order ID: ${result.order.orderId}`;
+        if (isSelectedItemsCheckout) {
+          successMessage += ` (${checkoutItems.length} items)`;
+        }
+        
+        toast.success(successMessage);
         
         // Redirect to profile with order info
         navigate('/profile', { 
           state: { 
             orderPlaced: true, 
             orderId: result.order.orderId,
+            orderType: isBuyNow ? 'Buy Now' : (isSelectedItemsCheckout ? 'Selected Items' : 'Full Cart'),
+            itemCount: checkoutItems.length,
             skipToast: true
           } 
         });
@@ -199,6 +236,13 @@ const Checkout = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get checkout type display text
+  const getCheckoutTypeText = () => {
+    if (isBuyNow) return 'Buy Now - Checkout';
+    if (isSelectedItemsCheckout) return `Checkout Selected Items (${checkoutItems.length})`;
+    return 'Checkout';
   };
 
   // ✅ Show loading if no items determined yet
@@ -239,9 +283,31 @@ const Checkout = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 my-12">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">
-        {isBuyNow ? 'Buy Now - Checkout' : 'Checkout'}
-      </h1>
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-1"
+        >
+          ← Back
+        </button>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          {getCheckoutTypeText()}
+        </h1>
+      </div>
+
+      {/* Checkout Type Indicator */}
+      <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-blue-800 font-medium">
+            {isBuyNow && '🛒 Buy Now Order'}
+            {isSelectedItemsCheckout && `✅ Selected Items (${checkoutItems.length} of ${cartItems.length} cart items)`}
+            {isCartCheckout && !isSelectedItemsCheckout && !isBuyNow && '🛍️ Full Cart Checkout'}
+          </span>
+          <span className="text-blue-600">
+            Total: Rs.{total.toLocaleString()}
+          </span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Billing Details Form */}
@@ -408,7 +474,22 @@ const Checkout = () => {
         <div className="bg-white p-6 rounded-lg shadow-md h-fit">
           <h2 className="text-xl font-semibold mb-4">Your Order</h2>
           
-          <div className="space-y-3 mb-4">
+          {/* Order Type Info */}
+          <div className="mb-4 p-2 bg-gray-50 rounded text-sm">
+            {isBuyNow && (
+              <span className="text-green-700 font-medium">🛒 Buy Now Order</span>
+            )}
+            {isSelectedItemsCheckout && (
+              <span className="text-blue-700 font-medium">
+                ✅ {checkoutItems.length} Selected Items
+              </span>
+            )}
+            {isCartCheckout && !isSelectedItemsCheckout && !isBuyNow && (
+              <span className="text-purple-700 font-medium">🛍️ Full Cart</span>
+            )}
+          </div>
+          
+          <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
             {checkoutItems.map((item) => (
               <div key={item.id} className="flex justify-between items-center pb-2 border-b">
                 <div className="flex items-center gap-3">
@@ -427,8 +508,20 @@ const Checkout = () => {
             ))}
           </div>
 
-          <div className="border-t pt-4">
-            <div className="flex justify-between items-center text-lg font-bold">
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Items ({checkoutItems.length})</span>
+              <span>Rs.{total.toLocaleString()}</span>
+            </div>
+            
+            {isSelectedItemsCheckout && cartItems.length > checkoutItems.length && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Remaining in cart ({cartItems.length - checkoutItems.length})</span>
+                <span>Not included</span>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
               <span>Total</span>
               <span>Rs.{total.toLocaleString()}</span>
             </div>
@@ -443,8 +536,15 @@ const Checkout = () => {
                 : 'bg-black text-white hover:bg-gray-900'
             }`}
           >
-            {loading ? 'Placing Order...' : 'Place Order'}
+            {loading ? 'Placing Order...' : `Place Order (Rs.${total.toLocaleString()})`}
           </button>
+
+          {/* Additional Info */}
+          <div className="mt-4 text-xs text-gray-500 text-center">
+            {isBuyNow && 'Your cart items will remain unchanged'}
+            {isSelectedItemsCheckout && 'Only selected items will be removed from cart'}
+            {isCartCheckout && !isSelectedItemsCheckout && !isBuyNow && 'Your entire cart will be cleared'}
+          </div>
         </div>
       </div>
     </div>
