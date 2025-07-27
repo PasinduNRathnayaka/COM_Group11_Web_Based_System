@@ -1,51 +1,60 @@
-// controllers/auth.controller.js
-import User from '../models/User.js';
-import Seller from '../models/Seller.js';
-import Employee from '../models/Employee.js';
-import OnlineEmployee from '../models/OnlineEmployee.js';
+// middlewares/authMiddleware.js
+import jwt from 'jsonwebtoken';
+import Employee from '../models/Seller/Employee.js';
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-
+// Middleware to verify JWT token
+export const verifyToken = async (req, res, next) => {
   try {
-    let role = null;
-    let user = null;
+    let token;
 
-    // Try finding in all roles
-    user = await Seller.findOne({ email });
-    if (user) role = "seller";
-
-    if (!user) {
-      user = await Employee.findOne({ email });
-      if (user) role = "employee";
+    // Check for token in Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    // Check for token in cookies
+    else if (req.cookies.token) {
+      token = req.cookies.token;
     }
 
-    if (!user) {
-      user = await OnlineEmployee.findOne({ email });
-      if (user) role = "online-employee";
+    if (!token) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Access denied. No token provided.' 
+      });
     }
 
-    if (!user) {
-      user = await User.findOne({ email });
-      if (user) role = "user";
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    // Get employee from token
+    const employee = await Employee.findById(decoded.id).select('-password');
+    
+    if (!employee) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token is not valid.' 
+      });
     }
 
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    return res.status(200).json({
-      message: "Login successful",
-      role,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-      },
+    req.employee = employee;
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ 
+      success: false, 
+      message: 'Token is not valid.' 
     });
+  }
+};
 
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error" });
+// Middleware to check if user is employee
+export const isEmployee = (req, res, next) => {
+  if (req.employee && req.employee.category) {
+    next();
+  } else {
+    res.status(403).json({ 
+      success: false, 
+      message: 'Access denied. Employee role required.' 
+    });
   }
 };

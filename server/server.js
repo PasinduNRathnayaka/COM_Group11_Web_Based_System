@@ -28,6 +28,10 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
 import { sendPasswordResetEmail } from './utils/emailService.js';
+
+
+import employeeProfileRoutes from './routes/Employee/profile.routes.js';
+
 const app = express();
 dotenv.config();
 
@@ -343,6 +347,7 @@ app.use('/api/bills', billRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/message', messageRoutes);
 
+app.use('/api/employee', employeeProfileRoutes);
 // Default route
 app.get('/', (req, res) => {
   res.send('✅ API is Working');

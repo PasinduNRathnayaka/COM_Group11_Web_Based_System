@@ -43,6 +43,142 @@ export const createEmployee = async (req, res) => {
   }
 };
 
+// Get Employee Profile (Current logged-in employee)
+export const getEmployeeProfile = async (req, res) => {
+  try {
+    // req.employee is set by the authentication middleware
+    const employee = await Employee.findById(req.employee._id).select('-password');
+    
+    if (!employee) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Employee profile not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      employee: {
+        _id: employee._id,
+        empId: employee.empId,
+        name: employee.name,
+        about: employee.about,
+        category: employee.category,
+        contact: employee.contact,
+        rate: employee.rate,
+        address: employee.address,
+        username: employee.username,
+        email: employee.email,
+        image: employee.image,
+        qrCode: employee.qrCode,
+        createdAt: employee.createdAt,
+        updatedAt: employee.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching profile data' 
+    });
+  }
+};
+
+// Update Employee Profile (Current logged-in employee)
+export const updateEmployeeProfile = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.employee._id);
+    
+    if (!employee) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Employee not found' 
+      });
+    }
+
+    // Fields that can be updated by employee
+    const allowedUpdates = ['name', 'about', 'contact', 'address', 'email'];
+    
+    // Only update fields that are provided and allowed
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        employee[field] = req.body[field];
+      }
+    });
+
+    // Handle password update separately if provided
+    if (req.body.password && req.body.password.trim()) {
+      if (req.body.password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      employee.password = hashedPassword;
+    }
+
+    // Handle image upload if provided
+    if (req.file) {
+      employee.image = `/uploads/employees/${req.file.filename}`;
+    }
+
+    await employee.save();
+
+    // Return updated employee data (without password)
+    const updatedEmployee = await Employee.findById(employee._id).select('-password');
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      employee: {
+        _id: updatedEmployee._id,
+        empId: updatedEmployee.empId,
+        name: updatedEmployee.name,
+        about: updatedEmployee.about,
+        category: updatedEmployee.category,
+        contact: updatedEmployee.contact,
+        rate: updatedEmployee.rate,
+        address: updatedEmployee.address,
+        username: updatedEmployee.username,
+        email: updatedEmployee.email,
+        image: updatedEmployee.image,
+        qrCode: updatedEmployee.qrCode,
+        createdAt: updatedEmployee.createdAt,
+        updatedAt: updatedEmployee.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: errors
+      });
+    }
+
+    // Handle duplicate key errors (email/username already exists)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({
+        success: false,
+        message: `${field} already exists. Please use a different ${field}.`
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error updating profile' 
+    });
+  }
+};
+
+
+
 // Login Employee
 export const loginEmployee = async (req, res) => {
   try {
