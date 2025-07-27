@@ -17,7 +17,8 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   const [newPwd, setNewPwd] = useState('');
   const [confirmNew, setConfirmNew] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [userType, setUserType] = useState(null); // Track if user or employee for forgot password
+  const [resetAccountType, setResetAccountType] = useState(null); // 'user' or 'employee' for reset flow
+  const [displayAccountType, setDisplayAccountType] = useState(''); // For display purposes
 
   // Function to handle redirect based on user type
   const handleUserRedirect = (userType, userData) => {
@@ -163,100 +164,170 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     setCode(['', '', '', '', '', '']); // Reset to 6 digits
     setNewPwd('');
     setConfirmNew('');
-    setUserType(null);
+    setResetAccountType(null);
+    setDisplayAccountType('');
   };
 
-  // Enhanced forgot password handling - try both user and employee endpoints
-  const handleForgotPasswordNext = async () => {
-    if (!email) {
-      toast.error('Please enter your email address');
+    // FIXED: Enhanced forgot password handling with proper type tracking and debugging
+const handleForgotPasswordNext = async () => {
+  if (!email) {
+    toast.error('Please enter your email address');
+    return;
+  }
+  
+  setIsLoading(true);
+  
+  try {
+    // Try both endpoints simultaneously to see which one has the account
+    const [userResult, employeeResult] = await Promise.allSettled([
+      axios.post('/api/user/forgot-password', { email }),
+      axios.post('/api/employees/forgot-password', { email })
+    ]);
+
+    console.log('=== FORGOT PASSWORD DEBUG ===');
+    console.log('User result:', userResult);
+    console.log('Employee result:', employeeResult);
+    
+    // Enhanced logging for employee result
+    if (employeeResult.status === 'fulfilled') {
+      console.log('Employee response data:', employeeResult.value.data);
+      console.log('Employee success field:', employeeResult.value.data.success);
+    }
+    
+    // Enhanced logging for user result
+    if (userResult.status === 'fulfilled') {
+      console.log('User response data:', userResult.value.data);
+      console.log('User success field:', userResult.value.data.success);
+    }
+
+    let success = false;
+
+    // FIXED: Check employee request first since you're getting employee emails
+    if (employeeResult.status === 'fulfilled' && employeeResult.value.data.success === true) {
+      console.log('✅ Employee forgot password successful');
+      const response = employeeResult.value.data;
+      
+      setResetAccountType('employee'); // For API calls
+      console.log('Setting resetAccountType to: employee');
+      
+      // Set display type based on employee category
+      if (response.userType === 'admin' || response.employeeCategory === 'seller' || response.employeeCategory === 'admin') {
+        setDisplayAccountType('Admin');
+        console.log('Setting displayAccountType to: Admin');
+      } else if (response.userType === 'online_employee' || response.employeeCategory === 'Employee for E-com') {
+        setDisplayAccountType('E-commerce Employee');
+        console.log('Setting displayAccountType to: E-commerce Employee');
+      } else {
+        setDisplayAccountType('Employee');
+        console.log('Setting displayAccountType to: Employee');
+      }
+      
+      success = true;
+    }
+    // Only check user request if employee request failed
+    else if (userResult.status === 'fulfilled' && userResult.value.data.success === true) {
+      console.log('✅ User forgot password successful');
+      setResetAccountType('user'); // For API calls
+      setDisplayAccountType('Customer'); // For display
+      console.log('Setting resetAccountType to: user');
+      console.log('Setting displayAccountType to: Customer');
+      success = true;
+    }
+
+    console.log('Final resetAccountType:', resetAccountType);
+    console.log('Final displayAccountType:', displayAccountType);
+
+    if (success) {
+      toast.success('Reset code sent to your email');
+      setStep(2);
       return;
     }
-    
-    setIsLoading(true);
-    
-    try {
-      let response = null;
-      let detectedUserType = 'user';
-      
-      // First try user forgot password
-      try {
-        console.log('Trying user forgot password...');
-        response = await axios.post('/api/user/forgot-password', {
-          email
-        });
-        detectedUserType = 'user';
-        console.log('User forgot password successful');
-      } catch (userError) {
-        console.log('User forgot password failed, trying employee...');
-        
-        // If user fails, try employee
-        try {
-          response = await axios.post('/api/employees/forgot-password', {
-            email
-          });
-          detectedUserType = 'employee';
-          console.log('Employee forgot password successful');
-        } catch (employeeError) {
-          // If both fail, show error
-          const errorMessage = employeeError.response?.data?.message || 
-                              userError.response?.data?.message || 
-                              'Email not found in our system';
-          throw new Error(errorMessage);
-        }
-      }
-      
-      if (response.data.success) {
-        setUserType(detectedUserType); // Store which type for later steps
-        toast.success('Reset code sent to your email');
-        setStep(2);
-      } else {
-        toast.error('Failed to send reset code');
-      }
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      toast.error(error.message || 'Failed to send reset code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  // Enhanced code verification
-  const handleCodeVerification = async () => {
-    const codeString = code.join('');
+    // If both failed, show appropriate error message
+    let errorMessage = 'Email not found in our system';
     
-    if (codeString.length !== 6) {
-      toast.error('Please enter all 6 digits');
-      return;
+    // Try to get a more specific error message
+    if (employeeResult.status === 'rejected' && employeeResult.reason.response?.data?.message) {
+      errorMessage = employeeResult.reason.response.data.message;
+    } else if (userResult.status === 'rejected' && userResult.reason.response?.data?.message) {
+      errorMessage = userResult.reason.response.data.message;
     }
 
-    setIsLoading(true);
+    console.log('❌ Both forgot password attempts failed');
+    toast.error(errorMessage);
+    
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    toast.error('Failed to send reset code. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    try {
-      const endpoint = userType === 'employee' 
-        ? '/api/employees/verify-reset-code'
-        : '/api/user/verify-reset-code';
-        
-      const { data } = await axios.post(endpoint, {
-        email,
-        resetCode: codeString, // Use resetCode instead of code
-      });
+    // FIXED: Enhanced code verification with better debugging and proper endpoint selection
+const handleCodeVerification = async () => {
+  const codeString = code.join('');
+  
+  if (codeString.length !== 6) {
+    toast.error('Please enter all 6 digits');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // Use the correct endpoint based on resetAccountType
+    const endpoint = resetAccountType === 'employee' 
+      ? '/api/employees/verify-reset-code'
+      : '/api/user/verify-reset-code';
       
-      if (data.success) {
-        toast.success('Code verified!');
-        setStep(3);
-      } else {
-        toast.error('Invalid code');
-      }
-    } catch (err) {
-      console.error('Code verification error:', err);
-      toast.error(err.response?.data?.message || 'Code verification failed');
-    } finally {
-      setIsLoading(false);
+    console.log('=== CODE VERIFICATION DEBUG ===');
+    console.log(`🔍 Using endpoint: ${endpoint}`);
+    console.log(`🔍 Account type: ${resetAccountType}`);
+    console.log(`🔍 Display type: ${displayAccountType}`);
+    console.log(`🔍 Email: ${email}`);
+    console.log(`🔍 Code: ${codeString}`);
+    
+    const requestData = {
+      email,
+      resetCode: codeString,
+    };
+    
+    console.log('🔍 Request data:', requestData);
+      
+    const { data } = await axios.post(endpoint, requestData);
+    
+    console.log('✅ Code verification response:', data);
+    console.log('✅ Success field:', data.success);
+    
+    if (data.success === true) {
+      toast.success('Code verified!');
+      setStep(3);
+    } else {
+      console.log('❌ Backend returned success: false');
+      toast.error(data.message || 'Invalid code');
     }
-  };
+  } catch (err) {
+    console.error('❌ Code verification error:', err);
+    console.error('❌ Error response:', err.response?.data);
+    console.error('❌ Error status:', err.response?.status);
+    console.error('❌ Error details:', {
+      endpoint: resetAccountType === 'employee' ? '/api/employees/verify-reset-code' : '/api/user/verify-reset-code',
+      accountType: resetAccountType,
+      displayType: displayAccountType,
+      email: email,
+      code: codeString
+    });
+    
+    const errorMessage = err.response?.data?.message || 'Code verification failed';
+    console.log('❌ Showing error message:', errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  // Enhanced password reset
+  // FIXED: Enhanced password reset with proper endpoint selection
   const handlePasswordReset = async () => {
     if (!newPwd || !confirmNew) {
       toast.error('Please fill all fields');
@@ -276,15 +347,20 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     setIsLoading(true);
 
     try {
-      const endpoint = userType === 'employee' 
+      // Use the correct endpoint based on resetAccountType
+      const endpoint = resetAccountType === 'employee' 
         ? '/api/employees/reset-password'
         : '/api/user/reset-password';
+        
+      console.log(`🔍 Using password reset endpoint: ${endpoint} for account type: ${resetAccountType}`);
         
       const { data } = await axios.post(endpoint, {
         email,
         resetCode: code.join(''), // Include the reset code
         newPassword: newPwd,
       });
+      
+      console.log('✅ Password reset response:', data);
       
       if (data.success) {
         toast.success('Password updated successfully!');
@@ -293,7 +369,12 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         toast.error('Password reset failed');
       }
     } catch (err) {
-      console.error('Password reset error:', err);
+      console.error('❌ Password reset error:', err);
+      console.error('Error details:', {
+        endpoint: resetAccountType === 'employee' ? '/api/employees/reset-password' : '/api/user/reset-password',
+        accountType: resetAccountType,
+        email: email
+      });
       toast.error(err.response?.data?.message || 'Password reset failed');
     } finally {
       setIsLoading(false);
@@ -449,6 +530,11 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
               Enter the 6-digit code sent to <br />
               <span className="font-semibold">{email}</span>
             </p>
+            {displayAccountType && (
+              <p className="mb-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                Account type: {displayAccountType}
+              </p>
+            )}
             <div className="flex justify-center gap-2 mb-4">
               {code.map((val, i) => (
                 <input
@@ -505,6 +591,11 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
             <p className="text-sm text-gray-600 mb-4">
               Create a strong password for your account
             </p>
+            {displayAccountType && (
+              <p className="mb-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                Account type: {displayAccountType}
+              </p>
+            )}
             
             <div className="flex flex-col gap-3">
               <input
