@@ -10,7 +10,8 @@ import connectDB from './configs/db.js';
 import productRoutes from './routes/Seller/product.routes.js';
 import categoryRoutes from './routes/Seller/category.routes.js';
 import employeeRoutes from './routes/Seller/employee.routes.js';
-import sellerOrderRoutes from './routes/Seller/order.routes.js'; // ✅ ADD THIS LINE
+import sellerOrderRoutes from './routes/Seller/order.routes.js';
+import billRoutes from './routes/Seller/bill.routes.js';
 
 import userRoutes from './routes/userRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
@@ -54,7 +55,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/salary', salaryRoutes);
-app.use('/api/seller/orders', sellerOrderRoutes); // ✅ ADD THIS LINE
+app.use('/api/seller/orders', sellerOrderRoutes); 
 
 app.use('/api/user', userRoutes);
 app.use('/api/reviews', reviewRoutes);
@@ -62,6 +63,7 @@ app.use('/api/order', orderRoutes);
 app.use('/api/product-reviews', productReviewRoutes);
 app.use('/api/user-orders', userOrderRoutes);
 app.use('/api/attendance', viewAttendanceRoutes);
+app.use('/api/bills', billRoutes);
 
 app.use('/api/contact', contactRoutes);
 app.use('/api/message', messageRoutes);
