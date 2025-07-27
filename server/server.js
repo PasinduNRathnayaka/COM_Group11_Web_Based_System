@@ -27,6 +27,7 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
+import { sendPasswordResetEmail } from './utils/emailService.js';
 
 const app = express();
 dotenv.config();
@@ -52,6 +53,39 @@ app.use(
     },
   })
 );
+
+
+// 🔑 ADD TEST EMAIL ROUTE - REMOVE AFTER TESTING
+app.get('/test-email', async (req, res) => {
+  try {
+    console.log('🧪 Testing email configuration...');
+    console.log('📧 EMAIL_USER:', process.env.EMAIL_USER);
+    console.log('📧 EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
+    
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ 
+        error: 'Email credentials not configured in .env file',
+        emailUser: process.env.EMAIL_USER,
+        emailPassSet: !!process.env.EMAIL_PASS
+      });
+    }
+    
+    // Send test email
+    await sendPasswordResetEmail('test@example.com', '123456', 'Test User');
+    res.json({ 
+      message: 'Test email sent successfully!',
+      emailUser: process.env.EMAIL_USER,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Test email failed:', error);
+    res.status(500).json({ 
+      error: error.message,
+      emailUser: process.env.EMAIL_USER,
+      emailPassSet: !!process.env.EMAIL_PASS
+    });
+  }
+});
 
 // Routes
 app.use('/api/products', productRoutes);
