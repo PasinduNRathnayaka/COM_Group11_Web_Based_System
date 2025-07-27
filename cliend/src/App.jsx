@@ -41,6 +41,7 @@ import EditEmployeeForm from './pages/seller/EditEmployeeForm';
 import EditProductForm from './pages/seller/EditProductPage';
 import ViewAttendance from './pages/seller/AttendancePage'; 
 import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
+import BillingScanner from "./pages/QRScanner/BillingScanner";
 import MonthlySalary from './pages/seller/MonthlySalary';
 
 // DEF01
@@ -75,7 +76,7 @@ import DownloadID from "./pages/Employee/DownloadID";
 
 const App = () => {
   const location = useLocation();
-  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee")  || location.pathname.startsWith("/attendance-scanner");
+  const isSellerPath = location.pathname.startsWith("/seller") || location.pathname.startsWith("/employee") || location.pathname.startsWith("/online_employee")  || location.pathname.startsWith("/attendance-scanner") || location.pathname.startsWith("/product-scanner");
   const { isSeller, showUserLogin, navigate, setShowUserLogin, user, setUser  } = useAppContext(); //new
   
 //new
@@ -129,6 +130,8 @@ const handleSignInClick = () => {
           <Route path="/contact" element={<Contact />} />
 
           <Route path="/attendance-scanner" element={<AttendanceScanner />} />
+
+          <Route path="/product-scanner" element={<BillingScanner />} />
 
         </Routes>
       </div>
