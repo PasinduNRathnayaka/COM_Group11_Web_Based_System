@@ -20,6 +20,66 @@ const Cart = () => {
   // Get additional cart functions from context
   const { removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount, isCartLoading } = useAppContext();
 
+  // Selection state for checkout
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+
+  // Initialize selected items when cart changes
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      // If there's only one item, select it by default
+      if (cartItems.length === 1) {
+        setSelectedItems(new Set([cartItems[0].id]));
+        setSelectAll(true);
+      } else {
+        // For multiple items, start with none selected
+        setSelectedItems(new Set());
+        setSelectAll(false);
+      }
+    } else {
+      setSelectedItems(new Set());
+      setSelectAll(false);
+    }
+  }, [cartItems]);
+
+  // Handle individual item selection
+  const handleItemSelect = (itemId) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+    
+    // Update select all state
+    setSelectAll(newSelected.size === cartItems.length);
+  };
+
+  // Handle select all toggle
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems(new Set());
+      setSelectAll(false);
+    } else {
+      const allIds = new Set(cartItems.map(item => item.id));
+      setSelectedItems(allIds);
+      setSelectAll(true);
+    }
+  };
+
+  // Calculate total for selected items only
+  const getSelectedItemsTotal = () => {
+    return cartItems
+      .filter(item => selectedItems.has(item.id))
+      .reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  // Get selected items for checkout
+  const getSelectedItems = () => {
+    return cartItems.filter(item => selectedItems.has(item.id));
+  };
+
   const getImageUrl = (path) => {
     if (!path) return assets.Airfilter;
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
@@ -189,11 +249,34 @@ const fetchProductReviews = async (productId) => {
 
   const handleRemove = (id) => {
     removeFromCart(id);
+    // Remove from selected items if it was selected
+    const newSelected = new Set(selectedItems);
+    newSelected.delete(id);
+    setSelectedItems(newSelected);
+  };
+
+  // Handle checkout with selected items
+  const handleCheckout = () => {
+    const selectedCartItems = getSelectedItems();
+    if (selectedCartItems.length === 0) {
+      alert('Please select at least one item to checkout');
+      return;
+    }
+    
+    // Navigate to checkout with selected items
+    navigate('/checkout', {
+      state: {
+        isCartCheckout: true,
+        selectedItems: selectedCartItems
+      }
+    });
   };
 
   if (!user) return <Navigate to="/" replace />;
 
   const total = getCartTotal();
+  const selectedTotal = getSelectedItemsTotal();
+  const selectedCount = selectedItems.size;
 
   return (
     <div className="px-4 md:px-10 py-10">
@@ -223,49 +306,82 @@ const fetchProductReviews = async (productId) => {
               </Link>
             </div>
           ) : (
-            cartItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between border-b py-4">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src={item.image || assets.Airfilter} 
-                    alt={item.name} 
-                    className="w-16 h-16 object-contain" 
+            <>
+              {/* Select All Checkbox - Only show if there are multiple items */}
+              {cartItems.length > 1 && (
+                <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                  <input
+                    type="checkbox"
+                    id="selectAll"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-black focus:ring-2"
                   />
-                  <div>
-                    <p className="font-semibold text-sm">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.desc || item.description}</p>
-                    <p className="mt-1 text-sm font-bold text-primary">Rs.{item.price}</p>
-                  </div>
+                  <label htmlFor="selectAll" className="text-sm font-medium text-gray-700">
+                    Select All Items ({cartItems.length})
+                  </label>
+                  {selectedCount > 0 && (
+                    <span className="text-xs text-gray-500">
+                      ({selectedCount} selected)
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
+              )}
+
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex items-center justify-between border-b py-4">
+                  <div className="flex items-center gap-4">
+                    {/* Selection Checkbox - Only show if there are multiple items */}
+                    {cartItems.length > 1 && (
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.has(item.id)}
+                        onChange={() => handleItemSelect(item.id)}
+                        className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-black focus:ring-2"
+                      />
+                    )}
+                    
+                    <img 
+                      src={item.image || assets.Airfilter} 
+                      alt={item.name} 
+                      className="w-16 h-16 object-contain" 
+                    />
+                    <div>
+                      <p className="font-semibold text-sm">{item.name}</p>
+                      <p className="text-xs text-gray-500">{item.desc || item.description}</p>
+                      <p className="mt-1 text-sm font-bold text-primary">Rs.{item.price}</p>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDecrease(item.id)}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      -
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDecrease(item.id)}
+                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      >
+                        -
+                      </button>
 
-                    <span className="min-w-[24px] text-center">{item.quantity}</span>
+                      <span className="min-w-[24px] text-center">{item.quantity}</span>
+
+                      <button
+                        onClick={() => handleIncrease(item.id)}
+                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                    </div>
 
                     <button
-                      onClick={() => handleIncrease(item.id)}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      onClick={() => handleRemove(item.id)}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm"
+                      title="Delete"
                     >
-                      +
+                      <Trash size={18} />
                     </button>
                   </div>
-
-                  <button
-                    onClick={() => handleRemove(item.id)}
-                    className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm"
-                    title="Delete"
-                  >
-                    <Trash size={18} />
-                  </button>
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           )}
         </div>
 
@@ -273,28 +389,59 @@ const fetchProductReviews = async (productId) => {
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-bold mb-4">Order Summary</h2>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Items ({cartItems.length})</span>
-              <span>Rs.{total}</span>
-            </div>
-            <div className="border-t pt-2">
-              <div className="text-md font-bold flex justify-between">
-                <span>Total</span>
-                <span>Rs.{total}</span>
-              </div>
-            </div>
+            {cartItems.length > 1 ? (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span>Selected Items ({selectedCount})</span>
+                  <span>Rs.{selectedTotal}</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Total Cart Items ({cartItems.length})</span>
+                  <span>Rs.{total}</span>
+                </div>
+                <div className="border-t pt-2">
+                  <div className="text-md font-bold flex justify-between">
+                    <span>Checkout Total</span>
+                    <span>Rs.{selectedTotal}</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span>Items ({cartItems.length})</span>
+                  <span>Rs.{total}</span>
+                </div>
+                <div className="border-t pt-2">
+                  <div className="text-md font-bold flex justify-between">
+                    <span>Total</span>
+                    <span>Rs.{total}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
+          
           <button
             className={`w-full mt-6 py-2 rounded transition ${
-              cartItems.length === 0 
+              cartItems.length === 0 || selectedCount === 0
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                 : 'bg-black text-white hover:bg-gray-900'
             }`}
-            onClick={() => navigate('/checkout')}
-            disabled={cartItems.length === 0}
+            onClick={handleCheckout}
+            disabled={cartItems.length === 0 || selectedCount === 0}
           >
-            Go to Checkout →
+            {cartItems.length > 1 
+              ? `Checkout Selected (${selectedCount}) →`
+              : 'Go to Checkout →'
+            }
           </button>
+
+          {cartItems.length > 1 && selectedCount === 0 && (
+            <p className="text-xs text-red-500 text-center mt-2">
+              Please select at least one item to checkout
+            </p>
+          )}
         </div>
       </div>
 
