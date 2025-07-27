@@ -27,6 +27,7 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
+import { sendPasswordResetEmail } from './utils/emailService.js';
 const app = express();
 dotenv.config();
 
@@ -48,6 +49,280 @@ app.use(
     },
   })
 );
+
+
+// 🔑 ADD TEST EMAIL ROUTE - REMOVE AFTER TESTING
+app.get('/test-email', async (req, res) => {
+  try {
+    console.log('🧪 Testing email configuration...');
+    console.log('📧 EMAIL_USER:', process.env.EMAIL_USER);
+    console.log('📧 EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
+    
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ 
+        error: 'Email credentials not configured in .env file',
+        emailUser: process.env.EMAIL_USER,
+        emailPassSet: !!process.env.EMAIL_PASS
+      });
+    }
+    
+    // Send test email
+    await sendPasswordResetEmail('test@example.com', '123456', 'Test User');
+    res.json({ 
+      message: 'Test email sent successfully!',
+      emailUser: process.env.EMAIL_USER,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Test email failed:', error);
+    res.status(500).json({ 
+      error: error.message,
+      emailUser: process.env.EMAIL_USER,
+      emailPassSet: !!process.env.EMAIL_PASS
+    });
+  }
+});
+
+// 🔧 Enhanced email debugging routes - ADD AFTER EXISTING /test-email ROUTE
+app.get('/debug-employees-email', async (req, res) => {
+  try {
+    const Employee = (await import('./models/Seller/Employee.js')).default;
+    
+    const employees = await Employee.find({}, {
+      empId: 1,
+      name: 1,
+      email: 1,
+      username: 1,
+      category: 1,
+      role: 1
+    });
+    
+    const emailStats = {
+      total: employees.length,
+      withEmail: employees.filter(emp => emp.email).length,
+      withoutEmail: employees.filter(emp => !emp.email).length
+    };
+    
+    const employeeList = employees.map(emp => ({
+      empId: emp.empId,
+      name: emp.name,
+      email: emp.email || 'NO EMAIL SET',
+      username: emp.username,
+      category: emp.category,
+      canReceiveEmails: !!emp.email
+    }));
+    
+    console.log('📊 Employee email statistics:', emailStats);
+    
+    res.json({
+      success: true,
+      statistics: emailStats,
+      employees: employeeList
+    });
+    
+  } catch (error) {
+    console.error('❌ Employee email debug failed:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Test employee email specifically
+app.post('/test-employee-email', async (req, res) => {
+  try {
+    const { empId, email, category } = req.body;
+    
+    if (!empId && !email) {
+      return res.status(400).json({ error: 'Either empId or email is required' });
+    }
+    
+    const Employee = (await import('./models/Seller/Employee.js')).default;
+    
+    let employee;
+    if (empId) {
+      employee = await Employee.findOne({ empId });
+    } else {
+      employee = await Employee.findOne({ 
+        $or: [{ email }, { username: email }] 
+      });
+    }
+    
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    
+    if (!employee.email) {
+      return res.status(400).json({ 
+        error: 'Employee has no email address set. Cannot send email.',
+        employee: {
+          empId: employee.empId,
+          name: employee.name,
+          username: employee.username,
+          category: employee.category
+        }
+      });
+    }
+    
+    // Determine user type
+    let userType = 'employee';
+    if (employee.category === 'seller' || employee.category === 'admin') {
+      userType = 'admin';
+    } else if (employee.category === 'Employee for E-com' || employee.category === 'online_employee') {
+      userType = 'online_employee';
+    }
+    
+    // Send test email
+    const result = await sendPasswordResetEmail(
+      employee.email, 
+      '123456', 
+      employee.name, 
+      userType
+    );
+    
+    res.json({ 
+      success: true,
+      message: 'Test email sent to employee successfully!',
+      employee: {
+        empId: employee.empId,
+        name: employee.name,
+        email: employee.email,
+        category: employee.category,
+        userType: userType
+      },
+      result: result
+    });
+    
+  } catch (error) {
+    console.error('❌ Employee email test failed:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// ✅ ADD THESE ROUTES TO server.js AFTER EXISTING TEST ROUTES
+
+// Update employee email (Admin function)
+app.put('/admin/employee/:empId/email', async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    // Validate email format
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    
+    const Employee = (await import('./models/Seller/Employee.js')).default;
+    
+    // Check if email already exists
+    const existingEmployee = await Employee.findOne({ email: email.toLowerCase().trim() });
+    if (existingEmployee && existingEmployee.empId !== empId) {
+      return res.status(400).json({ 
+        error: 'Email already exists for another employee',
+        existingEmployee: {
+          empId: existingEmployee.empId,
+          name: existingEmployee.name
+        }
+      });
+    }
+    
+    // Update employee email
+    const employee = await Employee.findOneAndUpdate(
+      { empId },
+      { email: email.toLowerCase().trim() },
+      { new: true }
+    );
+    
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Employee email updated successfully',
+      employee: {
+        empId: employee.empId,
+        name: employee.name,
+        email: employee.email,
+        category: employee.category
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating employee email:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Bulk update employee emails
+app.post('/admin/employees/bulk-update-emails', async (req, res) => {
+  try {
+    const { employees } = req.body; // Array of {empId, email}
+    
+    if (!Array.isArray(employees)) {
+      return res.status(400).json({ error: 'Employees array is required' });
+    }
+    
+    const Employee = (await import('./models/Seller/Employee.js')).default;
+    const results = [];
+    const errors = [];
+    
+    for (const empData of employees) {
+      try {
+        const { empId, email } = empData;
+        
+        // Validate email
+        const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+        if (!emailRegex.test(email)) {
+          errors.push({ empId, error: 'Invalid email format' });
+          continue;
+        }
+        
+        // Update employee
+        const employee = await Employee.findOneAndUpdate(
+          { empId },
+          { email: email.toLowerCase().trim() },
+          { new: true }
+        );
+        
+        if (!employee) {
+          errors.push({ empId, error: 'Employee not found' });
+          continue;
+        }
+        
+        results.push({
+          empId: employee.empId,
+          name: employee.name,
+          email: employee.email,
+          category: employee.category
+        });
+        
+      } catch (error) {
+        errors.push({ empId: empData.empId, error: error.message });
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Updated ${results.length} employees, ${errors.length} errors`,
+      results,
+      errors
+    });
+    
+  } catch (error) {
+    console.error('❌ Error bulk updating employee emails:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Routes
 app.use('/api/products', productRoutes);

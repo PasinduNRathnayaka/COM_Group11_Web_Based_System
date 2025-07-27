@@ -1,3 +1,4 @@
+// models/User.js - Updated with password reset fields
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
@@ -33,7 +34,28 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: '', // placeholder until user uploads
     },
-     // ✅ NEW: Cart field to store user's cart items
+    // ✅ NEW: Password reset fields
+    resetPasswordCode: {
+      type: String,
+      default: null
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null
+    },
+    resetPasswordExpire: {
+      type: Date,
+      default: null
+    },
+    resetPasswordAttempts: {
+      type: Number,
+      default: 0
+    },
+    resetPasswordLockedUntil: {
+      type: Date,
+      default: null
+    },
+     // ✅ Cart field to store user's cart items
     cart: [{
       productId: {
         type: String,
@@ -60,5 +82,45 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+// 🔑 Method to clear reset password fields
+userSchema.methods.clearResetPasswordFields = function() {
+  this.resetPasswordCode = null;
+  this.resetPasswordToken = null;
+  this.resetPasswordExpire = null;
+  this.resetPasswordAttempts = 0;
+  this.resetPasswordLockedUntil = null;
+};
+
+// 🔑 Method to check if reset is locked
+userSchema.methods.isResetLocked = function() {
+  return this.resetPasswordLockedUntil && this.resetPasswordLockedUntil > Date.now();
+};
+
+// 🔑 Method to increment failed attempts
+userSchema.methods.incrementResetAttempts = function() {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.resetPasswordLockedUntil && this.resetPasswordLockedUntil < Date.now()) {
+    return this.updateOne({
+      $unset: {
+        resetPasswordLockedUntil: 1,
+      },
+      $set: {
+        resetPasswordAttempts: 1,
+      }
+    });
+  }
+  
+  const updates = { $inc: { resetPasswordAttempts: 1 } };
+  
+  // If we have max attempts and aren't locked yet, lock the account
+  if (this.resetPasswordAttempts + 1 >= 5 && !this.isResetLocked()) {
+    updates.$set = {
+      resetPasswordLockedUntil: Date.now() + 30 * 60 * 1000, // Lock for 30 minutes
+    };
+  }
+  
+  return this.updateOne(updates);
+};
 
 export default mongoose.model('User', userSchema);

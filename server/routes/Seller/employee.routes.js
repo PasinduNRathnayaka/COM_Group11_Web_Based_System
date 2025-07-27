@@ -1,3 +1,4 @@
+// routes/Seller/employee.routes.js - Updated with forgot password routes
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -9,7 +10,11 @@ import {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
-  loginEmployee 
+  loginEmployee,
+  // New forgot password functions
+  requestEmployeePasswordReset,
+  resetEmployeePassword,
+  verifyEmployeeResetCode
 } from '../../controllers/Seller/employeeController.js';
 
 const router = express.Router();
@@ -29,11 +34,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Employee CRUD routes
 router.post('/', upload.single('image'), createEmployee);
 router.get('/', getEmployees);
 router.get('/:id', getEmployeeById);
 router.put('/:id', upload.single('image'), updateEmployee);
 router.delete('/:id', deleteEmployee);
+
+// Authentication routes
 router.post('/login', loginEmployee);
+
+// 🔑 NEW: Forgot password routes for employees (no authentication needed)
+router.post('/forgot-password', requestEmployeePasswordReset);
+router.post('/verify-reset-code', verifyEmployeeResetCode);
+router.post('/reset-password', resetEmployeePassword);
 
 export default router;

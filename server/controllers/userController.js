@@ -1,4 +1,4 @@
-// User-specific actions
+// controllers/userController.js - Complete file with forgot password functionality
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
@@ -7,6 +7,12 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { 
+  sendPasswordResetEmail, 
+  sendPasswordResetSuccessEmail,
+  generateResetCode, 
+  generateResetToken 
+} from '../utils/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +53,6 @@ export const upload = multer({
   fileFilter: fileFilter
 });
 
-
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, number, address } = req.body;
 
@@ -86,10 +91,8 @@ export const registerUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Invalid user data');
   }
+});
 
-  });
-
-  /*  Login controller placeholder */
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -107,6 +110,195 @@ export const loginUser = asyncHandler(async (req, res) => {
   } else {
     res.status(401);
     throw new Error('Invalid email or password');
+  }
+});
+
+// 🔑 NEW: Request password reset (send verification code)
+export const requestPasswordReset = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400);
+    throw new Error('Email is required');
+  }
+
+  try {
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset code has been sent.'
+      });
+    }
+
+    // Check if user is currently locked out
+    if (user.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((user.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      res.status(429);
+      throw new Error(`Too many failed attempts. Please try again in ${lockTimeRemaining} minutes.`);
+    }
+
+    // Generate reset code and token
+    const resetCode = generateResetCode();
+    const resetToken = generateResetToken();
+    
+    // Set reset fields (expires in 15 minutes)
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    await user.save();
+
+    // Send email with reset code
+    await sendPasswordResetEmail(user.email, resetCode, user.name, 'user');
+
+    res.json({
+      success: true,
+      message: 'Password reset code has been sent to your email.',
+      // In development, you might want to return the code for testing
+      // Remove this in production!
+      ...(process.env.NODE_ENV === 'development' && { resetCode })
+    });
+
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    
+    if (error.message.includes('Too many failed attempts')) {
+      throw error;
+    }
+    
+    res.status(500);
+    throw new Error('Error sending password reset email. Please try again later.');
+  }
+});
+
+// 🔑 NEW: Verify reset code and reset password
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, resetCode, newPassword } = req.body;
+
+  // Validate input
+  if (!email || !resetCode || !newPassword) {
+    res.status(400);
+    throw new Error('Email, reset code, and new password are required');
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400);
+    throw new Error('New password must be at least 6 characters long');
+  }
+
+  try {
+    // Find user with valid reset code and not expired
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+      resetPasswordCode: resetCode,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      // Could be invalid code, expired code, or wrong email
+      // Try to find user by email to increment attempts
+      const userByEmail = await User.findOne({ email: email.toLowerCase().trim() });
+      
+      if (userByEmail) {
+        await userByEmail.incrementResetAttempts();
+        
+        if (userByEmail.resetPasswordAttempts >= 4) { // Will be 5 after increment
+          res.status(429);
+          throw new Error('Too many failed attempts. Your account has been temporarily locked for 30 minutes.');
+        }
+      }
+      
+      res.status(400);
+      throw new Error('Invalid or expired reset code');
+    }
+
+    // Check if user is locked out
+    if (user.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((user.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      res.status(429);
+      throw new Error(`Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.`);
+    }
+
+    // Reset password
+    user.password = newPassword; // Will be hashed by pre('save') middleware
+    user.clearResetPasswordFields(); // Clear all reset-related fields
+    
+    await user.save();
+
+    // Send success notification email (don't throw error if this fails)
+    try {
+      await sendPasswordResetSuccessEmail(user.email, user.name, 'user');
+    } catch (emailError) {
+      console.error('Failed to send success email:', emailError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now log in with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Password reset error:', error);
+    
+    if (error.message.includes('Too many failed attempts') || 
+        error.message.includes('temporarily locked') ||
+        error.message.includes('Invalid or expired')) {
+      throw error;
+    }
+    
+    res.status(500);
+    throw new Error('Error resetting password. Please try again later.');
+  }
+});
+
+// 🔑 NEW: Verify reset code (without resetting password)
+export const verifyResetCode = asyncHandler(async (req, res) => {
+  const { email, resetCode } = req.body;
+
+  if (!email || !resetCode) {
+    res.status(400);
+    throw new Error('Email and reset code are required');
+  }
+
+  try {
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+      resetPasswordCode: resetCode,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      // Try to find user by email to increment attempts
+      const userByEmail = await User.findOne({ email: email.toLowerCase().trim() });
+      
+      if (userByEmail) {
+        await userByEmail.incrementResetAttempts();
+      }
+      
+      res.status(400);
+      throw new Error('Invalid or expired reset code');
+    }
+
+    // Check if user is locked out
+    if (user.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((user.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      res.status(429);
+      throw new Error(`Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Reset code verified successfully. You can now set your new password.',
+      token: user.resetPasswordToken // Can be used for additional security in next step
+    });
+
+  } catch (error) {
+    console.error('Reset code verification error:', error);
+    throw error;
   }
 });
 
@@ -272,8 +464,6 @@ export const getUserProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 });
-
-// Add these functions to your userController.js
 
 // Get user's cart
 export const getCart = asyncHandler(async (req, res) => {

@@ -13,35 +13,36 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   const [step, setStep] = useState(0);     
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState(['', '', '', '']);
+  const [code, setCode] = useState(['', '', '', '', '', '']); // 6 digits now
   const [newPwd, setNewPwd] = useState('');
   const [confirmNew, setConfirmNew] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [resetAccountType, setResetAccountType] = useState(null); // 'user' or 'employee' for reset flow
+  const [displayAccountType, setDisplayAccountType] = useState(''); // For display purposes
 
   // Function to handle redirect based on user type
   const handleUserRedirect = (userType, userData) => {
     console.log('Redirecting user:', userType, userData);
     
     switch (userType) {
-  case 'admin':
-    toast.success(`Welcome Admin, ${userData.name}!`);
-    navigate('/seller', { replace: true });
-    break;
-  case 'employee':
-    toast.success(`Welcome Employee, ${userData.name}!`);
-    navigate('/employee', { replace: true });
-    break;
-  case 'online_employee':
-    toast.success(`Welcome Employee, ${userData.name}!`);
-    navigate('/online_employee', { replace: true });
-    break;
-  case 'user':
-  default:
-    toast.success(`Welcome, ${userData.name}!`);
-    navigate('/', { replace: true });
-    break;
-}
-
+      case 'admin':
+        toast.success(`Welcome Admin, ${userData.name}!`);
+        navigate('/seller', { replace: true });
+        break;
+      case 'employee':
+        toast.success(`Welcome Employee, ${userData.name}!`);
+        navigate('/employee', { replace: true });
+        break;
+      case 'online_employee':
+        toast.success(`Welcome Employee, ${userData.name}!`);
+        navigate('/online_employee', { replace: true });
+        break;
+      case 'user':
+      default:
+        toast.success(`Welcome, ${userData.name}!`);
+        navigate('/', { replace: true });
+        break;
+    }
   };
 
   // Enhanced login function with better user type detection
@@ -55,9 +56,6 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
       
       let loginResponse = null;
       let userType = 'user';
-      
-      // Try to determine if this is an employee email first by checking email domain or pattern
-      // You could also add a dropdown to let users select their login type
       
       // First, try employee login to avoid conflicts
       try {
@@ -163,72 +161,173 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     setStep(0);
     setEmail(''); 
     setPassword('');
-    setCode(['', '', '', '']);
+    setCode(['', '', '', '', '', '']); // Reset to 6 digits
     setNewPwd('');
     setConfirmNew('');
+    setResetAccountType(null);
+    setDisplayAccountType('');
   };
 
-  // Enhanced forgot password handling
-  const handleForgotPasswordNext = async () => {
-    if (!email) {
-      toast.error('Please enter your email address');
+    // FIXED: Enhanced forgot password handling with proper type tracking and debugging
+const handleForgotPasswordNext = async () => {
+  if (!email) {
+    toast.error('Please enter your email address');
+    return;
+  }
+  
+  setIsLoading(true);
+  
+  try {
+    // Try both endpoints simultaneously to see which one has the account
+    const [userResult, employeeResult] = await Promise.allSettled([
+      axios.post('/api/user/forgot-password', { email }),
+      axios.post('/api/employees/forgot-password', { email })
+    ]);
+
+    console.log('=== FORGOT PASSWORD DEBUG ===');
+    console.log('User result:', userResult);
+    console.log('Employee result:', employeeResult);
+    
+    // Enhanced logging for employee result
+    if (employeeResult.status === 'fulfilled') {
+      console.log('Employee response data:', employeeResult.value.data);
+      console.log('Employee success field:', employeeResult.value.data.success);
+    }
+    
+    // Enhanced logging for user result
+    if (userResult.status === 'fulfilled') {
+      console.log('User response data:', userResult.value.data);
+      console.log('User success field:', userResult.value.data.success);
+    }
+
+    let success = false;
+
+    // FIXED: Check employee request first since you're getting employee emails
+    if (employeeResult.status === 'fulfilled' && employeeResult.value.data.success === true) {
+      console.log('✅ Employee forgot password successful');
+      const response = employeeResult.value.data;
+      
+      setResetAccountType('employee'); // For API calls
+      console.log('Setting resetAccountType to: employee');
+      
+      // Set display type based on employee category
+      if (response.userType === 'admin' || response.employeeCategory === 'seller' || response.employeeCategory === 'admin') {
+        setDisplayAccountType('Admin');
+        console.log('Setting displayAccountType to: Admin');
+      } else if (response.userType === 'online_employee' || response.employeeCategory === 'Employee for E-com') {
+        setDisplayAccountType('E-commerce Employee');
+        console.log('Setting displayAccountType to: E-commerce Employee');
+      } else {
+        setDisplayAccountType('Employee');
+        console.log('Setting displayAccountType to: Employee');
+      }
+      
+      success = true;
+    }
+    // Only check user request if employee request failed
+    else if (userResult.status === 'fulfilled' && userResult.value.data.success === true) {
+      console.log('✅ User forgot password successful');
+      setResetAccountType('user'); // For API calls
+      setDisplayAccountType('Customer'); // For display
+      console.log('Setting resetAccountType to: user');
+      console.log('Setting displayAccountType to: Customer');
+      success = true;
+    }
+
+    console.log('Final resetAccountType:', resetAccountType);
+    console.log('Final displayAccountType:', displayAccountType);
+
+    if (success) {
+      toast.success('Reset code sent to your email');
+      setStep(2);
       return;
     }
+
+    // If both failed, show appropriate error message
+    let errorMessage = 'Email not found in our system';
     
-    setIsLoading(true);
+    // Try to get a more specific error message
+    if (employeeResult.status === 'rejected' && employeeResult.reason.response?.data?.message) {
+      errorMessage = employeeResult.reason.response.data.message;
+    } else if (userResult.status === 'rejected' && userResult.reason.response?.data?.message) {
+      errorMessage = userResult.reason.response.data.message;
+    }
+
+    console.log('❌ Both forgot password attempts failed');
+    toast.error(errorMessage);
     
-    try {
-      // Send password reset request
-      const response = await axios.post('/api/user/forgot-password', {
-        email
-      });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    toast.error('Failed to send reset code. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+    // FIXED: Enhanced code verification with better debugging and proper endpoint selection
+const handleCodeVerification = async () => {
+  const codeString = code.join('');
+  
+  if (codeString.length !== 6) {
+    toast.error('Please enter all 6 digits');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // Use the correct endpoint based on resetAccountType
+    const endpoint = resetAccountType === 'employee' 
+      ? '/api/employees/verify-reset-code'
+      : '/api/user/verify-reset-code';
       
-      if (response.data.success) {
-        toast.success('Reset code sent to your email');
-        setStep(2);
-      } else {
-        toast.error('Failed to send reset code');
-      }
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      toast.error(error.response?.data?.message || 'Failed to send reset code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Enhanced code verification
-  const handleCodeVerification = async () => {
-    const codeString = code.join('');
+    console.log('=== CODE VERIFICATION DEBUG ===');
+    console.log(`🔍 Using endpoint: ${endpoint}`);
+    console.log(`🔍 Account type: ${resetAccountType}`);
+    console.log(`🔍 Display type: ${displayAccountType}`);
+    console.log(`🔍 Email: ${email}`);
+    console.log(`🔍 Code: ${codeString}`);
     
-    if (codeString.length !== 4) {
-      toast.error('Please enter all 4 digits');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { data } = await axios.post('/api/user/verify-reset-code', {
-        email,
-        code: codeString,
-      });
+    const requestData = {
+      email,
+      resetCode: codeString,
+    };
+    
+    console.log('🔍 Request data:', requestData);
       
-      if (data.success) {
-        toast.success('Code verified!');
-        setStep(3);
-      } else {
-        toast.error('Invalid code');
-      }
-    } catch (err) {
-      console.error('Code verification error:', err);
-      toast.error(err.response?.data?.message || 'Code verification failed');
-    } finally {
-      setIsLoading(false);
+    const { data } = await axios.post(endpoint, requestData);
+    
+    console.log('✅ Code verification response:', data);
+    console.log('✅ Success field:', data.success);
+    
+    if (data.success === true) {
+      toast.success('Code verified!');
+      setStep(3);
+    } else {
+      console.log('❌ Backend returned success: false');
+      toast.error(data.message || 'Invalid code');
     }
-  };
+  } catch (err) {
+    console.error('❌ Code verification error:', err);
+    console.error('❌ Error response:', err.response?.data);
+    console.error('❌ Error status:', err.response?.status);
+    console.error('❌ Error details:', {
+      endpoint: resetAccountType === 'employee' ? '/api/employees/verify-reset-code' : '/api/user/verify-reset-code',
+      accountType: resetAccountType,
+      displayType: displayAccountType,
+      email: email,
+      code: codeString
+    });
+    
+    const errorMessage = err.response?.data?.message || 'Code verification failed';
+    console.log('❌ Showing error message:', errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  // Enhanced password reset
+  // FIXED: Enhanced password reset with proper endpoint selection
   const handlePasswordReset = async () => {
     if (!newPwd || !confirmNew) {
       toast.error('Please fill all fields');
@@ -248,10 +347,20 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     setIsLoading(true);
 
     try {
-      const { data } = await axios.post('/api/user/reset-password', {
+      // Use the correct endpoint based on resetAccountType
+      const endpoint = resetAccountType === 'employee' 
+        ? '/api/employees/reset-password'
+        : '/api/user/reset-password';
+        
+      console.log(`🔍 Using password reset endpoint: ${endpoint} for account type: ${resetAccountType}`);
+        
+      const { data } = await axios.post(endpoint, {
         email,
+        resetCode: code.join(''), // Include the reset code
         newPassword: newPwd,
       });
+      
+      console.log('✅ Password reset response:', data);
       
       if (data.success) {
         toast.success('Password updated successfully!');
@@ -260,7 +369,12 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         toast.error('Password reset failed');
       }
     } catch (err) {
-      console.error('Password reset error:', err);
+      console.error('❌ Password reset error:', err);
+      console.error('Error details:', {
+        endpoint: resetAccountType === 'employee' ? '/api/employees/reset-password' : '/api/user/reset-password',
+        accountType: resetAccountType,
+        email: email
+      });
       toast.error(err.response?.data?.message || 'Password reset failed');
     } finally {
       setIsLoading(false);
@@ -268,14 +382,25 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
   };
 
   const handleCodeChange = (i, val) => {
+    // Only allow numbers
+    if (val && !/^\d$/.test(val)) return;
+    
     const tmp = [...code];
     tmp[i] = val;
     setCode(tmp);
     
     // Auto-focus next input
-    if (val && i < 3) {
+    if (val && i < 5) {
       const nextInput = document.querySelector(`input[data-index="${i + 1}"]`);
       if (nextInput) nextInput.focus();
+    }
+  };
+
+  // Handle backspace to go to previous input
+  const handleCodeKeyDown = (i, e) => {
+    if (e.key === 'Backspace' && !code[i] && i > 0) {
+      const prevInput = document.querySelector(`input[data-index="${i - 1}"]`);
+      if (prevInput) prevInput.focus();
     }
   };
 
@@ -356,6 +481,9 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         {step === 1 && (
           <>
             <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Enter your email address and we'll send you a verification code to reset your password.
+            </p>
             
             <input
               type="email"
@@ -383,30 +511,54 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
                 'SEND CODE'
               )}
             </button>
+            
+            <button
+              onClick={() => setStep(0)}
+              className="mt-2 text-sm text-gray-500 hover:underline"
+              disabled={isLoading}
+            >
+              ← Back to Login
+            </button>
           </>
         )}
 
-        {/* ---------------- STEP 2 — enter 4‑digit code ---------------- */}
+        {/* ---------------- STEP 2 — enter 6‑digit code ---------------- */}
         {step === 2 && (
           <>
-            <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
-            <p className="mb-3">Enter 4 Digit Code sent to {email}</p>
-            <div className="flex justify-center gap-2">
+            <h2 className="text-xl font-bold mb-4">Verify Code</h2>
+            <p className="mb-3 text-sm text-gray-600">
+              Enter the 6-digit code sent to <br />
+              <span className="font-semibold">{email}</span>
+            </p>
+            {displayAccountType && (
+              <p className="mb-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                Account type: {displayAccountType}
+              </p>
+            )}
+            <div className="flex justify-center gap-2 mb-4">
               {code.map((val, i) => (
                 <input
                   key={i}
                   data-index={i}
+                  type="text"
+                  inputMode="numeric"
                   maxLength={1}
                   value={val}
                   onChange={(e) => handleCodeChange(i, e.target.value)}
-                  className="w-12 h-12 text-center border rounded"
+                  onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                  className="w-12 h-12 text-center border rounded text-lg font-semibold focus:border-blue-500 focus:outline-none"
                   disabled={isLoading}
                 />
               ))}
             </div>
+            
+            <p className="text-xs text-gray-500 mb-4">
+              Code expires in 15 minutes
+            </p>
+            
             <button
               onClick={handleCodeVerification}
-              className="mt-4 w-full bg-blue-900 text-white rounded py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-blue-900 text-white rounded py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -421,34 +573,58 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
                 'VERIFY CODE'
               )}
             </button>
+            
+            <button
+              onClick={() => setStep(1)}
+              className="mt-2 text-sm text-gray-500 hover:underline"
+              disabled={isLoading}
+            >
+              ← Back to Email
+            </button>
           </>
         )}
 
         {/* ---------------- STEP 3 — reset password ---------------- */}
         {step === 3 && (
           <>
-            <h2 className="text-xl font-bold mb-4">Change Password</h2>
-            <input
-              type="password"
-              placeholder="Enter New Password"
-              value={newPwd}
-              onChange={(e) => setNewPwd(e.target.value)}
-              className="border rounded px-4 py-2 mb-2 w-full"
-              minLength={6}
-              disabled={isLoading}
-            />
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmNew}
-              onChange={(e) => setConfirmNew(e.target.value)}
-              className="border rounded px-4 py-2 w-full"
-              minLength={6}
-              disabled={isLoading}
-            />
+            <h2 className="text-xl font-bold mb-4">Set New Password</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Create a strong password for your account
+            </p>
+            {displayAccountType && (
+              <p className="mb-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                Account type: {displayAccountType}
+              </p>
+            )}
+            
+            <div className="flex flex-col gap-3">
+              <input
+                type="password"
+                placeholder="Enter New Password"
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                className="border rounded px-4 py-2 w-full"
+                minLength={6}
+                disabled={isLoading}
+              />
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                value={confirmNew}
+                onChange={(e) => setConfirmNew(e.target.value)}
+                className="border rounded px-4 py-2 w-full"
+                minLength={6}
+                disabled={isLoading}
+              />
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-2 mb-4">
+              Password must be at least 6 characters long
+            </p>
+            
             <button
               onClick={handlePasswordReset}
-              className="mt-4 w-full bg-blue-900 text-white rounded py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-blue-900 text-white rounded py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
