@@ -14,6 +14,7 @@ const Profile = () => {
 
   const location = useLocation();
   const [orders, setOrders] = useState([]);
+  const [expandedOrders, setExpandedOrders] = useState(new Set());
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   // ✅ Helper function to get the correct image URL
@@ -102,6 +103,18 @@ const Profile = () => {
   setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
 
   toast.success('Order History removed');
+};
+
+    const toggleOrderExpansion = (orderId) => {
+  setExpandedOrders(prev => {
+    const newSet = new Set(prev);
+    if (newSet.has(orderId)) {
+      newSet.delete(orderId);
+    } else {
+      newSet.add(orderId);
+    }
+    return newSet;
+  });
 };
 
 
@@ -420,27 +433,33 @@ const Profile = () => {
                 <div>
                   <h4 className="font-medium mb-2">Items ({order.items.length})</h4>
                   <div className="space-y-2">
-                    {order.items.slice(0, 2).map((item, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <img 
-                          src={item.image} 
-                          alt={item.productName} 
-                          className="w-12 h-12 object-contain rounded"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.productName}</p>
-                          <p className="text-xs text-gray-600">
-                            Qty: {item.quantity} × Rs.{item.price.toLocaleString()}
-                          </p>
-                        </div>
+                  {(expandedOrders.has(order.id) ? order.items : order.items.slice(0, 2)).map((item, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <img 
+                        src={item.image} 
+                        alt={item.productName} 
+                        className="w-12 h-12 object-contain rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{item.productName}</p>
+                        <p className="text-xs text-gray-600">
+                          Qty: {item.quantity} × Rs.{item.price.toLocaleString()}
+                        </p>
                       </div>
-                    ))}
-                    {order.items.length > 2 && (
-                      <p className="text-xs text-gray-500">
-                        + {order.items.length - 2} more items
-                      </p>
-                    )}
-                  </div>
+                    </div>
+                  ))}
+                  {order.items.length > 2 && (
+                    <button
+                      onClick={() => toggleOrderExpansion(order.id)}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium mt-2"
+                    >
+                      {expandedOrders.has(order.id) 
+                        ? 'Show Less' 
+                        : `+ ${order.items.length - 2} more items`
+                      }
+                    </button>
+                  )}
+                </div>
                 </div>
                 
                 <div>
