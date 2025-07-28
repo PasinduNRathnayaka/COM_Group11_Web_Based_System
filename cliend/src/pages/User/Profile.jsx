@@ -14,6 +14,7 @@ const Profile = () => {
 
   const location = useLocation();
   const [orders, setOrders] = useState([]);
+  const [showAllOrders, setShowAllOrders] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState(new Set());
   const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -387,7 +388,7 @@ const Profile = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => (
+           {(showAllOrders ? orders : orders.slice(0, 2)).map((order) => (
             <div key={order.id} className="border rounded-lg p-4 bg-gray-50">
              <div className="flex justify-between items-start mb-3">
             <div>
@@ -491,6 +492,19 @@ const Profile = () => {
               </div>
             </div>
           ))}
+           {orders.length > 2 && (
+            <div className="text-center pt-4">
+              <button
+                onClick={() => setShowAllOrders(!showAllOrders)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {showAllOrders 
+                  ? 'Show Less Orders' 
+                  : `Show All Orders (${orders.length})`
+                }
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
