@@ -203,7 +203,8 @@ const handleForgotPasswordNext = async () => {
     let success = false;
 
     // FIXED: Check employee request first since you're getting employee emails
-    if (employeeResult.status === 'fulfilled' && employeeResult.value.data.success === true) {
+    if (employeeResult.status === 'fulfilled' && employeeResult.value.data.success === true &&
+  employeeResult.value.data.employeeCategory) {
       console.log('✅ Employee forgot password successful');
       const response = employeeResult.value.data;
       
