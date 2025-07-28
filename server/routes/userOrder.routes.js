@@ -1,5 +1,5 @@
 import express from 'express';
-import UserOrder from '../models/UserOrder.model.js'; // ✅ Fixed import name
+import UserOrder from '../models/UserOrder.model.js';
 import Product from '../models/Seller/Product.model.js';
 import jwt from 'jsonwebtoken';
 
@@ -154,7 +154,7 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// GET /api/user-orders/user - Get user's orders
+// GET /api/user-orders/user - Get user's orders (✅ This fetches latest status from database)
 router.get('/user', verifyToken, async (req, res) => {
   try {
     const orders = await UserOrder.find({ userId: req.user.id })
@@ -166,7 +166,7 @@ router.get('/user', verifyToken, async (req, res) => {
       orderId: order.orderId,
       items: order.items,
       totalAmount: order.totalAmount,
-      status: order.status,
+      status: order.status, // ✅ This will have the latest status from database
       paymentMethod: order.paymentMethod,
       orderDate: order.orderDate,
       estimatedDelivery: order.estimatedDelivery,
