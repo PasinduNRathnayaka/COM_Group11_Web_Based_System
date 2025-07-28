@@ -8,6 +8,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const [showBankSandbox, setShowBankSandbox] = useState(false);
   
   // ✅ Get checkout items (either from cart, selected items, or buy now)
   const [checkoutItems, setCheckoutItems] = useState([]);
@@ -145,19 +146,30 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate form data first
+    const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'city', 'zipCode', 'phone', 'email'];
+    const missingFields = requiredFields.filter(field => !formData[field].trim());
+    
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // If online payment is selected, show bank sandbox instead of processing order
+    if (formData.paymentMethod === 'online') {
+      setShowBankSandbox(true);
+      return;
+    }
+
+    // Process order for cash payment
+    await processOrder();
+  };
+
+  const processOrder = async () => {
     setLoading(true);
 
     try {
-      // Validate form data
-      const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'city', 'zipCode', 'phone', 'email'];
-      const missingFields = requiredFields.filter(field => !formData[field].trim());
-      
-      if (missingFields.length > 0) {
-        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
-        setLoading(false);
-        return;
-      }
-
       const totalAmount = calculateTotal();
       
       // Prepare order data
@@ -236,6 +248,157 @@ const Checkout = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBankPaymentConfirm = async () => {
+    setShowBankSandbox(false);
+    await processOrder();
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
+  };
+
+  // Bank Details Sandbox Modal
+  const BankSandbox = () => {
+    const total = calculateTotal();
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Bank Transfer Details</h2>
+              <button 
+                onClick={() => setShowBankSandbox(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-blue-50 p-4 rounded-lg mb-6">
+              <h3 className="font-semibold text-blue-800 mb-2">Order Summary</h3>
+              <div className="flex justify-between text-sm">
+                <span>Items: {checkoutItems.length}</span>
+                <span className="font-bold">Rs. {total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Bank Details */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-800 mb-3">Transfer to:</h3>
+              
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Bank Name:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Commercial Bank</span>
+                    <button 
+                      onClick={() => copyToClipboard('Commercial Bank')}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Account Name:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Your Store Name</span>
+                    <button 
+                      onClick={() => copyToClipboard('Your Store Name')}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Account Number:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold font-mono">1234567890</span>
+                    <button 
+                      onClick={() => copyToClipboard('1234567890')}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Branch:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Colombo Main</span>
+                    <button 
+                      onClick={() => copyToClipboard('Colombo Main')}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center border-t pt-3">
+                  <span className="text-sm text-gray-600">Amount to Transfer:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-lg text-green-600">Rs. {total.toLocaleString()}</span>
+                    <button 
+                      onClick={() => copyToClipboard(total.toString())}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                <h4 className="font-semibold text-yellow-800 mb-2">Instructions:</h4>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  <li>• Transfer the exact amount shown above</li>
+                  <li>• Use your order reference in the transfer description</li>
+                  <li>• Keep your transfer receipt for verification</li>
+                  <li>• Your order will be processed after payment confirmation</li>
+                </ul>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowBankSandbox(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBankPaymentConfirm}
+                  disabled={loading}
+                  className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
+                    loading
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {loading ? 'Processing...' : 'I Have Transferred'}
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center mt-3">
+                Click "I Have Transferred" after completing your bank transfer
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Get checkout type display text
@@ -536,7 +699,10 @@ const Checkout = () => {
                 : 'bg-black text-white hover:bg-gray-900'
             }`}
           >
-            {loading ? 'Placing Order...' : `Place Order (Rs.${total.toLocaleString()})`}
+            {loading ? 'Placing Order...' : 
+             formData.paymentMethod === 'online' ? 
+             `Pay Online (Rs.${total.toLocaleString()})` : 
+             `Place Order (Rs.${total.toLocaleString()})`}
           </button>
 
           {/* Additional Info */}
@@ -547,6 +713,9 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+
+      {/* Bank Details Sandbox Modal */}
+      {showBankSandbox && <BankSandbox />}
     </div>
   );
 };
