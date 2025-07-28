@@ -30,7 +30,7 @@ export const isEmployee = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
 
-    if (!user || user.role !== 'employee') {
+    if (!user || user.userType !== 'employee') {
       return res.status(403).json({ message: 'Access denied: employee only' });
     }
 

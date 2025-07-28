@@ -1,25 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, Navigate } from "react-router-dom";
 import { FiSearch, FiBell, FiChevronDown, FiLogOut } from "react-icons/fi";
 import { useAppContext } from "../../context/AppContext";
 
 import logo from "../../assets/kamal-logo.png";
-import addProductIcon from "../../assets/add-product.png";
-import productListIcon from "../../assets/product-list.png";
-import addEmployeeIcon from "../../assets/add-employee.png";
-import employeeListIcon from "../../assets/employee-list.png";
-import attendanceIcon from "../../assets/attendance.png";
-import ordersIcon from "../../assets/orders.png";
 import {
   FaUser,
   FaCalendarCheck,
   FaMoneyCheckAlt,
   FaPaperPlane,
   FaFileDownload,
-  FaArrowLeft,
 } from "react-icons/fa";
-
-
 
 // Import NotificationPopup
 import NotificationPopup from "../../components/seller/NotificationPopup";
@@ -79,9 +70,9 @@ const EditProfileModal = ({ open, onClose }) => {
   );
 };
 
-/* ------------------------------ SellerLayout ------------------------------ */
+/* ------------------------------ EmployeeLayout ------------------------------ */
 const EmployeeLayout = () => {
-  const { setIsSeller } = useAppContext();
+  const { user, setUser } = useAppContext(); // Get user and setUser
   const navigate = useNavigate();
 
   const [showSearch, setShowSearch] = useState(false);
@@ -92,9 +83,26 @@ const EmployeeLayout = () => {
   const menuRef = useRef(null);
   const bellRef = useRef(null);
 
+  // Authentication check
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  console.log("User object:", user);
+
+  // Check if user is an employee
+  
+
   const handleLogout = () => {
-    setIsSeller(false);
-    navigate("/seller");
+    // Clear all authentication data
+    localStorage.removeItem('userData');
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    
+    // Clear user from context
+    setUser(null);
+    
+    // Navigate to home page
+    navigate("/", { replace: true });
   };
 
   useEffect(() => {
@@ -119,20 +127,18 @@ const EmployeeLayout = () => {
     { name: "Check Payment", path: "/employee/salary", icon: <FaMoneyCheckAlt /> },
     { name: "Apply For Leave", path: "/employee/leave", icon: <FaPaperPlane /> },
     { name: "Download ID", path: "/employee/download_id", icon: <FaFileDownload /> },
-   
-   // assuming this is the target for the BACK button
-  
-];
+  ];
 
   return (
     <>
       {/* ---------------------------- Top Navbar ---------------------------- */}
       <div className="flex items-center justify-between px-4 md:px-8 py-2 bg-blue-900 text-white relative">
         {/* brand */}
-        <a href="/seller/dashboard" className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <img className="h-10" src={logo} alt="logo" />
           <h1 className="hidden sm:block text-lg font-bold">Kamal Auto Parts</h1>
-        </a>
+          
+        </div>
 
         {/* actions */}
         <div className="flex items-center gap-4">
@@ -170,7 +176,7 @@ const EmployeeLayout = () => {
             />
           </div>
 
-          {/* admin dropdown */}
+          {/* employee dropdown */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu((p) => !p)}
@@ -181,7 +187,14 @@ const EmployeeLayout = () => {
 
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-20">
-                <div className="px-4 py-3 font-semibold border-b">EMPLOYEE</div>
+                <div className="px-4 py-3 font-semibold border-b">
+                  EMPLOYEE
+                  {user.name && (
+                    <div className="text-xs text-gray-500 font-normal mt-1">
+                      {user.name}
+                    </div>
+                  )}
+                </div>
                 <button
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                   onClick={() => {
@@ -210,7 +223,7 @@ const EmployeeLayout = () => {
             <NavLink
               to={item.path}
               key={item.name}
-              end={item.path === "/seller"}
+              end={item.path === "/employee"}
               className={({ isActive }) =>
                 `flex items-center py-3 px-4 gap-3 font-medium transition-all
                  ${isActive
@@ -219,7 +232,6 @@ const EmployeeLayout = () => {
               }
             >
               <span className="text-xl">{item.icon}</span>
-
               <p className="hidden md:block">{item.name}</p>
             </NavLink>
           ))}

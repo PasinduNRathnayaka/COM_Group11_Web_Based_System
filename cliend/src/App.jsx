@@ -23,7 +23,7 @@ import Contact from './pages/User/Contact';
 
 //import MyOrders from './pages/User/MyOrders'
 //import OrderHistory from './pages/User/OrderHistory'
-import Profile from './pages/User/Profile'
+import Profile from './pages/User/Profile';
 
 
 import SellerLogin from './pages/seller/SellerLogin';
@@ -61,6 +61,7 @@ import EmployeeLayout from './pages/Employee/EmployeeLayout';
 import Viewattendance from './pages/Employee/Viewattendance';
 
 import OnlineEmloyeeLayout from './pages/OnlineEmployee/OnlineEmployeeLayout';
+
 import Attendance from "./pages/Employee/Attendance";
 
 import CheckPayment from "./pages/Employee/CheckPayment";
@@ -173,7 +174,7 @@ const handleSignInClick = () => {
           <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Attendance />} />
 
-          <Route path="/employee/profile" element={<EmployeeProfile />} />
+          <Route path="profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
           
           <Route path="/employee/salary" element={<CheckPayment />} />
@@ -204,8 +205,8 @@ const handleSignInClick = () => {
           <Route path="order-list" element={<OrderList />} />
 
 
-          <Route path="employee/profile" element={<EmployeeProfile />} />
-          <Route path="employee/edit-profile" element={<EditProfile />} />
+          <Route path="profile" element={<EmployeeProfile />} />
+          <Route path="edit-profile" element={<EditProfile />} />
        
          <Route path="attendance" element={<Viewattendance />} />
           <Route path="profile" element={<EmployeeProfile />} />

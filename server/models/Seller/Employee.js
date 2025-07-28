@@ -6,7 +6,7 @@ const employeeSchema = new mongoose.Schema({
   name: String,
   about: String,
   category: String, // This can be: 'employee', 'seller', 'admin', 'online_employee', etc.
-  role: String, // Alternative field for role-based distinction
+  userType: String, // Alternative field for role-based distinction
   contact: String,
   rate: Number,
   address: String,
