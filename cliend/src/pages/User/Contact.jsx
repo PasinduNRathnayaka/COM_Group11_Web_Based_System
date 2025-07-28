@@ -16,9 +16,52 @@ const Contact = () => {
     message: ''
   });
 
+  const [shopDetails, setShopDetails] = useState({
+    name: "KAMAL AUTO PARTS",
+    address: "No 128, Wewurukannala Road, Kekanadura, Sri Lanka",
+    email: "kamalautoparts@gmail.com",
+    phone: "+94 0777 555 919"
+  });
+
   const [loading, setLoading] = useState(false);
+  const [shopLoading, setShopLoading] = useState(true);
 
   if (!user) return <Navigate to="/" replace />;
+
+  // Fetch shop details from backend
+  useEffect(() => {
+    const fetchShopDetails = async () => {
+      try {
+        // Fetch seller/admin details from employee collection
+        const response = await fetch('/api/employees');
+        const employees = await response.json();
+        
+        // Find seller or admin employee
+        const seller = employees.find(emp => 
+          emp.category === 'seller' || 
+          emp.category === 'admin' || 
+          emp.role === 'seller' || 
+          emp.role === 'admin'
+        );
+        
+        if (seller) {
+          setShopDetails({
+            name: "KAMAL AUTO PARTS",
+            address: seller.address || "No 128, Wewurukannala Road, Kekanadura, Sri Lanka",
+            email: seller.email || "kamalautoparts@gmail.com",
+            phone: seller.contact || "+94 0777 555 919"
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching shop details:', error);
+        // Keep default values if fetch fails
+      } finally {
+        setShopLoading(false);
+      }
+    };
+
+    fetchShopDetails();
+  }, []);
 
   // Autofill form data with user information when component mounts
   useEffect(() => {
@@ -85,27 +128,81 @@ const Contact = () => {
     }
   };
 
+  // Format phone number for display
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return "+94 0777 555 919";
+    
+    // Remove any existing formatting
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // If it starts with 94, format as international
+    if (cleaned.startsWith('94')) {
+      return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
+    }
+    
+    // If it starts with 0, format as local
+    if (cleaned.startsWith('0')) {
+      return `+94 ${cleaned.slice(1, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`;
+    }
+    
+    return phone;
+  };
+
   return (
     <div>
       {/* 🔷 Top Blue Section with Contact Info */}
       <div className="bg-blue-500 text-white py-10 px-4 sm:px-6 md:px-12 lg:px-20 xl:px-28 rounded-b-2xl">
-        <h1 className="text-3xl font-bold mb-2">KAMAL AUTO PARTS</h1>
-        <p className="mb-6 text-sm md:text-base">We'd love to hear from you. Let's get in touch.</p>
+        {shopLoading ? (
+          // Loading skeleton for shop details
+          <div className="animate-pulse">
+            <div className="h-8 bg-blue-400 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-blue-400 rounded w-80 mb-6"></div>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+              <div>
+                <div className="h-4 bg-blue-400 rounded w-20 mb-2"></div>
+                <div className="h-4 bg-blue-400 rounded w-48"></div>
+              </div>
+              <div>
+                <div className="h-4 bg-blue-400 rounded w-16 mb-2"></div>
+                <div className="h-4 bg-blue-400 rounded w-32"></div>
+              </div>
+              <div>
+                <div className="h-4 bg-blue-400 rounded w-12 mb-2"></div>
+                <div className="h-4 bg-blue-400 rounded w-40"></div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold mb-2">{shopDetails.name}</h1>
+            <p className="mb-6 text-sm md:text-base">We'd love to hear from you. Let's get in touch.</p>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
-          <div>
-            <p className="font-semibold">📍 Address</p>
-            <p>No 128, Wewurukannala Road, Kekanadura, Sri Lanka</p>
-          </div>
-          <div>
-            <p className="font-semibold">📞 Phone</p>
-            <p>+94 0777 555 919</p>
-          </div>
-          <div>
-            <p className="font-semibold">📧 Email</p>
-            <p>kamalautoparts@gmail.com</p>
-          </div>
-        </div>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+              <div>
+                <p className="font-semibold">📍 Address</p>
+                <p>{shopDetails.address}</p>
+              </div>
+              <div>
+                <p className="font-semibold">📞 Phone</p>
+                <a 
+                  href={`tel:${shopDetails.phone.replace(/\D/g, '')}`}
+                  className="hover:text-blue-200 transition-colors cursor-pointer"
+                >
+                  {formatPhoneNumber(shopDetails.phone)}
+                </a>
+              </div>
+              <div>
+                <p className="font-semibold">📧 Email</p>
+                <a 
+                  href={`mailto:${shopDetails.email}`}
+                  className="hover:text-blue-200 transition-colors cursor-pointer"
+                >
+                  {shopDetails.email}
+                </a>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 🔘 Contact Form + Image Section */}
@@ -123,7 +220,7 @@ const Contact = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
-                  className="p-3 border rounded w-full"
+                  className="p-3 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
                   type="text"
@@ -132,7 +229,7 @@ const Contact = () => {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
-                  className="p-3 border rounded w-full"
+                  className="p-3 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <input
@@ -142,7 +239,7 @@ const Contact = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="p-3 border rounded w-full"
+                className="p-3 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="text"
@@ -151,7 +248,7 @@ const Contact = () => {
                 value={formData.subject}
                 onChange={handleChange}
                 required
-                className="p-3 border rounded w-full"
+                className="p-3 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <textarea
                 name="message"
@@ -160,14 +257,22 @@ const Contact = () => {
                 value={formData.message}
                 onChange={handleChange}
                 required
-                className="p-3 border rounded w-full"
+                className="p-3 border rounded w-full resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               ></textarea>
               <button
                 type="submit"
-                className="bg-primary text-white px-6 py-2 rounded hover:bg-primary-dull"
+                className="bg-primary text-white px-6 py-2 rounded hover:bg-primary-dull transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Message'}
+                {loading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </span>
+                ) : 'Send Message'}
               </button>
             </form>
           </div>
@@ -184,6 +289,7 @@ const Contact = () => {
 
         {/* Google Map */}
         <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-4 text-center">Find Us Here</h2>
           <iframe
             title="Kamal Auto Location"
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63317.39405935737!2d80.51600484031252!3d5.948351038750421!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae140f6a3ac2f11%3A0x6f2cb7a2c2a75d83!2sMatara!5e0!3m2!1sen!2slk!4v1621781714811!5m2!1sen!2slk"
@@ -191,7 +297,7 @@ const Contact = () => {
             height="350"
             allowFullScreen=""
             loading="lazy"
-            className="rounded-lg shadow"
+            className="rounded-lg shadow-lg border"
           ></iframe>
         </div>
       </div>
