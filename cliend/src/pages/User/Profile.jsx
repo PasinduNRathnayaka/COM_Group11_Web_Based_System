@@ -93,31 +93,17 @@ const Profile = () => {
     };
 
       // Delete order function
-      const deleteOrder = async (orderId) => {
-      if (!window.confirm('Are you sure you want to delete this order?')) {
-       return;
-     }
+ const deleteOrder = (orderId) => {
+  if (!window.confirm('Are you sure you want to remove this Order History.')) {
+    return;
+  }
 
-    try {
-    const token = localStorage.getItem('token');
-    const response = await axios.delete(`/api/user-orders/${orderId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  // Just update the local state without calling the backend
+  setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
 
-    if (response.data.success) {
-      // Remove the deleted order from the local state
-      setOrders(orders.filter(order => order.id !== orderId));
-      toast.success('Order deleted successfully!');
-    } else {
-      toast.error(response.data.message || 'Failed to delete order');
-    }
-    } catch (error) {
-    console.error('❌ Error deleting order:', error);
-    toast.error(error.response?.data?.message || 'Failed to delete order');
-    }
-  };
+  toast.success('Order History removed');
+};
+
 
     // Fetch orders when orders tab is active
     useEffect(() => {
