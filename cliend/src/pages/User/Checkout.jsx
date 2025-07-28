@@ -290,58 +290,34 @@ const Checkout = () => {
 
             {/* Bank Details */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-800 mb-3">Transfer to:</h3>
+              <h3 className="font-semibold text-gray-800 mb-3">Enter Card Details</h3>
               
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Bank Name:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Commercial Bank</span>
-                    <button 
-                      onClick={() => copyToClipboard('Commercial Bank')}
-                      className="text-blue-600 hover:text-blue-800 text-xs"
-                    >
-                      Copy
-                    </button>
+                  <span className="text-sm text-gray-600 ">Bank Name:</span>
+                  <div className="flex items-center gap-2 ">
+                    <input className="w-full h-4 p-3 rounded border border-gray-300 focus:border-primary focus:outline-non"/>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Account Name:</span>
+                  <span className="text-sm text-gray-600">Card Holders Name:</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">Your Store Name</span>
-                    <button 
-                      onClick={() => copyToClipboard('Your Store Name')}
-                      className="text-blue-600 hover:text-blue-800 text-xs"
-                    >
-                      Copy
-                    </button>
+                    <input className="w-full h-4 p-3 rounded border border-gray-300 focus:border-primary focus:outline-non"/>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Account Number:</span>
+                  <span className="text-sm text-gray-600">Card Number:</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold font-mono">1234567890</span>
-                    <button 
-                      onClick={() => copyToClipboard('1234567890')}
-                      className="text-blue-600 hover:text-blue-800 text-xs"
-                    >
-                      Copy
-                    </button>
+                    <input className="w-full h-4 p-3 rounded border border-gray-300 focus:border-primary focus:outline-non"/>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Branch:</span>
+                  <span className="text-sm text-gray-600">Expire Date:</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">Colombo Main</span>
-                    <button 
-                      onClick={() => copyToClipboard('Colombo Main')}
-                      className="text-blue-600 hover:text-blue-800 text-xs"
-                    >
-                      Copy
-                    </button>
+                    <input className="w-full h-4 p-3 rounded border border-gray-300 focus:border-primary focus:outline-non"/>
                   </div>
                 </div>
 
@@ -349,12 +325,6 @@ const Checkout = () => {
                   <span className="text-sm text-gray-600">Amount to Transfer:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-lg text-green-600">Rs. {total.toLocaleString()}</span>
-                    <button 
-                      onClick={() => copyToClipboard(total.toString())}
-                      className="text-blue-600 hover:text-blue-800 text-xs"
-                    >
-                      Copy
-                    </button>
                   </div>
                 </div>
               </div>
@@ -364,7 +334,6 @@ const Checkout = () => {
                 <h4 className="font-semibold text-yellow-800 mb-2">Instructions:</h4>
                 <ul className="text-sm text-yellow-700 space-y-1">
                   <li>• Transfer the exact amount shown above</li>
-                  <li>• Use your order reference in the transfer description</li>
                   <li>• Keep your transfer receipt for verification</li>
                   <li>• Your order will be processed after payment confirmation</li>
                 </ul>
@@ -387,12 +356,12 @@ const Checkout = () => {
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
                 >
-                  {loading ? 'Processing...' : 'I Have Transferred'}
+                  {loading ? 'Processing...' : 'Pay Now'}
                 </button>
               </div>
 
               <p className="text-xs text-gray-500 text-center mt-3">
-                Click "I Have Transferred" after completing your bank transfer
+                Click "Pay Now" after completing your bank transfer
               </p>
             </div>
           </div>
@@ -447,12 +416,13 @@ const Checkout = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 my-12">
       <div className="flex items-center gap-4 mb-6">
-        <button
+        
+        {/*<button
           onClick={() => navigate(-1)}
           className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-1"
         >
           ← Back
-        </button>
+        </button>*/}
         <h1 className="text-2xl md:text-3xl font-bold">
           {getCheckoutTypeText()}
         </h1>
@@ -677,12 +647,12 @@ const Checkout = () => {
               <span>Rs.{total.toLocaleString()}</span>
             </div>
             
-            {isSelectedItemsCheckout && cartItems.length > checkoutItems.length && (
+            {/*{isSelectedItemsCheckout && cartItems.length > checkoutItems.length && (
               <div className="flex justify-between text-xs text-gray-500">
                 <span>Remaining in cart ({cartItems.length - checkoutItems.length})</span>
                 <span>Not included</span>
               </div>
-            )}
+            )}*/}
             
             <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
               <span>Total</span>
@@ -705,12 +675,12 @@ const Checkout = () => {
              `Place Order (Rs.${total.toLocaleString()})`}
           </button>
 
-          {/* Additional Info */}
+          {/* Additional Info 
           <div className="mt-4 text-xs text-gray-500 text-center">
             {isBuyNow && 'Your cart items will remain unchanged'}
             {isSelectedItemsCheckout && 'Only selected items will be removed from cart'}
             {isCartCheckout && !isSelectedItemsCheckout && !isBuyNow && 'Your entire cart will be cleared'}
-          </div>
+          </div>*/}
         </div>
       </div>
 
