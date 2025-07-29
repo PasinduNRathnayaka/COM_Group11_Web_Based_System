@@ -5,8 +5,6 @@ import { Navigate } from 'react-router-dom';
 const ReturnPolicy = () => {
   const { user } = useAppContext();
 
-  if (!user) return <Navigate to="/" replace />;
-
   return (
     <div>
       {/* Header Section */}
@@ -207,29 +205,6 @@ const ReturnPolicy = () => {
                 <li>• We'll arrange pickup or provide prepaid return label</li>
                 <li>• Full refund or replacement will be provided promptly</li>
               </ul>
-            </div>
-          </div>
-
-          {/* Contact Information */}
-          <div className="bg-blue-50 p-8 rounded-lg">
-            <h2 className="text-2xl font-bold text-blue-700 mb-4">Need Help with Returns?</h2>
-            <p className="text-gray-700 mb-4">
-              Our customer service team is here to help with any return questions or concerns.
-            </p>
-            <div className="grid md:grid-cols-2 gap-6 text-gray-700">
-              <div>
-                <h4 className="font-semibold mb-2">Contact Information</h4>
-                <p>📞 Phone: +94 0777 555 919</p>
-                <p>📧 Email: kamalautoparts@gmail.com</p>
-                <p>🕒 Hours: Mon-Sat 8:00 AM - 6:00 PM</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Return Address</h4>
-                <p>Kamal Auto Parts</p>
-                <p>No 128, Wewurukannala Road</p>
-                <p>Kekanadura, Sri Lanka</p>
-                <p className="text-sm text-blue-600 mt-2">(Include RAN with your return)</p>
-              </div>
             </div>
           </div>
 
