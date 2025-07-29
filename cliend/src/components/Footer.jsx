@@ -66,9 +66,6 @@ const Footer = () => {
       case 'Return Policy':
         navigate('/return-policy');
         break;
-      case 'Delivery Grid':
-        navigate('/delivery');
-        break;
       default:
         break;
     }
@@ -178,14 +175,6 @@ const Footer = () => {
                   className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   Return Policy
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => handleLinkClick('Delivery Grid')}
-                  className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  Delivery Grid
                 </button>
               </li>
             </ul>
