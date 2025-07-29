@@ -5,8 +5,6 @@ import { Navigate } from 'react-router-dom';
 const Privacy = () => {
   const { user } = useAppContext();
 
-  if (!user) return <Navigate to="/" replace />;
-
   return (
     <div>
       {/* Header Section */}
@@ -147,19 +145,6 @@ const Privacy = () => {
               requirements. We will notify you of material changes by posting the updated notice on our website 
               and updating the "Last updated" date at the top of this page.
             </p>
-          </div>
-
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">10. Contact Us</h2>
-            <p className="text-gray-600 mb-4">
-              If you have any questions about this privacy notice or our privacy practices, please contact us:
-            </p>
-            <div className="text-gray-700">
-              <p><strong>Kamal Auto Parts</strong></p>
-              <p>📍 No 128, Wewurukannala Road, Kekanadura, Sri Lanka</p>
-              <p>📧 Email: kamalautoparts@gmail.com</p>
-              <p>📞 Phone: +94 0777 555 919</p>
-            </div>
           </div>
 
         </div>
