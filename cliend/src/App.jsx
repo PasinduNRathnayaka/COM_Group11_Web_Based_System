@@ -20,6 +20,10 @@ import Checkout from './pages/User/Checkout';
 import ProductDetails from './pages/User/ProductDetails';
 import AllProducts from './pages/User/AllProducts';
 import Contact from './pages/User/Contact';
+import About from './pages/User/About';
+import Privacy from './pages/User/Privacy';
+import Terms from './pages/User/Terms';
+import ReturnPolicy from './pages/User/ReturnPolicy';
 
 //import MyOrders from './pages/User/MyOrders'
 //import OrderHistory from './pages/User/OrderHistory'
@@ -132,6 +136,14 @@ const handleSignInClick = () => {
           <Route path="/attendance-scanner" element={<AttendanceScanner />} />
 
           <Route path="/product-scanner" element={<BillingScanner />} />
+
+          <Route path="/about" element={<About />} />
+
+          <Route path="/privacy" element={<Privacy />} />
+
+          <Route path="/terms" element={<Terms />} />
+
+          <Route path="/return-policy" element={<ReturnPolicy />} />
 
         </Routes>
       </div>

@@ -157,6 +157,15 @@ const SignUp = () => {
             </p>
           </div>
 
+            <input
+              type="checkbox"
+              id="select"
+              className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-black focus:ring-2"
+              required
+               />
+              <p className="block mb-1 font-medium">I Agree to the Terms and Conditions</p>
+           
+
           <button
             type="submit"
             className="w-full bg-blue-900 hover:bg-blue-800 text-white rounded py-2 mt-2"
