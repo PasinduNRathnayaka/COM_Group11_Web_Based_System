@@ -13,8 +13,6 @@ const About = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  if (!user) return <Navigate to="/" replace />;
-
   // Fetch shop details from backend
   useEffect(() => {
     const fetchShopDetails = async () => {
@@ -52,7 +50,7 @@ const About = () => {
       {/* Hero Section */}
       <div className="bg-blue-500 text-white py-16 px-4 sm:px-6 md:px-12 lg:px-20 xl:px-28 rounded-b-2xl">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">About {shopDetails.name}</h1>
+          <h1 className="text-4xl font-bold mb-4">{shopDetails.name}</h1>
           <p className="text-lg opacity-90">Your trusted partner for quality auto parts in Sri Lanka</p>
         </div>
       </div>
