@@ -5,8 +5,6 @@ import { Navigate } from 'react-router-dom';
 const Terms = () => {
   const { user } = useAppContext();
 
-  if (!user) return <Navigate to="/" replace />;
-
   return (
     <div>
       {/* Header Section */}
@@ -172,20 +170,6 @@ const Terms = () => {
               website, you are agreeing to be bound by the then current version of these terms of service.
             </p>
           </div>
-
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">13. Contact Information</h2>
-            <p className="text-gray-600 mb-4">
-              If you have any questions about these Terms and Conditions, please contact us:
-            </p>
-            <div className="text-gray-700">
-              <p><strong>Kamal Auto Parts</strong></p>
-              <p>📍 No 128, Wewurukannala Road, Kekanadura, Sri Lanka</p>
-              <p>📧 Email: kamalautoparts@gmail.com</p>
-              <p>📞 Phone: +94 0777 555 919</p>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
