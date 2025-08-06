@@ -27,6 +27,9 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
+// Employee Profile Routes
+import employeeProfileRoutes from './routes/Employee/profile.routes.js';
+
 import { sendPasswordResetEmail } from './utils/emailService.js';
 
 const app = express();
@@ -35,6 +38,28 @@ dotenv.config();
 // Setup __dirname (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Create necessary directories
+const createDirectories = () => {
+  const directories = [
+    'uploads',
+    'uploads/profiles',
+    'controllers',
+    'controllers/Employee',
+    'routes/Employee',
+    'middlewares'
+  ];
+
+  directories.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`✅ Created directory: ${dir}`);
+    }
+  });
+};
+
+// Create directories on startup
+createDirectories();
 
 // Middlewares
 app.use(cors());
@@ -50,7 +75,6 @@ app.use(
     },
   })
 );
-
 
 // 🔑 ADD TEST EMAIL ROUTE - REMOVE AFTER TESTING
 app.get('/test-email', async (req, res) => {
@@ -204,8 +228,6 @@ app.post('/test-employee-email', async (req, res) => {
   }
 });
 
-// ✅ ADD THESE ROUTES TO server.js AFTER EXISTING TEST ROUTES
-
 // Update employee email (Admin function)
 app.put('/admin/employee/:empId/email', async (req, res) => {
   try {
@@ -325,7 +347,7 @@ app.post('/admin/employees/bulk-update-emails', async (req, res) => {
   }
 });
 
-// Routes
+// Existing Routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -343,6 +365,9 @@ app.use('/api/bills', billRoutes);
 
 app.use('/api/contact', contactRoutes);
 app.use('/api/message', messageRoutes);
+
+// Employee Profile Routes - using different path to avoid conflicts
+app.use('/api/employee-profile', employeeProfileRoutes);
 
 // Default route
 app.get('/', (req, res) => {
