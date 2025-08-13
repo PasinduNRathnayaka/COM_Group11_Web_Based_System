@@ -5,14 +5,18 @@ import logo from '../../assets/kamal-logo.png'; // ✅ replace with actual path
 
 const AttendanceScanner = () => {
   const [cameraActive, setCameraActive] = useState(true);
-  const [mode, setMode] = useState('checkIn');
   const [scannedData, setScannedData] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success', 'error', 'warning'
   const [scanning, setScanning] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [showGreeting, setShowGreeting] = useState(false);
+  const [employeeName, setEmployeeName] = useState('');
+  const [lastScannedCode, setLastScannedCode] = useState('');
+  const [lastScanTime, setLastScanTime] = useState(0);
 
   const videoRef = useRef(null);
+  const SCAN_COOLDOWN = 3000; // 3 seconds cooldown between scans
 
   // Update current time every second
   useEffect(() => {
@@ -74,9 +78,23 @@ const AttendanceScanner = () => {
   }, [cameraActive]);
 
   const handleScan = async (data) => {
-    if (data && !scanning) {
+    const currentTime = Date.now();
+    
+    // Prevent scanning if:
+    // 1. Already processing a scan
+    // 2. Showing greeting 
+    // 3. Same QR code scanned within cooldown period
+    if (data && !scanning && !showGreeting) {
+      // Check if this is the same QR code scanned recently
+      if (lastScannedCode === data && (currentTime - lastScanTime) < SCAN_COOLDOWN) {
+        console.log('Duplicate scan detected, ignoring...');
+        return; // Ignore duplicate scan within cooldown period
+      }
+
       setScanning(true);
       setScannedData(data);
+      setLastScannedCode(data);
+      setLastScanTime(currentTime);
 
       // Show scanning message
       setMessage('📱 Processing QR Code...');
@@ -85,16 +103,24 @@ const AttendanceScanner = () => {
       try {
         const response = await axios.post('http://localhost:4000/api/attendance/mark', {
           qrData: data,
-          type: mode,
         });
 
-        // Success messages with current time
+        // Get employee name and attendance type from response
+        const { employeeName, attendanceType, checkInTime, checkOutTime } = response.data;
+        setEmployeeName(employeeName);
+
+        // Show greeting message
+        setShowGreeting(true);
         const now = new Date().toLocaleTimeString('en-US', { hour12: false });
-        const msg = mode === 'checkIn'
-          ? `✅ Welcome to Kamal Auto Parts! Check-in time: ${now}`
-          : `👋 Goodbye! Check-out time: ${now}. See you again at Kamal Auto Parts!`;
         
-        setMessage(msg);
+        let greetingMsg;
+        if (attendanceType === 'checkIn') {
+          greetingMsg = `🌅 Good morning, ${employeeName}!\nWelcome to Kamal Auto Parts!\nCheck-in time: ${checkInTime || now}`;
+        } else {
+          greetingMsg = `🌅 Goodbye, ${employeeName}!\nSee you again at Kamal Auto Parts!\nCheck-out time: ${checkOutTime || now}`;
+        }
+        
+        setMessage(greetingMsg);
         setMessageType('success');
 
         // Log the response for debugging
@@ -117,13 +143,16 @@ const AttendanceScanner = () => {
         setMessageType('error');
       }
 
-      // Clear message after 6 seconds (increased from 5)
+      // Clear message after 5 seconds and reset scanning state
       setTimeout(() => {
         setMessage('');
         setMessageType('');
         setScanning(false);
         setScannedData('');
-      }, 6000);
+        setShowGreeting(false);
+        setEmployeeName('');
+        // Don't clear lastScannedCode and lastScanTime here to maintain cooldown
+      }, 5000);
     }
   };
 
@@ -134,17 +163,17 @@ const AttendanceScanner = () => {
   };
 
   const getMessageStyle = () => {
-    const baseStyle = "mt-5 px-6 py-3 rounded shadow text-center text-lg font-semibold border";
+    const baseStyle = "mt-5 px-6 py-4 rounded-lg shadow-lg text-center text-lg font-semibold border-2";
     
     switch (messageType) {
       case 'success':
-        return `${baseStyle} bg-green-100 text-green-800 border-green-300`;
+        return `${baseStyle} bg-green-50 text-green-800 border-green-300`;
       case 'error':
-        return `${baseStyle} bg-red-100 text-red-800 border-red-300`;
+        return `${baseStyle} bg-red-50 text-red-800 border-red-300`;
       case 'warning':
-        return `${baseStyle} bg-yellow-100 text-yellow-800 border-yellow-300`;
+        return `${baseStyle} bg-yellow-50 text-yellow-800 border-yellow-300`;
       default:
-        return `${baseStyle} bg-blue-100 text-blue-800 border-blue-300`;
+        return `${baseStyle} bg-blue-50 text-blue-800 border-blue-300`;
     }
   };
 
@@ -176,7 +205,7 @@ const AttendanceScanner = () => {
           width: 0,
         }}
       >
-        {cameraActive && (
+        {cameraActive && !showGreeting && (
           <QrReader
             constraints={{ 
               facingMode: 'environment',
@@ -222,36 +251,39 @@ const AttendanceScanner = () => {
         )}
       </div>
 
-      {/* Mode Selector */}
-      <div className="mt-6 flex flex-col items-center">
-        <label className="text-sm text-gray-600 mb-2 font-medium">Select Mode:</label>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value)}
-          className="bg-white border-2 border-gray-300 text-gray-800 px-6 py-3 rounded-lg shadow-md text-lg font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          disabled={scanning}
-        >
-          <option value="checkIn">🟢 Check In</option>
-          <option value="checkOut">🔴 Check Out</option>
-        </select>
+      {/* Status Indicator */}
+      <div className="mt-4 text-center">
+        {showGreeting ? (
+          <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg border border-blue-300">
+            <span className="font-medium">🚫 Scanning disabled during greeting</span>
+          </div>
+        ) : scanning ? (
+          <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-300">
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+              <span className="font-medium">Processing...</span>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg border border-green-300">
+            <span className="font-medium">✅ Ready to scan QR code</span>
+            {lastScannedCode && (
+              <div className="text-xs mt-1 opacity-75">
+                Last scan: {new Date(lastScanTime).toLocaleTimeString()}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Toggle Camera */}
       <button
         onClick={() => setCameraActive((prev) => !prev)}
         className="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-md disabled:opacity-50"
-        disabled={scanning}
+        disabled={scanning || showGreeting}
       >
         {cameraActive ? '📷 Turn Camera Off' : '📷 Turn Camera On'}
       </button>
-
-      {/* Scanning Status */}
-      {scanning && (
-        <div className="mt-4 flex items-center gap-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          <span className="text-blue-600 font-medium">Processing...</span>
-        </div>
-      )}
 
       {/* Scanned Data Display (for debugging) */}
       {scannedData && (
@@ -260,10 +292,17 @@ const AttendanceScanner = () => {
         </div>
       )}
 
-      {/* Result Message */}
+      {/* Result Message / Greeting */}
       {message && (
         <div className={getMessageStyle()}>
-          {message}
+          <div className="whitespace-pre-line">
+            {message}
+          </div>
+          {showGreeting && (
+            <div className="mt-3 text-sm opacity-75">
+              This message will disappear in 5 seconds...
+            </div>
+          )}
         </div>
       )}
 
@@ -271,10 +310,11 @@ const AttendanceScanner = () => {
       <div className="mt-8 max-w-md text-center">
         <h3 className="text-lg font-semibold text-gray-700 mb-2">Instructions:</h3>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>1. Select Check In or Check Out mode</li>
-          <li>2. Hold your QR code in front of the camera</li>
-          <li>3. Wait for the confirmation message</li>
-          <li>4. Make sure the camera has good lighting</li>
+          <li>1. Hold your QR code in front of the camera</li>
+          <li>2. First scan = Check In, Second scan = Check Out</li>
+          <li>3. Wait for the greeting message to complete</li>
+          <li>4. Wait 3 seconds between scans to avoid duplicates</li>
+          <li>5. Make sure the camera has good lighting</li>
         </ul>
       </div>
     </div>
