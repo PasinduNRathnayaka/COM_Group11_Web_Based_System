@@ -250,7 +250,7 @@ const SellerLayout = () => {
             ))}
 
             {/* Category Dropdown */}
-            <div className="mx-2 my-1">
+            {/* <div className="mx-2 my-1">
               <button
                 onClick={() => setCatDropdownOpen((p) => !p)}
                 className="w-full flex items-center justify-between py-3 px-4 font-medium text-slate-700 hover:bg-slate-200 hover:text-slate-800 rounded-lg transition-all duration-200"
@@ -286,7 +286,7 @@ const SellerLayout = () => {
                   ))}
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
 
