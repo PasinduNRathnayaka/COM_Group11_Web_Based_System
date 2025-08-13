@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
 import { Search, Filter, RefreshCw, Package, Plus, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle } from "lucide-react";
 import ProductCard from "./ProductCard";
 
@@ -19,11 +20,8 @@ const ProductGrid = () => {
     outOfStock: 0
   });
 
-  const navigate = (path) => {
-    console.log('Navigate to:', path);
-    // This would use your actual navigate function
-    // navigate(path);
-  };
+  // Use the proper React Router navigate hook
+  const navigate = useNavigate();
 
   // Fetch products on mount
   useEffect(() => {
