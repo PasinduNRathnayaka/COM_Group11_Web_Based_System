@@ -14,6 +14,12 @@ const productSchema = new mongoose.Schema({
   image: String, // Main product image
   gallery: [String], // Additional product images (up to 3 more)
   qrPath: String, // QR code path
+  
+  // Soft delete fields
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: String, default: null }, // Who deleted it
+  deletionReason: { type: String, default: null }, // Optional reason for deletion
 }, { timestamps: true });
 
 // Ensure we don't exceed 4 total images
@@ -25,6 +31,34 @@ productSchema.pre('save', function(next) {
   }
   next();
 });
+
+// Method to soft delete
+productSchema.methods.softDelete = function(deletedBy, reason = null) {
+  this.isDeleted = true;
+  this.deletedAt = new Date();
+  this.deletedBy = deletedBy;
+  this.deletionReason = reason;
+  return this.save();
+};
+
+// Method to restore from recycle bin
+productSchema.methods.restore = function() {
+  this.isDeleted = false;
+  this.deletedAt = null;
+  this.deletedBy = null;
+  this.deletionReason = null;
+  return this.save();
+};
+
+// Static method to find non-deleted items
+productSchema.statics.findActive = function(filter = {}) {
+  return this.find({ ...filter, isDeleted: false });
+};
+
+// Static method to find deleted items (recycle bin)
+productSchema.statics.findDeleted = function(filter = {}) {
+  return this.find({ ...filter, isDeleted: true });
+};
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;
