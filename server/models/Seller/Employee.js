@@ -1,4 +1,3 @@
-// models/Seller/Employee.js - FIXED VERSION with better email handling
 import mongoose from 'mongoose';
 
 const employeeSchema = new mongoose.Schema({
@@ -26,6 +25,13 @@ const employeeSchema = new mongoose.Schema({
   },
   image: String,
   qrCode: String,
+  
+  // Soft delete fields
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: String, default: null }, // Who deleted it
+  deletionReason: { type: String, default: null }, // Optional reason for deletion
+  
   // Password reset fields for employees
   resetPasswordCode: {
     type: String,
@@ -57,6 +63,34 @@ employeeSchema.pre('save', function(next) {
   }
   next();
 });
+
+// Method to soft delete
+employeeSchema.methods.softDelete = function(deletedBy, reason = null) {
+  this.isDeleted = true;
+  this.deletedAt = new Date();
+  this.deletedBy = deletedBy;
+  this.deletionReason = reason;
+  return this.save();
+};
+
+// Method to restore from recycle bin
+employeeSchema.methods.restore = function() {
+  this.isDeleted = false;
+  this.deletedAt = null;
+  this.deletedBy = null;
+  this.deletionReason = null;
+  return this.save();
+};
+
+// Static method to find non-deleted items
+employeeSchema.statics.findActive = function(filter = {}) {
+  return this.find({ ...filter, isDeleted: false });
+};
+
+// Static method to find deleted items (recycle bin)
+employeeSchema.statics.findDeleted = function(filter = {}) {
+  return this.find({ ...filter, isDeleted: true });
+};
 
 // Method to clear reset password fields
 employeeSchema.methods.clearResetPasswordFields = function() {
