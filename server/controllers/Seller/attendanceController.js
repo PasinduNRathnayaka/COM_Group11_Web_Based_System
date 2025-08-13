@@ -4,38 +4,81 @@ import Employee from '../../models/Seller/Employee.js';
 
 const getToday = () => new Date().toISOString().split("T")[0];
 
-// --- MARK ATTENDANCE ------------------------------------------
+// --- MARK ATTENDANCE (Updated for automatic check-in/check-out) --
 export const markAttendance = async (req, res) => {
-  const { qrData, type } = req.body;
-
   try {
+    const { qrData } = req.body;
+
+    if (!qrData) {
+      return res.status(400).json({ message: 'QR data is required' });
+    }
+
+    // Find employee by empId (QR data contains empId)
     const employee = await Employee.findOne({ empId: qrData });
-    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
 
     const today = getToday();
+    const now = new Date();
+    const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+
+    // Check if attendance record exists for today
     let attendance = await Attendance.findOne({ employee: employee._id, date: today });
 
-    if (type === 'checkIn') {
-      if (attendance && attendance.checkIn) return res.status(400).json({ message: 'Already checked in today' });
-      if (!attendance) {
-        attendance = new Attendance({ employee: employee._id, date: today });
-      }
-      const now = new Date();
-      attendance.checkIn = now.toTimeString().split(' ')[0]; // HH:MM:SS (24hr)
+    let attendanceType;
+    let responseData = {
+      employeeName: employee.name,
+      employeeId: employee.empId,
+      date: today
+    };
+
+    if (!attendance) {
+      // First scan of the day - CREATE new record with check-in
+      attendance = new Attendance({
+        employee: employee._id,
+        date: today,
+        checkIn: currentTime,
+        checkOut: null
+      });
+      
+      await attendance.save();
+      
+      attendanceType = 'checkIn';
+      responseData.checkInTime = currentTime;
+      responseData.attendanceType = attendanceType;
+      responseData.message = `Welcome ${employee.name}! Check-in recorded successfully.`;
+      
+    } else if (attendance.checkIn && !attendance.checkOut) {
+      // Second scan of the day - UPDATE with check-out
+      attendance.checkOut = currentTime;
+      await attendance.save();
+      
+      attendanceType = 'checkOut';
+      responseData.checkInTime = attendance.checkIn;
+      responseData.checkOutTime = currentTime;
+      responseData.attendanceType = attendanceType;
+      responseData.message = `Goodbye ${employee.name}! Check-out recorded successfully.`;
+      
+    } else if (attendance.checkIn && attendance.checkOut) {
+      // Already checked in and out for the day
+      return res.status(400).json({ 
+        message: `${employee.name}, you have already completed attendance for today.`,
+        employeeName: employee.name,
+        checkInTime: attendance.checkIn,
+        checkOutTime: attendance.checkOut
+      });
     }
 
-    if (type === 'checkOut') {
-      if (!attendance) return res.status(400).json({ message: 'Check-in first before checking out' });
-      if (attendance.checkOut) return res.status(400).json({ message: 'Already checked out today' });
-      const now = new Date();
-      attendance.checkOut = now.toTimeString().split(' ')[0]; // HH:MM:SS (24hr)
-    }
-
-    await attendance.save();
-    res.status(200).json({ message: `Successfully ${type}`, attendance });
+    res.status(200).json(responseData);
+    
   } catch (error) {
     console.error('Error marking attendance:', error);
-    res.status(500).json({ message: 'Server error while marking attendance' });
+    res.status(500).json({ 
+      message: 'Server error while marking attendance',
+      error: error.message 
+    });
   }
 };
 

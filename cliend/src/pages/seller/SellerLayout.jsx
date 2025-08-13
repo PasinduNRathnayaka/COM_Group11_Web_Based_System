@@ -10,6 +10,7 @@ import addEmployeeIcon from "../../assets/add-employee.png";
 import employeeListIcon from "../../assets/employee-list.png";
 import attendanceIcon from "../../assets/attendance.png";
 import ordersIcon from "../../assets/orders.png";
+import recycleBinIcon from "../../assets/orders.png"; // Add this icon
 import NotificationPopup from "../../components/seller/NotificationPopup";
 
 const EditProfileModal = ({ open, onClose }) => {
@@ -128,6 +129,7 @@ const SellerLayout = () => {
     { name: "View Attendance", path: "/seller/view-attendence", icon: attendanceIcon },
     { name: "View Salary", path: "/seller/monthly-salary", icon: employeeListIcon },
     { name: "Orders", path: "/seller/orders", icon: ordersIcon },
+    { name: "Recycle Bin", path: "/seller/recycle-bin", icon: recycleBinIcon }, // New recycle bin link
   ];
 
   return (

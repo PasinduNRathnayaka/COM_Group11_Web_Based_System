@@ -58,6 +58,20 @@ const deleteImageFile = (imagePath) => {
   }
 };
 
+// Helper to add full URLs for images and qrPath fields
+function addFullUrls(products, req) {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  return products.map((p) => {
+    const obj = p.toObject ? p.toObject() : p;
+    return {
+      ...obj,
+      image: obj.image ? baseUrl + obj.image : null,
+      gallery: obj.gallery ? obj.gallery.map(img => baseUrl + img) : [],
+      qrPath: obj.qrPath ? baseUrl + obj.qrPath : null,
+    };
+  });
+}
+
 // POST /api/products - Create Product with Multiple Images and QR code
 router.post('/', upload.array('images', 4), async (req, res) => {
   try {
@@ -157,7 +171,7 @@ router.put('/:id', upload.array('images', 4), async (req, res) => {
     } = req.body;
 
     const product = await Product.findById(id);
-    if (!product) {
+    if (!product || product.isDeleted) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
@@ -270,24 +284,10 @@ router.put('/:id', upload.array('images', 4), async (req, res) => {
   }
 });
 
-// Helper to add full URLs for images and qrPath fields
-function addFullUrls(products, req) {
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  return products.map((p) => {
-    const obj = p.toObject ? p.toObject() : p;
-    return {
-      ...obj,
-      image: obj.image ? baseUrl + obj.image : null,
-      gallery: obj.gallery ? obj.gallery.map(img => baseUrl + img) : [],
-      qrPath: obj.qrPath ? baseUrl + obj.qrPath : null,
-    };
-  });
-}
-
-// GET /api/products - Fetch all products with full URLs for images & QR codes
+// GET /api/products - Fetch all ACTIVE products with full URLs for images & QR codes
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.findActive().sort({ createdAt: -1 });
     res.json(addFullUrls(products, req));
   } catch (err) {
     console.error('❌ Error fetching products:', err.message);
@@ -295,11 +295,22 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/products/category/:categoryName - Fetch products by category with full URLs
+// GET /api/products/recycle-bin - Fetch all DELETED products (Recycle Bin)
+router.get('/recycle-bin', async (req, res) => {
+  try {
+    const deletedProducts = await Product.findDeleted().sort({ deletedAt: -1 });
+    res.json(addFullUrls(deletedProducts, req));
+  } catch (err) {
+    console.error('❌ Error fetching deleted products:', err.message);
+    res.status(500).json({ error: 'Failed to fetch deleted products' });
+  }
+});
+
+// GET /api/products/category/:categoryName - Fetch ACTIVE products by category with full URLs
 router.get('/category/:categoryName', async (req, res) => {
   const { categoryName } = req.params;
   try {
-    const products = await Product.find({ category: categoryName });
+    const products = await Product.findActive({ category: categoryName });
     res.json(addFullUrls(products, req));
   } catch (err) {
     console.error('❌ Failed to fetch products by category:', err);
@@ -307,10 +318,10 @@ router.get('/category/:categoryName', async (req, res) => {
   }
 });
 
-// GET /api/products/:id - Get product by ID with full URLs
+// GET /api/products/:id - Get ACTIVE product by ID with full URLs
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, isDeleted: false });
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -323,14 +334,70 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/products/:id - Delete a product by ID
+// DELETE /api/products/:id - SOFT DELETE a product (Move to Recycle Bin)
 router.delete('/:id', async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { deletedBy, reason } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product || product.isDeleted) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Soft delete the product
+    await product.softDelete(deletedBy || 'Unknown', reason);
+
+    res.json({ 
+      message: "Product moved to recycle bin successfully",
+      product: {
+        _id: product._id,
+        productName: product.productName,
+        deletedAt: product.deletedAt,
+        deletedBy: product.deletedBy
+      }
+    });
+  } catch (err) {
+    console.error("❌ Failed to move product to recycle bin:", err);
+    res.status(500).json({ error: "Failed to move product to recycle bin" });
+  }
+});
+
+// POST /api/products/:id/restore - RESTORE a product from Recycle Bin
+router.post('/:id/restore', async (req, res) => {
   try {
     const productId = req.params.id;
 
     const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+    if (!product || !product.isDeleted) {
+      return res.status(404).json({ error: "Product not found in recycle bin" });
+    }
+
+    // Restore the product
+    await product.restore();
+
+    res.json({ 
+      message: "Product restored successfully",
+      product: {
+        _id: product._id,
+        productName: product.productName,
+        restoredAt: new Date()
+      }
+    });
+  } catch (err) {
+    console.error("❌ Failed to restore product:", err);
+    res.status(500).json({ error: "Failed to restore product" });
+  }
+});
+
+// DELETE /api/products/:id/permanent - PERMANENTLY DELETE a product from Recycle Bin
+router.delete('/:id/permanent', async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    const product = await Product.findById(productId);
+    if (!product || !product.isDeleted) {
+      return res.status(404).json({ error: "Product not found in recycle bin" });
     }
 
     // Delete associated images
@@ -351,10 +418,45 @@ router.delete('/:id', async (req, res) => {
 
     await Product.findByIdAndDelete(productId);
 
-    res.json({ message: "Product deleted successfully" });
+    res.json({ message: "Product permanently deleted successfully" });
   } catch (err) {
-    console.error("❌ Failed to delete product:", err);
-    res.status(500).json({ error: "Failed to delete product" });
+    console.error("❌ Failed to permanently delete product:", err);
+    res.status(500).json({ error: "Failed to permanently delete product" });
+  }
+});
+
+// POST /api/products/recycle-bin/clear - Clear entire recycle bin (PERMANENTLY DELETE ALL)
+router.post('/recycle-bin/clear', async (req, res) => {
+  try {
+    const deletedProducts = await Product.findDeleted();
+    
+    // Delete all associated files
+    for (const product of deletedProducts) {
+      if (product.image) {
+        deleteImageFile(product.image);
+      }
+      
+      if (product.gallery && product.gallery.length > 0) {
+        product.gallery.forEach(imagePath => {
+          deleteImageFile(imagePath);
+        });
+      }
+
+      if (product.qrPath) {
+        deleteImageFile(product.qrPath);
+      }
+    }
+
+    // Permanently delete all products in recycle bin
+    const result = await Product.deleteMany({ isDeleted: true });
+
+    res.json({ 
+      message: `${result.deletedCount} products permanently deleted from recycle bin`,
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error("❌ Failed to clear recycle bin:", err);
+    res.status(500).json({ error: "Failed to clear recycle bin" });
   }
 });
 

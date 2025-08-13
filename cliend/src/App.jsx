@@ -1,4 +1,4 @@
-// App.jsx
+// App.jsx - Add RecycleBin import and route
 import React from 'react';
 import Navbar from './components/Navbar';
 import { Route, Routes, useLocation } from 'react-router-dom';
@@ -6,7 +6,6 @@ import { useAppContext } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 
 // import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import EmployeeScanner from './pages/QRScanner/EmployeeScanner';
@@ -29,7 +28,6 @@ import ReturnPolicy from './pages/User/ReturnPolicy';
 //import OrderHistory from './pages/User/OrderHistory'
 import Profile from './pages/User/Profile'
 
-
 import SellerLogin from './pages/seller/SellerLogin';
 import SellerLayout from './pages/seller/SellerLayout';
 
@@ -47,6 +45,9 @@ import ViewAttendance from './pages/seller/AttendancePage';
 import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
 import BillingScanner from "./pages/QRScanner/BillingScanner";
 import MonthlySalary from './pages/seller/MonthlySalary';
+
+// NEW: Import RecycleBin component
+import RecycleBin from './pages/seller/RecycleBin'; // Adjust path as needed
 
 // DEF01
 //new
@@ -69,12 +70,9 @@ import Attendance from "./pages/Employee/Attendance";
 
 import CheckPayment from "./pages/Employee/CheckPayment";
 
-
 import ApplyLeave from "./pages/Employee/ApplyLeave";
 
 import DownloadID from "./pages/Employee/DownloadID";
-
-
 
 //main
 
@@ -88,7 +86,6 @@ const handleSignInClick = () => {
     setShowUserLogin(false)  // Close login modal
     navigate('/signup')      // Redirect to /signup page
   }
-
 
   useEffect(() => {
   // Delay logout if invalid user is on "/" — prevent interfering with initial login redirects
@@ -171,6 +168,9 @@ const handleSignInClick = () => {
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
             <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
             <Route path="monthly-salary" element={<MonthlySalary />} />
+            
+            {/* NEW: Add Recycle Bin Route */}
+            <Route path="recycle-bin" element={<RecycleBin />} />
 
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
@@ -213,7 +213,6 @@ const handleSignInClick = () => {
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
 
-
           <Route path="employee/profile" element={<EmployeeProfile />} />
           <Route path="employee/edit-profile" element={<EditProfile />} />
        
@@ -227,9 +226,7 @@ const handleSignInClick = () => {
 
           <Route path="download-id" element={<DownloadID />} />
 
-
           <Route path="salary" element={<CheckPayment />} />
-
 
         </Route>
         </Routes>

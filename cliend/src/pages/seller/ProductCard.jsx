@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowUp, Download, Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const ProductCard = ({ product, onDelete }) => {
   const navigate = useNavigate();
@@ -26,6 +27,34 @@ const ProductCard = ({ product, onDelete }) => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading QR code:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to move "${product.productName}" to recycle bin?\n\nThis item can be restored later from the recycle bin.`
+    );
+    
+    if (!confirmDelete) return;
+
+    try {
+      // Soft delete - move to recycle bin
+      await axios.delete(`http://localhost:4000/api/products/${product._id}`, {
+        data: {
+          deletedBy: 'Admin', // You can get this from context/auth
+          reason: 'Moved to recycle bin via product management'
+        }
+      });
+      
+      alert("✅ Product moved to recycle bin successfully!");
+      
+      // Call the onDelete callback to refresh the list
+      if (onDelete) {
+        onDelete(product._id);
+      }
+    } catch (error) {
+      console.error("Error moving product to recycle bin:", error);
+      alert("❌ Failed to move product to recycle bin");
     }
   };
 
@@ -116,10 +145,11 @@ const ProductCard = ({ product, onDelete }) => {
           <Pencil className="w-4 h-4" /> Edit
         </button>
         <button
-          onClick={() => onDelete(product._id)}
-          className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-full shadow flex items-center gap-1"
+          onClick={handleDelete}
+          className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-3 py-1 rounded-full shadow flex items-center gap-1"
+          title="Move to Recycle Bin"
         >
-          <Trash className="w-4 h-4" /> Delete
+          <Trash className="w-4 h-4" /> Move to Bin
         </button>
       </div>
     </div>
