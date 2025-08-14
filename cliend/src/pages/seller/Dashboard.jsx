@@ -47,8 +47,8 @@ const SalesGraph = () => {
       const billsResponse = await fetch('http://localhost:4000/api/bills');
       const billsData = billsResponse.ok ? await billsResponse.json() : { bills: [] };
       
-      // Fetch user orders data
-      const ordersResponse = await fetch('http://localhost:4000/api/user-orders');
+      // Fetch seller orders data - using the same endpoint as OrderListPage
+      const ordersResponse = await fetch('http://localhost:4000/api/seller/orders');
       const ordersData = ordersResponse.ok ? await ordersResponse.json() : { orders: [] };
       
       console.log('📊 Bills data:', billsData);
@@ -479,23 +479,12 @@ const Dashboard = () => {
         const billsResponse = await fetch('http://localhost:4000/api/bills');
         const billsData = billsResponse.ok ? await billsResponse.json() : { bills: [] };
         
-        // Fetch user orders - try different endpoint patterns
-        let ordersData = { orders: [] };
-        try {
-          const ordersResponse = await fetch('http://localhost:4000/api/user-orders');
-          if (!ordersResponse.ok) {
-            // Try alternative endpoint
-            const altResponse = await fetch('http://localhost:4000/api/user-orders/all');
-            ordersData = altResponse.ok ? await altResponse.json() : { orders: [] };
-          } else {
-            ordersData = await ordersResponse.json();
-          }
-        } catch (orderError) {
-          console.warn('⚠️ Could not fetch orders:', orderError.message);
-        }
+        // Fetch seller orders data - using the same endpoint as OrderListPage
+        const ordersResponse = await fetch('http://localhost:4000/api/seller/orders');
+        const ordersData = ordersResponse.ok ? await ordersResponse.json() : { orders: [] };
 
         const bills = billsData.bills || [];
-        const orders = ordersData.orders || [];
+        const orders = ordersData.success ? ordersData.orders : [];
         
         console.log('📊 Real bills:', bills.length);
         console.log('📦 Real orders:', orders.length);
@@ -505,7 +494,7 @@ const Dashboard = () => {
         const ordersRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
         const totalSales = billsRevenue + ordersRevenue;
         
-        // Count order statuses
+        // Count order statuses based on the same logic as OrderListPage
         const activeOrders = orders.filter(order => 
           ['pending', 'confirmed', 'processing', 'shipped'].includes(order.status)
         ).length;
