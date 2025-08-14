@@ -194,7 +194,7 @@ const EditEmployeeForm = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hourly Rate *
+              Daily Rate *
             </label>
             <input
               type="number"

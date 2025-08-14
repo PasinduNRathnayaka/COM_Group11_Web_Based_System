@@ -13,7 +13,35 @@ const MonthlySalary = () => {
     setLoading(true);
     try {
       const res = await axios.get(`http://localhost:4000/api/salary/monthly?month=${selectedMonth}`);
-      setSalaryData(res.data);
+      // Process the data to calculate daily-based salary
+      const processedData = res.data.map(emp => {
+        const dailyRate = emp.hourlyRate || emp.rate || 0; // Now treating as daily rate
+        const totalHours = emp.totalHours || 0;
+        const workDays = Math.floor(totalHours / 8); // Complete 8-hour days
+        const remainingHours = totalHours % 8;
+        
+        let calculatedSalary = workDays * dailyRate;
+        
+        // Add half day if employee worked 4+ hours but less than 8
+        if (remainingHours >= 4) {
+          calculatedSalary += dailyRate * 0.5;
+        }
+        
+        // Check if employee has incomplete days (less than 8 hours on any day)
+        const hasIncompleteDay = (totalHours % 8 !== 0 && totalHours % 8 < 8) || (emp.presentDays > Math.floor(totalHours / 8) + (remainingHours >= 4 ? 1 : 0));
+        
+        return {
+          ...emp,
+          dailyRate,
+          calculatedSalary,
+          workDays,
+          remainingHours,
+          hasIncompleteDay,
+          completeDays: workDays + (remainingHours >= 4 ? 0.5 : 0)
+        };
+      });
+      
+      setSalaryData(processedData);
     } catch (err) {
       console.error("Failed to fetch monthly salary summary:", err);
       setSalaryData([]);
@@ -114,6 +142,9 @@ const MonthlySalary = () => {
             tr:nth-child(even) {
               background-color: #f2f2f2;
             }
+            .incomplete-day {
+              background-color: #f2f2f2;
+            }
             .total-row {
               background-color: #e8f4f8 !important;
               font-weight: bold;
@@ -166,11 +197,11 @@ const MonthlySalary = () => {
                 <th>Employee ID</th>
                 <th>Name</th>
                 <th>Category</th>
-                <th>Hourly Rate</th>
+                <th>Daily Rate</th>
                 <th>Total Hours</th>
                 <th>Present Days</th>
                 <th>Complete Days</th>
-                <th>Salary</th>
+                <th>Calculated Salary</th>
               </tr>
             </thead>
             <tbody>
@@ -179,11 +210,11 @@ const MonthlySalary = () => {
                   <td>${emp.empId}</td>
                   <td>${emp.name}</td>
                   <td>${emp.category || 'N/A'}</td>
-                  <td>Rs. ${emp.hourlyRate || emp.rate || 0}</td>
+                  <td>Rs. ${emp.dailyRate}</td>
                   <td>${emp.totalHours || 0}</td>
                   <td>${emp.presentDays || 0}</td>
-                  <td>${emp.completeDays || 0}</td>
-                  <td>Rs. ${(emp.salary || 0).toLocaleString()}</td>
+                  <td>${emp.completeDays}</td>
+                  <td>Rs. ${(emp.calculatedSalary || 0).toLocaleString()}</td>
                 </tr>
               `).join('')}
               <tr class="total-row">
@@ -224,7 +255,7 @@ const MonthlySalary = () => {
   };
 
   const calculateTotals = () => {
-    const totalSalary = salaryData.reduce((sum, emp) => sum + (emp.salary || 0), 0);
+    const totalSalary = salaryData.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0);
     const totalHours = salaryData.reduce((sum, emp) => sum + (emp.totalHours || 0), 0);
     const averageSalary = salaryData.length > 0 ? totalSalary / salaryData.length : 0;
     
@@ -308,7 +339,10 @@ const MonthlySalary = () => {
       {/* Employee Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
         {salaryData.map((emp, i) => (
-          <div key={i} className="bg-white rounded-xl p-4 shadow text-center hover:shadow-lg transition-shadow">
+          <div 
+            key={i} 
+            className="bg-white rounded-xl p-4 shadow text-center hover:shadow-lg transition-shadow"
+          >
             <img
               src={`http://localhost:4000${emp.image}`}
               alt={emp.name}
@@ -317,14 +351,19 @@ const MonthlySalary = () => {
                 e.target.src = "/default-avatar.png";
               }}
             />
-            <h3 className="text-base font-semibold mb-1">{emp.name}</h3>
+            <h3 className="text-base font-semibold mb-1">
+              {emp.name}
+            </h3>
             <p className="text-sm text-gray-500">ID: {emp.empId}</p>
             <p className="text-sm text-gray-600">{emp.category}</p>
             <div className="mt-2 space-y-1">
-              <p className="text-xs text-gray-600">Rate: Rs. {emp.hourlyRate || emp.rate || 0}/hr</p>
+              <p className="text-xs text-gray-600">Daily Rate: Rs. {emp.dailyRate}/day</p>
               <p className="text-xs text-gray-600">Hours: {emp.totalHours || 0}</p>
               <p className="text-xs text-gray-600">Present: {emp.presentDays || 0} days</p>
-              <p className="text-sm font-bold text-green-700">Salary: Rs. {(emp.salary || 0).toLocaleString()}</p>
+              <p className="text-xs text-gray-600">Complete: {emp.completeDays} days</p>
+              <p className="text-sm font-bold text-green-700">
+                Salary: Rs. {(emp.calculatedSalary || 0).toLocaleString()}
+              </p>
             </div>
           </div>
         ))}
@@ -346,16 +385,19 @@ const MonthlySalary = () => {
                 <th className="py-2">Employee ID</th>
                 <th className="py-2">Name</th>
                 <th className="py-2">Category</th>
-                <th className="py-2">Hourly Rate</th>
+                <th className="py-2">Daily Rate</th>
                 <th className="py-2">Total Hours</th>
                 <th className="py-2">Present Days</th>
                 <th className="py-2">Complete Days</th>
-                <th className="py-2">Salary</th>
+                <th className="py-2">Calculated Salary</th>
               </tr>
             </thead>
             <tbody>
               {salaryData.map((emp, i) => (
-                <tr key={i} className="border-t hover:bg-gray-50">
+                <tr 
+                  key={i} 
+                  className="border-t hover:bg-gray-50"
+                >
                   <td className="py-2">{emp.empId}</td>
                   <td className="py-2 flex items-center gap-2">
                     <img
@@ -372,8 +414,10 @@ const MonthlySalary = () => {
                   <td className="py-2">Rs. {emp.hourlyRate || emp.rate || 0}</td>
                   <td className="py-2">{emp.totalHours || 0}</td>
                   <td className="py-2">{emp.presentDays || 0}</td>
-                  <td className="py-2">{emp.completeDays || 0}</td>
-                  <td className="py-2 font-bold text-green-700">Rs. {(emp.salary || 0).toLocaleString()}</td>
+                  <td className="py-2">{emp.completeDays}</td>
+                  <td className="py-2 font-bold text-green-700">
+                    Rs. {(emp.calculatedSalary || 0).toLocaleString()}
+                  </td>
                 </tr>
               ))}
               
