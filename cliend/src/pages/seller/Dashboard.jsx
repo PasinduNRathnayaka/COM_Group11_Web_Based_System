@@ -421,42 +421,241 @@ const BestSellers = () => {
 };
 
 const AttendanceTable = () => {
-  const attendanceRows = [
-    { id: 1, empNo: "001", name: "John Doe", date: "2025‑01‑15", in: "09:00", out: "17:00" },
-    { id: 2, empNo: "002", name: "Jane Smith", date: "2025‑01‑15", in: "09:15", out: "17:10" },
-    { id: 3, empNo: "003", name: "Bob Lee", date: "2025‑01‑15", in: "08:50", out: "16:55" },
-  ];
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Helper functions from AttendancePage
+  const calculateHours = (checkIn, checkOut) => {
+    if (!checkIn || !checkOut) return "--";
+
+    try {
+      const [inH, inM, inS = 0] = checkIn.split(":").map(Number);
+      const [outH, outM, outS = 0] = checkOut.split(":").map(Number);
+
+      const checkInMinutes = inH * 60 + inM + inS / 60;
+      const checkOutMinutes = outH * 60 + outM + outS / 60;
+
+      let durationMinutes = checkOutMinutes - checkInMinutes;
+
+      if (durationMinutes < 0) {
+        durationMinutes += 24 * 60;
+      }
+
+      const hours = durationMinutes / 60;
+
+      if (isNaN(hours) || hours < 0 || hours > 24) {
+        return "--";
+      }
+
+      return hours.toFixed(2);
+    } catch (err) {
+      console.error("Error calculating hours:", err);
+      return "--";
+    }
+  };
+
+  const getAttendanceStatus = (checkIn, checkOut) => {
+    if (!checkIn && !checkOut) return "absent";
+    if (checkIn && !checkOut) return "present";
+    if (checkIn && checkOut) return "completed";
+    return "unknown";
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "completed": return "text-green-600 bg-green-50";
+      case "present": return "text-blue-600 bg-blue-50";
+      case "absent": return "text-red-600 bg-red-50";
+      default: return "text-gray-600 bg-gray-50";
+    }
+  };
+
+  const isUnderEightHours = (checkIn, checkOut) => {
+    const hours = calculateHours(checkIn, checkOut);
+    if (hours === "--") return false;
+    return parseFloat(hours) < 8;
+  };
+
+  useEffect(() => {
+    const fetchTodaysAttendance = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log('🔄 Fetching today\'s attendance data...');
+        
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date();
+        const todayStr = today.toISOString().split("T")[0];
+        
+        // Fetch attendance data for today - same API as AttendancePage
+        const response = await fetch(`http://localhost:4000/api/attendance?date=${todayStr}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📊 Today\'s attendance data:', data);
+          setAttendanceData(data || []);
+        } else {
+          console.error('Failed to fetch attendance data');
+          setError('Failed to fetch attendance data');
+          setAttendanceData([]);
+        }
+        
+      } catch (err) {
+        console.error('❌ Error fetching attendance:', err);
+        setError('Failed to load attendance data');
+        setAttendanceData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTodaysAttendance();
+  }, []);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow p-4 overflow-x-auto">
-      <h4 className="font-semibold mb-4">Today's Attendance</h4>
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="bg-gray-50">
-            {["Employee Number", "Employee Name", "Date", "Check In", "Check Out", "Details"].map((head) => (
-              <th key={head} className="px-3 py-2 border-b text-left font-semibold text-gray-700">
-                {head}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {attendanceRows.map((row) => (
-            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-3 py-3 border-b">{row.empNo}</td>
-              <td className="px-3 py-3 border-b font-medium">{row.name}</td>
-              <td className="px-3 py-3 border-b">{row.date}</td>
-              <td className="px-3 py-3 border-b text-green-600">{row.in}</td>
-              <td className="px-3 py-3 border-b text-red-600">{row.out}</td>
-              <td className="px-3 py-3 border-b">
-                <button className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
-                  View Details
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="font-semibold">Today's Attendance (Real Data)</h4>
+        <span className="text-sm text-gray-500">
+          {new Date().toLocaleDateString()}
+        </span>
+      </div>
+      
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Loading attendance data...</span>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8 text-red-600">
+          <p className="mb-2">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      ) : attendanceData.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p className="mb-2">No attendance records found for today</p>
+          <p className="text-sm">Employee check-ins will appear here</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Summary stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Total</p>
+              <p className="font-bold text-lg">{attendanceData.length}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Present</p>
+              <p className="font-bold text-lg text-green-600">
+                {attendanceData.filter(att => att.checkIn).length}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Completed</p>
+              <p className="font-bold text-lg text-blue-600">
+                {attendanceData.filter(att => att.checkIn && att.checkOut).length}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Under 8h</p>
+              <p className="font-bold text-lg text-red-600">
+                {attendanceData.filter(att => isUnderEightHours(att.checkIn, att.checkOut)).length}
+              </p>
+            </div>
+          </div>
+
+          {/* Attendance table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-3 py-2 border-b text-left font-semibold text-gray-700">Employee</th>
+                  <th className="px-3 py-2 border-b text-left font-semibold text-gray-700">ID</th>
+                  <th className="px-3 py-2 border-b text-left font-semibold text-gray-700">Check In</th>
+                  <th className="px-3 py-2 border-b text-left font-semibold text-gray-700">Check Out</th>
+                  <th className="px-3 py-2 border-b text-left font-semibold text-gray-700">Hours</th>
+                  <th className="px-3 py-2 border-b text-left font-semibold text-gray-700">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceData.slice(0, 10).map((att, index) => {
+                  const status = getAttendanceStatus(att.checkIn, att.checkOut);
+                  const isUnderEight = isUnderEightHours(att.checkIn, att.checkOut);
+                  
+                  return (
+                    <tr key={index} className={`hover:bg-gray-50 transition-colors ${
+                      isUnderEight ? 'bg-red-50' : ''
+                    }`}>
+                      <td className="px-3 py-3 border-b">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            <img
+                              src={`http://localhost:4000${att.employee.image}`}
+                              alt={att.employee.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div className="w-full h-full bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold text-gray-600" style={{ display: 'none' }}>
+                              {att.employee.name.charAt(0)}
+                            </div>
+                          </div>
+                          <span className={`font-medium ${isUnderEight ? 'text-red-900' : 'text-gray-900'}`}>
+                            {att.employee.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className={`px-3 py-3 border-b ${isUnderEight ? 'text-red-700' : 'text-gray-600'}`}>
+                        {att.employee.empId}
+                      </td>
+                      <td className="px-3 py-3 border-b">
+                        <span className={att.checkIn ? (isUnderEight ? 'text-red-900 font-medium' : 'text-green-600 font-medium') : 'text-gray-400'}>
+                          {att.checkIn || "--"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 border-b">
+                        <span className={att.checkOut ? (isUnderEight ? 'text-red-900 font-medium' : 'text-red-600 font-medium') : 'text-gray-400'}>
+                          {att.checkOut || "--"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 border-b">
+                        <span className={isUnderEight ? 'text-red-600 font-semibold bg-red-50 px-2 py-1 rounded' : 'text-gray-900 font-medium'}>
+                          {calculateHours(att.checkIn, att.checkOut)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 border-b">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {attendanceData.length > 10 && (
+            <div className="text-center py-2">
+              <p className="text-sm text-gray-500">
+                Showing first 10 of {attendanceData.length} employees
+              </p>
+              <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm">
+                View All Attendance
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
