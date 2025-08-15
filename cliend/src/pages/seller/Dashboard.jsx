@@ -315,75 +315,529 @@ const SalesGraph = () => {
 const BestSellers = () => {
   const [bestSellers, setBestSellers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [reportData, setReportData] = useState(null);
+
+  // Generate month options for the last 12 months
+  const generateMonthOptions = () => {
+    const months = [];
+    const currentDate = new Date();
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      months.push({ value, label });
+    }
+    
+    return months;
+  };
+
+  const monthOptions = generateMonthOptions();
+
+  const fetchBestSellersForMonth = async (month) => {
+    try {
+      console.log(`🔄 Fetching best sellers for ${month}...`);
+      setLoading(true);
+      
+      // Parse the selected month
+      const [year, monthNum] = month.split('-');
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59);
+      
+      // Fetch bills data for the selected month
+      const billsResponse = await fetch('http://localhost:4000/api/bills');
+      const billsData = billsResponse.ok ? await billsResponse.json() : { bills: [] };
+      
+      // Fetch orders data for the selected month
+      const ordersResponse = await fetch('http://localhost:4000/api/seller/orders');
+      const ordersData = ordersResponse.ok ? await ordersResponse.json() : { orders: [] };
+      
+      // Fetch products data for complete information
+      const productsResponse = await fetch('http://localhost:4000/api/products');
+      const productsData = productsResponse.ok ? await productsResponse.json() : [];
+      
+      const bills = billsData.bills || [];
+      const orders = ordersData.orders || [];
+      const products = productsData || [];
+      
+      // Filter data by selected month
+      const filteredBills = bills.filter(bill => {
+        const billDate = new Date(bill.billDate || bill.createdAt);
+        return billDate >= startDate && billDate <= endDate;
+      });
+      
+      const filteredOrders = orders.filter(order => {
+        const orderDate = new Date(order.orderDate || order.createdAt);
+        return orderDate >= startDate && orderDate <= endDate;
+      });
+      
+      // Calculate best sellers from bills and orders
+      const productSales = new Map();
+      
+      // Process bills
+      filteredBills.forEach(bill => {
+        bill.items?.forEach(item => {
+          const key = item.productId || item.productName;
+          if (!productSales.has(key)) {
+            productSales.set(key, {
+              productId: item.productId,
+              productName: item.productName,
+              billQuantity: 0,
+              billRevenue: 0,
+              orderQuantity: 0,
+              orderRevenue: 0,
+              totalQuantity: 0,
+              totalRevenue: 0,
+              category: 'Unknown',
+              remainingStock: 0,
+              unitPrice: item.unitPrice || 0
+            });
+          }
+          
+          const product = productSales.get(key);
+          product.billQuantity += item.quantity || 0;
+          product.billRevenue += item.totalPrice || (item.quantity * item.unitPrice) || 0;
+          product.totalQuantity += item.quantity || 0;
+          product.totalRevenue += item.totalPrice || (item.quantity * item.unitPrice) || 0;
+        });
+      });
+      
+      // Process orders
+      filteredOrders.forEach(order => {
+        order.items?.forEach(item => {
+          const key = item.productId || item.productName;
+          if (!productSales.has(key)) {
+            productSales.set(key, {
+              productId: item.productId,
+              productName: item.productName,
+              billQuantity: 0,
+              billRevenue: 0,
+              orderQuantity: 0,
+              orderRevenue: 0,
+              totalQuantity: 0,
+              totalRevenue: 0,
+              category: 'Unknown',
+              remainingStock: 0,
+              unitPrice: item.unitPrice || 0
+            });
+          }
+          
+          const product = productSales.get(key);
+          product.orderQuantity += item.quantity || 0;
+          product.orderRevenue += item.totalPrice || (item.quantity * item.unitPrice) || 0;
+          product.totalQuantity += item.quantity || 0;
+          product.totalRevenue += item.totalPrice || (item.quantity * item.unitPrice) || 0;
+        });
+      });
+      
+      // Enhance with product details
+      productSales.forEach((salesData, key) => {
+        const productInfo = products.find(p => 
+          p.productId === salesData.productId || p.productName === salesData.productName
+        );
+        
+        if (productInfo) {
+          salesData.category = productInfo.category || 'Unknown';
+          salesData.remainingStock = productInfo.stock || 0;
+          salesData.image = productInfo.image;
+          salesData.description = productInfo.description;
+        }
+      });
+      
+      // Convert to array and sort by total quantity sold
+      const sortedProducts = Array.from(productSales.values())
+        .sort((a, b) => b.totalQuantity - a.totalQuantity)
+        .slice(0, 10); // Get top 10
+      
+      setBestSellers(sortedProducts);
+      
+      // Prepare comprehensive report data
+      const totalBillRevenue = filteredBills.reduce((sum, bill) => sum + (bill.totalAmount || 0), 0);
+      const totalOrderRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+      const totalRevenue = totalBillRevenue + totalOrderRevenue;
+      
+      setReportData({
+        month: monthOptions.find(m => m.value === month)?.label || month,
+        period: { startDate, endDate },
+        summary: {
+          totalBillRevenue,
+          totalOrderRevenue,
+          totalRevenue,
+          totalBills: filteredBills.length,
+          totalOrders: filteredOrders.length,
+          totalItems: sortedProducts.reduce((sum, item) => sum + item.totalQuantity, 0),
+          uniqueProducts: sortedProducts.length
+        },
+        bestSellers: sortedProducts,
+        bills: filteredBills,
+        orders: filteredOrders,
+        products: products
+      });
+      
+      console.log('✅ Best sellers data processed:', sortedProducts);
+      
+    } catch (error) {
+      console.error('❌ Error fetching best sellers:', error);
+      setBestSellers([]);
+      setReportData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateDetailedReport = () => {
+    if (!reportData) {
+      alert('No data available for report generation');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Monthly Sales Report - ${reportData.month}</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+          }
+          .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+          }
+          .report-title {
+            font-size: 20px;
+            color: #374151;
+            margin-bottom: 10px;
+          }
+          .period {
+            font-size: 14px;
+            color: #6b7280;
+          }
+          .summary-section {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+          }
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+          }
+          .summary-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #2563eb;
+          }
+          .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+          }
+          .summary-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+          }
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 30px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          }
+          .table th {
+            background: #2563eb;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+          }
+          .table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+          }
+          .table tr:hover {
+            background-color: #f9fafb;
+          }
+          .highlight-row {
+            background-color: #fef3c7 !important;
+            font-weight: 600;
+          }
+          .category-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+          }
+          .revenue-cell {
+            font-weight: 600;
+            color: #059669;
+          }
+          .stock-low {
+            color: #dc2626;
+            font-weight: 600;
+          }
+          .stock-good {
+            color: #059669;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+          }
+          .chart-placeholder {
+            background: #f3f4f6;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #6b7280;
+            border: 2px dashed #d1d5db;
+          }
+          @media print {
+            body { margin: 10px; }
+            .no-print { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">KAMAL AUTO PARTS</div>
+          <div class="report-title">Comprehensive Monthly Sales Report</div>
+          <div class="period">Period: ${reportData.month}</div>
+          <div class="period">Generated on: ${new Date().toLocaleString()}</div>
+        </div>
+
+        <div class="summary-section">
+          <h2 style="margin-top: 0; color: #1f2937;">📊 Executive Summary</h2>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${reportData.summary.totalRevenue.toLocaleString()}</div>
+              <div class="summary-label">Total Revenue</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${reportData.summary.totalBillRevenue.toLocaleString()}</div>
+              <div class="summary-label">Bill Revenue</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${reportData.summary.totalOrderRevenue.toLocaleString()}</div>
+              <div class="summary-label">Online Order Revenue</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.totalBills}</div>
+              <div class="summary-label">Total Bills</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.totalOrders}</div>
+              <div class="summary-label">Online Orders</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.totalItems}</div>
+              <div class="summary-label">Items Sold</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.uniqueProducts}</div>
+              <div class="summary-label">Unique Products</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${(reportData.summary.totalRevenue / (reportData.summary.totalBills + reportData.summary.totalOrders) || 0).toFixed(0)}</div>
+              <div class="summary-label">Average Order Value</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">🏆 Best Selling Items Analysis</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Total Sold</th>
+              <th>Bill Sales</th>
+              <th>Online Sales</th>
+              <th>Revenue</th>
+              <th>Avg Price</th>
+              <th>Stock Left</th>
+              <th>Stock Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.bestSellers.map((item, index) => `
+              <tr ${index === 0 ? 'class="highlight-row"' : ''}>
+                <td><strong>#${index + 1}</strong></td>
+                <td><strong>${item.productName}</strong></td>
+                <td><span class="category-badge">${item.category}</span></td>
+                <td><strong>${item.totalQuantity}</strong></td>
+                <td>${item.billQuantity}</td>
+                <td>${item.orderQuantity}</td>
+                <td class="revenue-cell">Rs. ${item.totalRevenue.toLocaleString()}</td>
+                <td>Rs. ${item.totalQuantity > 0 ? (item.totalRevenue / item.totalQuantity).toFixed(0) : '0'}</td>
+                <td>${item.remainingStock}</td>
+                <td class="${item.remainingStock < 10 ? 'stock-low' : 'stock-good'}">
+                  ${item.remainingStock < 10 ? '⚠️ Low' : '✅ Good'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">💰 Revenue Breakdown</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Revenue Source</th>
+              <th>Amount (Rs.)</th>
+              <th>Percentage</th>
+              <th>Count</th>
+              <th>Average Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Direct Sales (Bills)</strong></td>
+              <td class="revenue-cell">Rs. ${reportData.summary.totalBillRevenue.toLocaleString()}</td>
+              <td>${((reportData.summary.totalBillRevenue / reportData.summary.totalRevenue) * 100).toFixed(1)}%</td>
+              <td>${reportData.summary.totalBills}</td>
+              <td>Rs. ${(reportData.summary.totalBillRevenue / reportData.summary.totalBills || 0).toFixed(0)}</td>
+            </tr>
+            <tr>
+              <td><strong>Online Orders</strong></td>
+              <td class="revenue-cell">Rs. ${reportData.summary.totalOrderRevenue.toLocaleString()}</td>
+              <td>${((reportData.summary.totalOrderRevenue / reportData.summary.totalRevenue) * 100).toFixed(1)}%</td>
+              <td>${reportData.summary.totalOrders}</td>
+              <td>Rs. ${(reportData.summary.totalOrderRevenue / reportData.summary.totalOrders || 0).toFixed(0)}</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>TOTAL</strong></td>
+              <td class="revenue-cell"><strong>Rs. ${reportData.summary.totalRevenue.toLocaleString()}</strong></td>
+              <td><strong>100%</strong></td>
+              <td><strong>${reportData.summary.totalBills + reportData.summary.totalOrders}</strong></td>
+              <td><strong>Rs. ${((reportData.summary.totalRevenue) / (reportData.summary.totalBills + reportData.summary.totalOrders) || 0).toFixed(0)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="section-title">📦 Inventory Status Report</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Current Stock</th>
+              <th>Sold This Month</th>
+              <th>Stock Turnover</th>
+              <th>Reorder Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.bestSellers.map(item => {
+              const turnover = item.remainingStock > 0 ? (item.totalQuantity / (item.remainingStock + item.totalQuantity) * 100).toFixed(1) : '100.0';
+              return `
+                <tr>
+                  <td><strong>${item.productName}</strong></td>
+                  <td><span class="category-badge">${item.category}</span></td>
+                  <td class="${item.remainingStock < 10 ? 'stock-low' : 'stock-good'}">${item.remainingStock}</td>
+                  <td>${item.totalQuantity}</td>
+                  <td>${turnover}%</td>
+                  <td class="${item.remainingStock < 10 ? 'stock-low' : 'stock-good'}">
+                    ${item.remainingStock < 5 ? '🚨 Critical - Reorder Now' : 
+                      item.remainingStock < 10 ? '⚠️ Low - Reorder Soon' : 
+                      '✅ Adequate'}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p><strong>Kamal Auto Parts - Monthly Sales Report</strong></p>
+          <p>This comprehensive report provides insights into sales performance, best-selling items, revenue analysis, and inventory status.</p>
+          <p>Report generated automatically on ${new Date().toLocaleString()} | For internal use only</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Create and download PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
 
   useEffect(() => {
-    const fetchRealBestSellers = async () => {
-      try {
-        console.log('🔄 Fetching real best sellers data...');
-        
-        // Try to get analytics data first
-        const analyticsResponse = await fetch('http://localhost:4000/api/bills/analytics/summary');
-        if (analyticsResponse.ok) {
-          const analyticsData = await analyticsResponse.json();
-          console.log('📊 Analytics data:', analyticsData);
-          
-          if (analyticsData.topProducts && analyticsData.topProducts.length > 0) {
-            setBestSellers(analyticsData.topProducts.slice(0, 3));
-            setLoading(false);
-            return;
-          }
-        }
-        
-        // Fallback: Calculate from bills data
-        const billsResponse = await fetch('http://localhost:4000/api/bills');
-        if (billsResponse.ok) {
-          const billsData = await billsResponse.json();
-          const bills = billsData.bills || [];
-          
-          // Calculate best sellers from bills
-          const productSales = new Map();
-          
-          bills.forEach(bill => {
-            bill.items?.forEach(item => {
-              const key = item.productId;
-              if (!productSales.has(key)) {
-                productSales.set(key, {
-                  _id: key,
-                  productName: item.productName,
-                  totalQuantity: 0,
-                  totalRevenue: 0
-                });
-              }
-              
-              const product = productSales.get(key);
-              product.totalQuantity += item.quantity || 0;
-              product.totalRevenue += item.totalPrice || (item.quantity * item.unitPrice) || 0;
-            });
-          });
-          
-          // Convert to array and sort by quantity
-          const sortedProducts = Array.from(productSales.values())
-            .sort((a, b) => b.totalQuantity - a.totalQuantity)
-            .slice(0, 3);
-          
-          console.log('✅ Calculated best sellers:', sortedProducts);
-          setBestSellers(sortedProducts);
-        }
-        
-      } catch (error) {
-        console.error('❌ Error fetching best sellers:', error);
-        setBestSellers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRealBestSellers();
-  }, []);
-
+    fetchBestSellersForMonth(selectedMonth);
+  }, [selectedMonth]);
   return (
-    <div className="w-64 bg-white border border-gray-200 rounded-lg shadow p-4">
-      <h4 className="font-semibold mb-4">Best Seller Items (Real Data)</h4>
+     <div className="w-64 bg-white border border-gray-200 rounded-lg shadow p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="font-semibold">Best Seller Items</h4>
+        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Real Data</span>
+      </div>
+      
+      {/* Month Selection */}
+      <div className="mb-4">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Select Month:</label>
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+        >
+          {monthOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
@@ -398,34 +852,68 @@ const BestSellers = () => {
         </div>
       ) : bestSellers.length === 0 ? (
         <div className="text-center text-gray-500 py-8">
-          <p className="text-sm">No sales data yet</p>
-          <p className="text-xs">Start creating bills to see best sellers</p>
+          <p className="text-sm">No sales data for {monthOptions.find(m => m.value === selectedMonth)?.label}</p>
+          <p className="text-xs">Try selecting a different month</p>
         </div>
       ) : (
-        <ul className="space-y-3 text-sm">
-          {bestSellers.map((item, index) => (
-            <li key={item._id || index} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center text-white font-bold text-xs">
-                  {index + 1}
+        <>
+          <ul className="space-y-3 text-sm mb-4">
+            {bestSellers.slice(0, 3).map((item, index) => (
+              <li key={item.productId || index} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center text-white font-bold text-xs">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-xs block truncate" title={item.productName}>
+                      {item.productName}
+                    </span>
+                    <span className="text-xs text-gray-500">{item.category}</span>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className="font-medium text-xs block truncate" title={item.productName}>
-                    {item.productName}
-                  </span>
+                <div className="text-right flex-shrink-0 ml-2">
+                  <p className="font-bold text-xs">Rs {item.totalRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{item.totalQuantity} sold</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          
+          {/* Summary Stats */}
+          {reportData && (
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="text-center">
+                  <p className="font-bold text-green-600">Rs {reportData.summary.totalRevenue.toLocaleString()}</p>
+                  <p className="text-gray-600">Total Revenue</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-blue-600">{reportData.summary.totalItems}</p>
+                  <p className="text-gray-600">Items Sold</p>
                 </div>
               </div>
-              <div className="text-right flex-shrink-0 ml-2">
-                <p className="font-bold text-xs">Rs {(item.totalRevenue || 0).toLocaleString()}</p>
-                <p className="text-xs text-gray-500">{item.totalQuantity} sold</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+          )}
+        </>
       )}
-      <button className="mt-4 w-full py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-        VIEW REPORT
-      </button>
+      
+      <div className="space-y-2">
+        <button 
+          onClick={() => {/* Navigate to detailed view */}}
+          className="w-full py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          VIEW DETAILED REPORT
+        </button>
+        
+        <button
+          onClick={generateDetailedReport}
+          disabled={!reportData || loading}
+          className="w-full py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+        >
+          <span>📄</span>
+          DOWNLOAD PDF REPORT
+        </button>
+      </div>
     </div>
   );
 };
