@@ -812,6 +812,331 @@ const BestSellers = () => {
     }, 500);
   };
 
+  const viewDetailedReport = () => {
+    if (!reportData) {
+      alert('No data available for report generation');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Monthly Sales Report - ${reportData.month}</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+          }
+          .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+          }
+          .report-title {
+            font-size: 20px;
+            color: #374151;
+            margin-bottom: 10px;
+          }
+          .period {
+            font-size: 14px;
+            color: #6b7280;
+          }
+          .summary-section {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+          }
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+          }
+          .summary-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #2563eb;
+          }
+          .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+          }
+          .summary-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+          }
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 30px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          }
+          .table th {
+            background: #2563eb;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+          }
+          .table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+          }
+          .table tr:hover {
+            background-color: #f9fafb;
+          }
+          .highlight-row {
+            background-color: #fef3c7 !important;
+            font-weight: 600;
+          }
+          .category-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+          }
+          .revenue-cell {
+            font-weight: 600;
+            color: #059669;
+          }
+          .stock-low {
+            color: #dc2626;
+            font-weight: 600;
+          }
+          .stock-good {
+            color: #059669;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+          }
+          .chart-placeholder {
+            background: #f3f4f6;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #6b7280;
+            border: 2px dashed #d1d5db;
+          }
+          @media print {
+            body { margin: 10px; }
+            .no-print { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">KAMAL AUTO PARTS</div>
+          <div class="report-title">Comprehensive Monthly Sales Report</div>
+          <div class="period">Period: ${reportData.month}</div>
+          <div class="period">Generated on: ${new Date().toLocaleString()}</div>
+        </div>
+
+        <div class="summary-section">
+          <h2 style="margin-top: 0; color: #1f2937;">📊 Executive Summary</h2>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${reportData.summary.totalRevenue.toLocaleString()}</div>
+              <div class="summary-label">Total Revenue</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${reportData.summary.totalBillRevenue.toLocaleString()}</div>
+              <div class="summary-label">Bill Revenue</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${reportData.summary.totalOrderRevenue.toLocaleString()}</div>
+              <div class="summary-label">Online Order Revenue</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.totalBills}</div>
+              <div class="summary-label">Total Bills</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.totalOrders}</div>
+              <div class="summary-label">Online Orders</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.totalItems}</div>
+              <div class="summary-label">Items Sold</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">${reportData.summary.uniqueProducts}</div>
+              <div class="summary-label">Unique Products</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value">Rs. ${(reportData.summary.totalRevenue / (reportData.summary.totalBills + reportData.summary.totalOrders) || 0).toFixed(0)}</div>
+              <div class="summary-label">Average Order Value</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">🏆 Best Selling Items Analysis</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Total Sold</th>
+              <th>Bill Sales</th>
+              <th>Online Sales</th>
+              <th>Revenue</th>
+              <th>Avg Price</th>
+              <th>Stock Left</th>
+              <th>Stock Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.bestSellers.map((item, index) => `
+              <tr ${index === 0 ? 'class="highlight-row"' : ''}>
+                <td><strong>#${index + 1}</strong></td>
+                <td><strong>${item.productName}</strong></td>
+                <td><span class="category-badge">${item.category}</span></td>
+                <td><strong>${item.totalQuantity}</strong></td>
+                <td>${item.billQuantity}</td>
+                <td>${item.orderQuantity}</td>
+                <td class="revenue-cell">Rs. ${item.totalRevenue.toLocaleString()}</td>
+                <td>Rs. ${item.totalQuantity > 0 ? (item.totalRevenue / item.totalQuantity).toFixed(0) : '0'}</td>
+                <td>${item.remainingStock}</td>
+                <td class="${item.remainingStock < 10 ? 'stock-low' : 'stock-good'}">
+                  ${item.remainingStock < 10 ? '⚠️ Low' : '✅ Good'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">💰 Revenue Breakdown</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Revenue Source</th>
+              <th>Amount (Rs.)</th>
+              <th>Percentage</th>
+              <th>Count</th>
+              <th>Average Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Direct Sales (Bills)</strong></td>
+              <td class="revenue-cell">Rs. ${reportData.summary.totalBillRevenue.toLocaleString()}</td>
+              <td>${((reportData.summary.totalBillRevenue / reportData.summary.totalRevenue) * 100).toFixed(1)}%</td>
+              <td>${reportData.summary.totalBills}</td>
+              <td>Rs. ${(reportData.summary.totalBillRevenue / reportData.summary.totalBills || 0).toFixed(0)}</td>
+            </tr>
+            <tr>
+              <td><strong>Online Orders</strong></td>
+              <td class="revenue-cell">Rs. ${reportData.summary.totalOrderRevenue.toLocaleString()}</td>
+              <td>${((reportData.summary.totalOrderRevenue / reportData.summary.totalRevenue) * 100).toFixed(1)}%</td>
+              <td>${reportData.summary.totalOrders}</td>
+              <td>Rs. ${(reportData.summary.totalOrderRevenue / reportData.summary.totalOrders || 0).toFixed(0)}</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>TOTAL</strong></td>
+              <td class="revenue-cell"><strong>Rs. ${reportData.summary.totalRevenue.toLocaleString()}</strong></td>
+              <td><strong>100%</strong></td>
+              <td><strong>${reportData.summary.totalBills + reportData.summary.totalOrders}</strong></td>
+              <td><strong>Rs. ${((reportData.summary.totalRevenue) / (reportData.summary.totalBills + reportData.summary.totalOrders) || 0).toFixed(0)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="section-title">📦 Inventory Status Report</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Current Stock</th>
+              <th>Sold This Month</th>
+              <th>Stock Turnover</th>
+              <th>Reorder Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.bestSellers.map(item => {
+              const turnover = item.remainingStock > 0 ? (item.totalQuantity / (item.remainingStock + item.totalQuantity) * 100).toFixed(1) : '100.0';
+              return `
+                <tr>
+                  <td><strong>${item.productName}</strong></td>
+                  <td><span class="category-badge">${item.category}</span></td>
+                  <td class="${item.remainingStock < 10 ? 'stock-low' : 'stock-good'}">${item.remainingStock}</td>
+                  <td>${item.totalQuantity}</td>
+                  <td>${turnover}%</td>
+                  <td class="${item.remainingStock < 10 ? 'stock-low' : 'stock-good'}">
+                    ${item.remainingStock < 5 ? '🚨 Critical - Reorder Now' : 
+                      item.remainingStock < 10 ? '⚠️ Low - Reorder Soon' : 
+                      '✅ Adequate'}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p><strong>Kamal Auto Parts - Monthly Sales Report</strong></p>
+          <p>This comprehensive report provides insights into sales performance, best-selling items, revenue analysis, and inventory status.</p>
+          <p>Report generated automatically on ${new Date().toLocaleString()} | For internal use only</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Open in new window without printing
+  const reportWindow = window.open('', '_blank');
+  reportWindow.document.write(htmlContent);
+  reportWindow.document.close();
+  
+  // Remove the print and close calls
+    
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+
   useEffect(() => {
     fetchBestSellersForMonth(selectedMonth);
   }, [selectedMonth]);
@@ -899,7 +1224,7 @@ const BestSellers = () => {
       
       <div className="space-y-2">
         <button 
-          onClick={() => {/* Navigate to detailed view */}}
+          onClick={viewDetailedReport}
           className="w-full py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           VIEW DETAILED REPORT
