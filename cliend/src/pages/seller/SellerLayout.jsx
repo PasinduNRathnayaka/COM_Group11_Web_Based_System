@@ -136,7 +136,7 @@ const SellerLayout = () => {
     <>
       {/* Top Navbar */}
       <div className="flex items-center justify-between px-4 md:px-8 py-2 bg-blue-900 shadow-sm border-b border-slate-700 relative">
-        <a href="/seller/dashboard" className="flex items-center gap-3">
+        <a href="/" className="flex items-center gap-3">
           <img className="h-10" src={logo} alt="logo" />
           <div className="hidden sm:block">
             <h1 className="text-xl font-bold text-white">Kamal Auto Parts</h1>
