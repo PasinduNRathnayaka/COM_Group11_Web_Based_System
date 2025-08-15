@@ -9,8 +9,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const SummaryCard = ({ title, value, change, icon, isLoading }) => (
-  <div className="flex-1 min-w-[200px] bg-white border border-gray-200 rounded-lg shadow p-4">
+const SummaryCard = ({ title, value, change, icon, isLoading, onClick }) => (
+  <div 
+    className={`flex-1 min-w-[200px] bg-white border border-gray-200 rounded-lg shadow p-4 ${
+      onClick ? 'cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200' : ''
+    }`}
+    onClick={onClick}
+  >
     <div className="flex items-center justify-between mb-2">
       <p className="text-gray-600 text-sm">{title}</p>
       {icon && <span className="text-gray-400">{icon}</span>}
@@ -25,6 +30,11 @@ const SummaryCard = ({ title, value, change, icon, isLoading }) => (
         <h3 className="text-xl font-bold">{value}</h3>
         <p className="text-xs text-green-600 mt-1">{change}</p>
       </>
+    )}
+    {onClick && (
+      <div className="mt-2 text-xs text-blue-600 opacity-75">
+        Click to view details →
+      </div>
     )}
   </div>
 );
@@ -660,6 +670,235 @@ const AttendanceTable = () => {
   );
 };
 
+// Bills List Modal Component
+const BillsListModal = ({ isOpen, onClose, bills }) => {
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [monthlyBills, setMonthlyBills] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('all');
+
+  // Generate month options
+  const generateMonthOptions = () => {
+    const months = [{ value: 'all', label: 'All Months' }];
+    const currentDate = new Date();
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      months.push({ value, label });
+    }
+    
+    return months;
+  };
+
+  const monthOptions = generateMonthOptions();
+
+  // Filter bills by month
+  useEffect(() => {
+    if (!bills || bills.length === 0) {
+      setMonthlyBills([]);
+      return;
+    }
+
+    let filtered = bills;
+
+    if (selectedMonth !== 'all') {
+      filtered = bills.filter(bill => {
+        const billDate = new Date(bill.billDate || bill.createdAt);
+        const billMonth = `${billDate.getFullYear()}-${String(billDate.getMonth() + 1).padStart(2, '0')}`;
+        return billMonth === selectedMonth;
+      });
+    }
+
+    // Sort by date (newest first)
+    filtered = filtered.sort((a, b) => new Date(b.billDate || b.createdAt) - new Date(a.billDate || a.createdAt));
+    
+    setMonthlyBills(filtered);
+  }, [bills, selectedMonth]);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">All Bills</h2>
+              <p className="text-sm text-gray-600 mt-1">View and manage all billing records</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-2"
+            >
+              <span className="text-2xl">×</span>
+            </button>
+          </div>
+          
+          {/* Month Filter */}
+          <div className="mt-4">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-[200px]"
+            >
+              {monthOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span className="ml-3 text-sm text-gray-500">
+              {monthlyBills.length} bills {selectedMonth !== 'all' ? 'in selected month' : 'total'}
+            </span>
+          </div>
+        </div>
+
+        {/* Bills List */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {monthlyBills.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4">🧾</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No bills found</h3>
+              <p className="text-gray-500">
+                {selectedMonth !== 'all' ? 'No bills found for the selected month.' : 'No bills have been created yet.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {monthlyBills.map((bill) => (
+                <div
+                  key={bill._id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setSelectedBill(bill)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm">#{bill.billNumber}</h4>
+                      <p className="text-xs text-gray-500">{formatDate(bill.billDate || bill.createdAt)}</p>
+                    </div>
+                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                      {bill.paymentStatus || 'Paid'}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Customer:</span>
+                      <span className="font-medium">{bill.customerName || 'Walk-in Customer'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Items:</span>
+                      <span>{bill.items?.length || 0} items</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="text-green-600">Rs {bill.totalAmount?.toFixed(2) || '0.00'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 text-xs text-blue-600">
+                    Click to view details →
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bill Details Modal */}
+      {selectedBill && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Bill Details</h3>
+                  <p className="text-sm text-gray-600">#{selectedBill.billNumber}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedBill(null)}
+                  className="text-gray-400 hover:text-gray-600 p-2"
+                >
+                  <span className="text-2xl">×</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Bill Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2">Bill Information</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="text-gray-600">Date:</span> {formatDate(selectedBill.billDate || selectedBill.createdAt)}</p>
+                    <p><span className="text-gray-600">Status:</span> <span className="text-green-600 font-medium">{selectedBill.paymentStatus || 'Paid'}</span></p>
+                    <p><span className="text-gray-600">Amount:</span> <span className="font-semibold">Rs {selectedBill.totalAmount?.toFixed(2) || '0.00'}</span></p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2">Customer Information</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="text-gray-600">Name:</span> {selectedBill.customerName || 'Walk-in Customer'}</p>
+                    <p><span className="text-gray-600">Phone:</span> {selectedBill.customerPhone || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div>
+                <h4 className="font-semibold text-gray-700 mb-3">Items ({selectedBill.items?.length || 0})</h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-medium text-gray-700">Product</th>
+                        <th className="px-4 py-2 text-center font-medium text-gray-700">Qty</th>
+                        <th className="px-4 py-2 text-right font-medium text-gray-700">Unit Price</th>
+                        <th className="px-4 py-2 text-right font-medium text-gray-700">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedBill.items?.map((item, index) => (
+                        <tr key={index}>
+                          <td className="px-4 py-2">{item.productName}</td>
+                          <td className="px-4 py-2 text-center">{item.quantity}</td>
+                          <td className="px-4 py-2 text-right">Rs {item.unitPrice?.toFixed(2) || '0.00'}</td>
+                          <td className="px-4 py-2 text-right font-medium">Rs {((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedBill.notes && (
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2">Notes</h4>
+                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{selectedBill.notes}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const [summaryData, setSummaryData] = useState({
     totalSales: 0,
@@ -668,6 +907,8 @@ const Dashboard = () => {
     totalBills: 0
   });
   const [loading, setLoading] = useState(true);
+  const [showBillsModal, setShowBillsModal] = useState(false);
+  const [bills, setBills] = useState([]);
 
   useEffect(() => {
     const fetchRealSummaryData = async () => {
@@ -687,6 +928,9 @@ const Dashboard = () => {
         
         console.log('📊 Real bills:', bills.length);
         console.log('📦 Real orders:', orders.length);
+
+        // Store bills for modal
+        setBills(bills);
 
         // Calculate real totals
         const billsRevenue = bills.reduce((sum, bill) => sum + (bill.totalAmount || 0), 0);
@@ -729,6 +973,21 @@ const Dashboard = () => {
     fetchRealSummaryData();
   }, []);
 
+  // Navigation handlers
+  const handleTotalBillsClick = () => {
+    setShowBillsModal(true);
+  };
+
+  const handleActiveOrdersClick = () => {
+    // Navigate to seller/orders page with active orders filter
+    window.location.href = '/seller/orders?status=active';
+  };
+
+  const handleCompletedOrdersClick = () => {
+    // Navigate to seller/orders page with completed orders filter
+    window.location.href = '/seller/orders?status=delivered';
+  };
+
   const summaryCards = [
     { 
       title: "Total Sales", 
@@ -740,19 +999,22 @@ const Dashboard = () => {
       title: "Active Orders", 
       value: summaryData.activeOrders.toString(), 
       change: "Pending/Processing",
-      icon: "📦"
+      icon: "📦",
+      onClick: handleActiveOrdersClick
     },
     { 
       title: "Completed Orders", 
       value: summaryData.completedOrders.toString(), 
       change: "Delivered",
-      icon: "✅"
+      icon: "✅",
+      onClick: handleCompletedOrdersClick
     },
     { 
       title: "Total Bills", 
       value: summaryData.totalBills.toString(), 
       change: "All time",
-      icon: "🧾"
+      icon: "🧾",
+      onClick: handleTotalBillsClick
     },
   ];
 
@@ -781,6 +1043,13 @@ const Dashboard = () => {
       <section>
         <AttendanceTable />
       </section>
+
+      {/* Bills Modal */}
+      <BillsListModal 
+        isOpen={showBillsModal}
+        onClose={() => setShowBillsModal(false)}
+        bills={bills}
+      />
     </div>
   );
 };
