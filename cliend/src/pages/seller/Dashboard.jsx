@@ -31,11 +31,11 @@ const SummaryCard = ({ title, value, change, icon, isLoading, onClick }) => (
         <p className="text-xs text-green-600 mt-1">{change}</p>
       </>
     )}
-    {onClick && (
+    {/* {onClick && (
       <div className="mt-2 text-xs text-blue-600 opacity-75">
         Click to view details →
       </div>
-    )}
+    )} */}
   </div>
 );
 
