@@ -418,7 +418,7 @@ const AdminProfile = ({ isOpen, onClose, adminData, onUpdate }) => {
               </div>
               
               {/* Form Fields */}
-              <div className="grid gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FiUser className="inline mr-2" size={16} />
@@ -633,7 +633,7 @@ const ViewProfile = ({ isOpen, onClose, adminData, onEditClick }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-[90%] max-w-lg rounded-xl shadow-2xl overflow-hidden">
+      <div className="bg-white w-[90%] max-w-4xl rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 text-white">
           <div className="flex items-center justify-between">
@@ -684,7 +684,7 @@ const ViewProfile = ({ isOpen, onClose, adminData, onEditClick }) => {
           </div>
 
           {/* Profile Information */}
-          <div className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-gray-800">Contact Information</h4>
