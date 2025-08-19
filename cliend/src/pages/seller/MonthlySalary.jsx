@@ -485,11 +485,15 @@ const MonthlySalary = () => {
       </html>
     `;
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${(employee.name || 'Employee').replace(/\s+/g, '_')}_Salary_Report_${monthYear.replace(/\s+/g, '_')}.html`;
+     a.download = `${(employee.name || 'Employee').replace(/\s+/g, '_')}_Salary_Report_${monthYear.replace(/\s+/g, '_')}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   };
