@@ -12,28 +12,25 @@ const Footer = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch shop details from backend
+  // Fetch shop details from admin backend
   useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        // Fetch seller/admin details from employee collection
-        const response = await fetch('/api/employees');
-        const employees = await response.json();
+        // 🔥 Updated: Fetch admin details from the new endpoint
+        const response = await fetch('/api/admin/shop-details');
         
-        // Find seller or admin employee
-        const seller = employees.find(emp => 
-          emp.category === 'seller' || 
-          emp.category === 'admin' || 
-          emp.role === 'seller' || 
-          emp.role === 'admin'
-        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch shop details');
+        }
+
+        const data = await response.json();
         
-        if (seller) {
+        if (data.success && data.shopDetails) {
           setShopDetails({
-            address: seller.address || "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
-            email: seller.email || "kamalautolg@gmail.com",
-            phone: seller.contact || "0777819999",
-            name: seller.name || "Kamal Auto"
+            address: data.shopDetails.address || "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
+            email: data.shopDetails.email || "kamalautolg@gmail.com",
+            phone: data.shopDetails.phone || "0777819999",
+            name: data.shopDetails.name || "Kamal Auto"
           });
         }
       } catch (error) {
