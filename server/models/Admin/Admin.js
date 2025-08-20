@@ -48,12 +48,24 @@ const adminSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  // Password reset fields
+  // Enhanced password reset fields
+  resetPasswordCode: {
+    type: String,
+    default: null
+  },
   resetPasswordToken: {
     type: String,
     default: null
   },
   resetPasswordExpire: {
+    type: Date,
+    default: null
+  },
+  resetPasswordAttempts: {
+    type: Number,
+    default: 0
+  },
+  resetPasswordLockedUntil: {
     type: Date,
     default: null
   }
@@ -90,9 +102,55 @@ adminSchema.methods.updateLastLogin = function() {
 
 // Clear password reset fields
 adminSchema.methods.clearResetPasswordFields = function() {
+  this.resetPasswordCode = null;
   this.resetPasswordToken = null;
   this.resetPasswordExpire = null;
-  return this.save();
+  this.resetPasswordAttempts = 0;
+  this.resetPasswordLockedUntil = null;
+};
+
+// Method to check if reset is locked
+adminSchema.methods.isResetLocked = function() {
+  return this.resetPasswordLockedUntil && this.resetPasswordLockedUntil > Date.now();
+};
+
+// Method to increment failed attempts
+adminSchema.methods.incrementResetAttempts = function() {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.resetPasswordLockedUntil && this.resetPasswordLockedUntil < Date.now()) {
+    return this.updateOne({
+      $unset: {
+        resetPasswordLockedUntil: 1,
+      },
+      $set: {
+        resetPasswordAttempts: 1,
+      }
+    });
+  }
+  
+  const updates = { $inc: { resetPasswordAttempts: 1 } };
+  
+  // If we have max attempts and aren't locked yet, lock the account
+  if (this.resetPasswordAttempts + 1 >= 5 && !this.isResetLocked()) {
+    updates.$set = {
+      resetPasswordLockedUntil: Date.now() + 30 * 60 * 1000, // Lock for 30 minutes
+    };
+  }
+  
+  return this.updateOne(updates);
+};
+
+// Method to check if admin can receive emails
+adminSchema.methods.canReceiveEmails = function() {
+  return !!(this.email && this.email.trim());
+};
+
+// Method to get user type for email templates
+adminSchema.methods.getUserType = function() {
+  if (this.role === 'super_admin') {
+    return 'super_admin';
+  }
+  return 'admin';
 };
 
 // Get admin without password
