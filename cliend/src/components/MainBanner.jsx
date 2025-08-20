@@ -334,14 +334,22 @@ const fetchProductReviews = async (productId) => {
 
   return (
     <>
+     <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] bg-gray-100 min-h-screen">
       {/* Banner */}
-      <div className='relative h-[300px] md:h-[400px] overflow-hidden'>
-        <img src={assets.mainbanner_lr} alt="banner" className='w-full h-full object-cover hidden md:block' />
-        <img src={assets.mainbanner_sm} alt="banner" className='w-full h-full object-cover md:hidden' />
-      </div>
-
+    <div className="w-screen relative left-1/2 right-1/2 h-[300px] md:h-[400px] -mx-[50vw] py-0">
+      <img 
+        src={assets.mainbanner_lr} 
+        alt="banner" 
+        className="w-full h-full object-cover hidden md:block" 
+      />
+      <img 
+        src={assets.mainbanner_sm} 
+        alt="banner" 
+        className="w-full h-full object-cover md:hidden" 
+      />
+    </div>
       {user && (
-        <div className="w-full flex justify-end pr-6 mt-6">
+        <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] flex justify-end pr-6 mt-6 py-2">
           <button className="text-sm text-primary hover:underline font-semibold" onClick={() => setShowRatePopup(true)}>
             We'd love your feedback! Rate us & help us improve →
           </button>
@@ -349,7 +357,8 @@ const fetchProductReviews = async (productId) => {
       )}
 
       <div className="flex flex-col items-center justify-center text-left px-4 mt-8 mb-12">
-        <h1 className='text-2xl md:text-4xl font-bold mb-6'>Explore Genuine Auto Parts at the Best Prices</h1>
+      
+      <h1 className='text-2xl md:text-4xl font-bold mb-6 text-blue'>Explore Genuine Auto Parts at the Best Prices</h1>
 
         {user && (
           <>
@@ -367,6 +376,7 @@ const fetchProductReviews = async (productId) => {
             {showRatePopup && <RateUsPopup onClose={() => setShowRatePopup(false)} />}
           </>
         )}
+      
       </div>
 
       {/* Show categories & products */}
@@ -384,7 +394,7 @@ const fetchProductReviews = async (productId) => {
           </div>
 
           {/* For You Section - Updated with Auto-sliding Carousel */}
-          <div className="px-4 mt-16 mb-20">
+          <div className="px-4 mt-16 mb-20 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-2 rounded-xl mx-4">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-left text-xl md:text-2xl font-bold">For You</h1>
               <div className="flex items-center gap-2">
@@ -504,6 +514,7 @@ const fetchProductReviews = async (productId) => {
           </div>
         </>
       )}
+      </div>
     </>
   );
 };
