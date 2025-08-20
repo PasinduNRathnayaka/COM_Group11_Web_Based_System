@@ -10,7 +10,11 @@ import {
   getAdminProfile,
   updateAdminProfile,
   changeAdminPassword,
-  getDashboardStats
+  getDashboardStats,
+  // New password reset functions
+  requestAdminPasswordReset,
+  verifyAdminResetCode,
+  resetAdminPassword
 } from '../../controllers/Admin/adminController.js';
 import { adminAuth } from '../../middlewares/adminAuth.js';
 
@@ -58,6 +62,11 @@ const upload = multer({
 // Public routes (no authentication required)
 router.post('/register', registerAdmin);
 router.post('/login', loginAdmin);
+
+// 🔐 NEW: Password reset routes for admins (no authentication needed)
+router.post('/forgot-password', requestAdminPasswordReset);
+router.post('/verify-reset-code', verifyAdminResetCode);
+router.post('/reset-password', resetAdminPassword);
 
 // Protected routes (authentication required)
 router.use(adminAuth); // Apply auth middleware to all routes below
