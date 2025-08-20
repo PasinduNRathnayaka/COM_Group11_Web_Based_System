@@ -14,7 +14,9 @@ import {
   // New password reset functions
   requestAdminPasswordReset,
   verifyAdminResetCode,
-  resetAdminPassword
+  resetAdminPassword,
+  // New function for shop details
+  getShopDetails
 } from '../../controllers/Admin/adminController.js';
 import { adminAuth } from '../../middlewares/adminAuth.js';
 
@@ -63,7 +65,10 @@ const upload = multer({
 router.post('/register', registerAdmin);
 router.post('/login', loginAdmin);
 
-// 🔐 NEW: Password reset routes for admins (no authentication needed)
+// 🔥 NEW: Public route for shop details (for footer)
+router.get('/shop-details', getShopDetails);
+
+// 🔍 NEW: Password reset routes for admins (no authentication needed)
 router.post('/forgot-password', requestAdminPasswordReset);
 router.post('/verify-reset-code', verifyAdminResetCode);
 router.post('/reset-password', resetAdminPassword);
