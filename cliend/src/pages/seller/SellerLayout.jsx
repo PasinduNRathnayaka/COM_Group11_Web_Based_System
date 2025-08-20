@@ -1013,7 +1013,7 @@ const SellerLayout = () => {
         </a>
 
         <div className="flex items-center gap-2">
-          {/* Search */}
+          {/* Search
           <div className="relative">
             <button
               onClick={() => setShowSearch((p) => !p)}
@@ -1030,7 +1030,7 @@ const SellerLayout = () => {
                 onBlur={() => setShowSearch(false)}
               />
             )}
-          </div>
+          </div> */}
 
           {/* Notifications */}
           <div className="relative" ref={bellRef}>
