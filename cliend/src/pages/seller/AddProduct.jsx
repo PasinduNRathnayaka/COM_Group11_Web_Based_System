@@ -361,18 +361,18 @@ const AddProductForm = () => {
                               {cat.name}
                             </option>
                           ))}
-                          <option value="__add__">+ Add new category</option>
+                          {/* <option value="__add__">+ Add new category</option> */}
                         </select>
                         {form.category && (
                           <button
                             type="button"
-                            onClick={() => {
-                              const catToDelete = categories.find((c) => c.name === form.category);
-                              if (catToDelete) handleDeleteCategory(catToDelete._id);
-                            }}
+                            // onClick={() => {
+                            //   const catToDelete = categories.find((c) => c.name === form.category);
+                            //   if (catToDelete) handleDeleteCategory(catToDelete._id);
+                            // }}
                             className="px-3 py-3 text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors duration-200"
                           >
-                            <Trash2 size={16} />
+                            {/* <Trash2 size={16} /> */}
                           </button>
                         )}
                       </div>
