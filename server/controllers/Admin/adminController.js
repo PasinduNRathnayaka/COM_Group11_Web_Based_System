@@ -66,6 +66,59 @@ export const registerAdmin = async (req, res) => {
 // @desc    Login Admin
 // @route   POST /api/admin/login
 // @access  Public
+
+export const getShopDetails = async (req, res) => {
+  try {
+    // Find the first active admin (you can modify this logic based on your needs)
+    // If you want to get a specific admin, you can add more specific criteria
+    const admin = await Admin.findOne({ 
+      isActive: true,
+      $or: [
+        { role: 'super_admin' },
+        { role: 'admin' }
+      ]
+    }).select('name email mobile'); // Only select the fields needed for shop details
+
+    if (!admin) {
+      // Return default shop details if no admin found
+      return res.json({
+        success: true,
+        shopDetails: {
+          name: "Kamal Auto",
+          email: "kamalautolg@gmail.com",
+          phone: "0777819999",
+          address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka"
+        }
+      });
+    }
+
+    // Return admin details as shop details
+    res.json({
+      success: true,
+      shopDetails: {
+        name: admin.name || "Kamal Auto",
+        email: admin.email || "kamalautolg@gmail.com", 
+        phone: admin.mobile || "0777819999",
+        address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka" // You can add address field to Admin model if needed
+      }
+    });
+
+  } catch (error) {
+    console.error('⚠️ Get shop details error:', error);
+    
+    // Return default shop details in case of error
+    res.json({
+      success: true,
+      shopDetails: {
+        name: "Kamal Auto",
+        email: "kamalautolg@gmail.com",
+        phone: "0777819999", 
+        address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka"
+      }
+    });
+  }
+};
+
 export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
