@@ -3,6 +3,12 @@ import Admin from '../../models/Admin/Admin.js';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import { 
+  sendPasswordResetEmail, 
+  sendPasswordResetSuccessEmail,
+  generateResetCode, 
+  generateResetToken 
+} from '../../utils/emailService.js';
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -103,6 +109,263 @@ export const loginAdmin = async (req, res) => {
       success: false, 
       message: 'Server error during login' 
     });
+  }
+};
+
+// @desc    Request Password Reset for Admin
+// @route   POST /api/admin/forgot-password
+// @access  Public
+export const requestAdminPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    console.log(`🔍 Looking for admin with email: ${email}`);
+
+    // Find admin by email
+    const searchValue = email.toLowerCase().trim();
+    const admin = await Admin.findOne({ email: searchValue });
+    
+    if (!admin) {
+      console.log('❌ Admin not found');
+      // Don't reveal if email exists or not for security
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset code has been sent.'
+      });
+    }
+
+    console.log('✅ Admin found:', {
+      name: admin.name,
+      email: admin.email,
+      role: admin.role,
+      isActive: admin.isActive
+    });
+
+    // Check if admin account is active
+    if (!admin.isActive) {
+      console.log('❌ Admin account is deactivated');
+      return res.status(400).json({ 
+        message: 'Admin account is deactivated. Please contact super administrator.' 
+      });
+    }
+
+    // Check if admin is currently locked out
+    if (admin.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((admin.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      console.log(`⏰ Admin is locked for ${lockTimeRemaining} minutes`);
+      return res.status(429).json({ 
+        message: `Too many failed attempts. Please try again in ${lockTimeRemaining} minutes.` 
+      });
+    }
+
+    // Generate reset code and token
+    const resetCode = generateResetCode();
+    const resetToken = generateResetToken();
+    
+    // Set reset fields (expires in 15 minutes)
+    admin.resetPasswordCode = resetCode;
+    admin.resetPasswordToken = resetToken;
+    admin.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+    
+    await admin.save();
+    console.log('💾 Reset fields saved to admin');
+
+    // Get user type for email template
+    const userType = admin.getUserType();
+
+    console.log(`📧 Sending email to ${admin.email} as ${userType}`);
+
+    // Send email with reset code
+    const emailResult = await sendPasswordResetEmail(
+      admin.email, 
+      resetCode, 
+      admin.name, 
+      userType
+    );
+
+    console.log('✅ Email sent successfully:', emailResult);
+
+    res.json({
+      success: true,
+      message: 'Password reset code has been sent to your email.',
+      userType: userType,
+      // Development info (remove in production)
+      ...(process.env.NODE_ENV === 'development' && { 
+        resetCode,
+        adminInfo: {
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+          userType: userType
+        }
+      })
+    });
+
+  } catch (error) {
+    console.error('❌ Admin password reset request error:', error);
+    
+    if (error.message.includes('Too many failed attempts')) {
+      return res.status(429).json({ message: error.message });
+    }
+    
+    // Provide more specific error messages
+    let errorMessage = 'Error sending password reset email. Please try again later.';
+    
+    if (error.message.includes('authentication failed') || error.code === 'EAUTH') {
+      errorMessage = 'Email service authentication failed. Please contact system administrator.';
+    } else if (error.message.includes('Invalid email') || error.code === 'ENOTFOUND') {
+      errorMessage = 'Email service configuration error. Please contact system administrator.';
+    } else if (error.message.includes('Invalid login')) {
+      errorMessage = 'Invalid email credentials. Please verify EMAIL_USER and EMAIL_PASS';
+    }
+    
+    res.status(500).json({ 
+      message: errorMessage,
+      category: 'EMAIL_SERVICE_ERROR',
+      debug: process.env.NODE_ENV === 'development' ? {
+        originalError: error.message,
+        code: error.code,
+        stack: error.stack
+      } : undefined
+    });
+  }
+};
+
+// @desc    Verify Admin Reset Code
+// @route   POST /api/admin/verify-reset-code
+// @access  Public
+export const verifyAdminResetCode = async (req, res) => {
+  try {
+    const { email, resetCode } = req.body;
+
+    if (!email || !resetCode) {
+      return res.status(400).json({ message: 'Email and reset code are required' });
+    }
+
+    const admin = await Admin.findOne({
+      email: email.toLowerCase().trim(),
+      resetPasswordCode: resetCode,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!admin) {
+      const adminByEmail = await Admin.findOne({ 
+        email: email.toLowerCase().trim()
+      });
+      
+      if (adminByEmail) {
+        await adminByEmail.incrementResetAttempts();
+      }
+      
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    // Check if admin is locked out
+    if (admin.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((admin.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      return res.status(429).json({ 
+        message: `Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.` 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Reset code verified successfully. You can now set your new password.',
+      token: admin.resetPasswordToken
+    });
+
+  } catch (error) {
+    console.error('Admin reset code verification error:', error);
+    res.status(500).json({ message: 'Error verifying reset code. Please try again later.' });
+  }
+};
+
+// @desc    Reset Admin Password
+// @route   POST /api/admin/reset-password
+// @access  Public
+export const resetAdminPassword = async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ 
+        message: 'Email, reset code, and new password are required' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        message: 'New password must be at least 6 characters long' 
+      });
+    }
+
+    // Find admin with valid reset code and not expired
+    const admin = await Admin.findOne({
+      email: email.toLowerCase().trim(),
+      resetPasswordCode: resetCode,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!admin) {
+      // Try to find admin by email to increment attempts
+      const adminByEmail = await Admin.findOne({ 
+        email: email.toLowerCase().trim()
+      });
+      
+      if (adminByEmail) {
+        await adminByEmail.incrementResetAttempts();
+        
+        if (adminByEmail.resetPasswordAttempts >= 4) {
+          return res.status(429).json({ 
+            message: 'Too many failed attempts. Your account has been temporarily locked for 30 minutes.' 
+          });
+        }
+      }
+      
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    // Check if admin is locked out
+    if (admin.isResetLocked()) {
+      const lockTimeRemaining = Math.ceil((admin.resetPasswordLockedUntil - Date.now()) / (1000 * 60));
+      return res.status(429).json({ 
+        message: `Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.` 
+      });
+    }
+
+    // Reset password
+    admin.password = newPassword;
+    admin.clearResetPasswordFields();
+    
+    await admin.save();
+
+    // Send success notification email
+    try {
+      await sendPasswordResetSuccessEmail(admin.email, admin.name);
+    } catch (emailError) {
+      console.error('Failed to send success email:', emailError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now log in with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Admin password reset error:', error);
+    
+    if (error.message.includes('Too many failed attempts') || 
+        error.message.includes('temporarily locked') ||
+        error.message.includes('Invalid or expired')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    res.status(500).json({ message: 'Error resetting password. Please try again later.' });
   }
 };
 
