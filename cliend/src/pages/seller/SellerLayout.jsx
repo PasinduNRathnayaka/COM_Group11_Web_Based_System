@@ -20,7 +20,7 @@ const API_BASE_URL = 'http://localhost:4000/api';
 const apiService = {
   // Get auth token from localStorage
   getAuthToken: () => {
-    return localStorage.getItem('adminToken');
+    return localStorage.getItem('token') || localStorage.getItem('adminToken');
   },
 
   // Get auth headers
@@ -40,7 +40,7 @@ const apiService = {
     };
   },
 
-  // Load admin profile
+  // Load admin profile using stored token
   loadAdminProfile: async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/profile`, {
@@ -57,62 +57,6 @@ const apiService = {
       return data;
     } catch (error) {
       console.error('❌ Load admin profile error:', error);
-      throw error;
-    }
-  },
-
-  // Create default admin (register)
-  createDefaultAdmin: async (adminData = {}) => {
-    try {
-      const defaultAdminData = {
-        name: 'Administrator',
-        email: 'admin@kamalautoparts.com',
-        password: 'admin123', // Default password
-        mobile: '+94771234567',
-        ...adminData
-      };
-
-      const response = await fetch(`${API_BASE_URL}/admin/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(defaultAdminData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create admin');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('❌ Create admin error:', error);
-      throw error;
-    }
-  },
-
-  // Login admin
-  loginAdmin: async (credentials) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/admin/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('❌ Login error:', error);
       throw error;
     }
   },
@@ -778,73 +722,8 @@ const ViewProfile = ({ isOpen, onClose, adminData, onEditClick }) => {
   );
 };
 
-const EditProfileModal = ({ open, onClose }) => {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-[90%] max-w-md rounded-xl shadow-2xl p-8 relative border border-gray-100">
-        <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">Edit Profile</h2>
-
-        <div className="flex items-center gap-4 mb-8">
-          <div className="relative">
-            <img
-              src="https://via.placeholder.com/64"
-              alt="admin"
-              className="w-16 h-16 rounded-full object-cover ring-4 ring-blue-100"
-            />
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
-          <div>
-            <p className="font-semibold text-gray-800">Your name</p>
-            <p className="text-sm text-gray-500">yourname@gmail.com</p>
-          </div>
-        </div>
-
-        <div className="space-y-4 text-sm">
-          <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
-            <span className="font-medium text-gray-700">Name</span>
-            <span className="text-gray-600">your name</span>
-          </div>
-          <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
-            <span className="font-medium text-gray-700">Email account</span>
-            <span className="text-gray-600">yourname@gmail.com</span>
-          </div>
-          <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
-            <span className="font-medium text-gray-700">Password</span>
-            <span className="text-gray-600">************</span>
-          </div>
-          <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
-            <span className="font-medium text-gray-700">Mobile number</span>
-            <span className="text-blue-600 cursor-pointer hover:text-blue-700 font-medium">Add number</span>
-          </div>
-        </div>
-
-        <div className="flex gap-3 mt-8">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 shadow-sm">
-            Save Changes
-          </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
-          >
-            Cancel
-          </button>
-        </div>
-
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200"
-        >
-          <span className="text-xl leading-none">&times;</span>
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const SellerLayout = () => {
-  const { setIsSeller } = useAppContext();
+  const { setIsSeller, user } = useAppContext(); // Get user from context
   const navigate = useNavigate();
 
   const [showSearch, setShowSearch] = useState(false);
@@ -863,82 +742,54 @@ const SellerLayout = () => {
 
   // Load admin data on component mount
   useEffect(() => {
-    loadAdminProfile();
-  }, []);
+    // Check if user is logged in and is admin
+    if (user && user.userType === 'admin' && user.token) {
+      loadLoggedInAdminProfile();
+    } else {
+      // Redirect to login if no admin user is found
+      console.log('No admin user found in context, redirecting to signup');
+      navigate('/signup');
+    }
+  }, [user, navigate]);
 
-  const loadAdminProfile = async () => {
+  const loadLoggedInAdminProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      console.log('Loading admin profile for logged in user...');
       
-      if (token) {
-        // Try to load existing admin profile
-        try {
-          const response = await apiService.loadAdminProfile();
-          if (response.success) {
-            setAdminData(response.admin);
-            console.log('✅ Admin profile loaded successfully');
-          }
-        } catch (profileError) {
-          console.log('Profile not found, creating default admin...');
-          await createDefaultAdmin();
-        }
+      const response = await apiService.loadAdminProfile();
+      if (response.success) {
+        setAdminData(response.admin);
+        console.log('✅ Admin profile loaded successfully:', response.admin);
       } else {
-        // No token, create default admin
-        await createDefaultAdmin();
+        throw new Error(response.message || 'Failed to load admin profile');
       }
     } catch (error) {
-      console.error('Error in loadAdminProfile:', error);
-      // Try to create default admin as fallback
-      try {
-        await createDefaultAdmin();
-      } catch (createError) {
-        console.error('Failed to create default admin:', createError);
-        alert('Failed to initialize admin. Please check your connection.');
+      console.error('❌ Error loading admin profile:', error);
+      
+      // If token is invalid or expired, redirect to login
+      if (error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('401')) {
+        console.log('Token invalid, redirecting to signup');
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('user');
+        navigate('/signup');
+      } else {
+        alert('Failed to load admin profile. Please try logging in again.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const createDefaultAdmin = async () => {
-    try {
-      const response = await apiService.createDefaultAdmin();
-
-      if (response.success) {
-        localStorage.setItem('adminToken', response.token);
-        setAdminData(response.admin);
-        console.log('✅ Default admin created successfully');
-      }
-    } catch (error) {
-      console.error('Error creating default admin:', error);
-      // If admin already exists, try to login with default credentials
-      if (error.message.includes('already exists')) {
-        try {
-          const loginResponse = await apiService.loginAdmin({
-            email: 'admin@kamalautoparts.com',
-            password: 'admin123'
-          });
-          
-          if (loginResponse.success) {
-            localStorage.setItem('adminToken', loginResponse.token);
-            setAdminData(loginResponse.admin);
-            console.log('✅ Logged in with existing admin');
-          }
-        } catch (loginError) {
-          console.error('Failed to login with default credentials:', loginError);
-          alert('Admin exists but login failed. Please check credentials.');
-        }
-      } else {
-        throw error;
-      }
-    }
-  };
-
   const handleLogout = () => {
     setIsSeller(false);
+    // Clear all stored data
+    localStorage.removeItem('token');
     localStorage.removeItem('adminToken');
-    navigate("/seller");
+    localStorage.removeItem('user');
+    // Navigate to home page
+    navigate("/");
   };
 
   const handleUpdateAdmin = (updatedAdmin) => {
@@ -989,12 +840,30 @@ const SellerLayout = () => {
   ];
 
   // Show loading state while initializing
-  if (loading && !adminData) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Initializing admin dashboard...</p>
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user or not admin, don't render the dashboard
+  if (!user || user.userType !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
+          <p className="text-gray-600 mb-4">You need to be logged in as an admin to access this page.</p>
+          <button
+            onClick={() => navigate('/signup')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -1013,25 +882,6 @@ const SellerLayout = () => {
         </a>
 
         <div className="flex items-center gap-2">
-          {/* Search
-          <div className="relative">
-            <button
-              onClick={() => setShowSearch((p) => !p)}
-              className="p-3 hover:bg-blue-700 rounded-lg transition-colors duration-200"
-            >
-              <FiSearch size={18} className="text-slate-300" />
-            </button>
-            {showSearch && (
-              <input
-                autoFocus
-                type="text"
-                placeholder="Search..."
-                className="absolute right-0 top-14 w-72 p-3 text-sm bg-white text-black rounded-lg shadow-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onBlur={() => setShowSearch(false)}
-              />
-            )}
-          </div> */}
-
           {/* Notifications */}
           <div className="relative" ref={bellRef}>
             <button
@@ -1068,11 +918,11 @@ const SellerLayout = () => {
                 <div 
                   className={`w-full h-full ${adminData?.avatar ? 'hidden' : 'flex'} items-center justify-center text-white text-xs font-semibold`}
                 >
-                  {adminData?.name ? adminData.name.charAt(0).toUpperCase() : 'A'}
+                  {adminData?.name ? adminData.name.charAt(0).toUpperCase() : user?.name?.charAt(0).toUpperCase() || 'A'}
                 </div>
               </div>
               <span className="hidden sm:block">
-                {adminData?.name || 'Administrator'}
+                {adminData?.name || user?.name || 'Administrator'}
               </span>
               <FiChevronDown size={14} />
             </button>
@@ -1081,10 +931,10 @@ const SellerLayout = () => {
               <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-200 z-20 overflow-hidden">
                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
                   <p className="font-semibold text-gray-800">
-                    {adminData?.name || 'Administrator'}
+                    {adminData?.name || user?.name || 'Administrator'}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {adminData?.email || 'admin@kamalautoparts.com'}
+                    {adminData?.email || user?.email || 'admin@kamalautoparts.com'}
                   </p>
                 </div>
                 
@@ -1162,10 +1012,13 @@ const SellerLayout = () => {
           <footer className="bg-white border-t border-gray-200 py-4 px-6">
             <div className="flex justify-between items-center text-sm text-gray-500">
               <span>© 2025 Kamal Auto Parts - Admin Dashboard</span>
-              <div className="flex gap-6">
-                <a href="#" className="hover:text-gray-700 transition-colors duration-200">About</a>
-                <a href="#" className="hover:text-gray-700 transition-colors duration-200">Contact</a>
-                <a href="#" className="hover:text-gray-700 transition-colors duration-200">Support</a>
+              <div className="flex items-center gap-4">
+                <span>Logged in as: {adminData?.name || user?.name}</span>
+                <div className="flex gap-6">
+                  <a href="#" className="hover:text-gray-700 transition-colors duration-200">About</a>
+                  <a href="#" className="hover:text-gray-700 transition-colors duration-200">Contact</a>
+                  <a href="#" className="hover:text-gray-700 transition-colors duration-200">Support</a>
+                </div>
               </div>
             </div>
           </footer>
@@ -1185,12 +1038,6 @@ const SellerLayout = () => {
         onClose={() => setShowAdminProfile(false)}
         adminData={adminData}
         onUpdate={handleUpdateAdmin}
-      />
-
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        open={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
       />
     </>
   );
