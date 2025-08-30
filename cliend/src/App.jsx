@@ -183,7 +183,7 @@ const handleSignInClick = () => {
         <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
-          <Route index element={<Attendance />} />
+          <Route index element={<EmployeeProfile />} />
 
           <Route path="/employee/profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
