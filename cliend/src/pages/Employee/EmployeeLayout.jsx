@@ -15,143 +15,12 @@ import {
 
 import NotificationPopup from "../../components/seller/NotificationPopup";
 
-// Edit Profile Modal
-const EditProfileModal = ({ open, onClose, employeeData }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    contact: '',
-    address: ''
-  });
-
-  useEffect(() => {
-    if (employeeData && open) {
-      setFormData({
-        name: employeeData.name || '',
-        email: employeeData.email || '',
-        contact: employeeData.contact || employeeData.phone || '',
-        address: employeeData.address || ''
-      });
-    }
-  }, [employeeData, open]);
-
-  if (!open) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: Implement profile update API call
-    toast.success('Profile update feature coming soon!');
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white w-[90%] max-w-md rounded-lg shadow-lg p-6 relative">
-        <h2 className="font-semibold text-lg mb-4">EMPLOYEE - EDIT PROFILE</h2>
-
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-            {employeeData?.image ? (
-              <img
-                src={employeeData.image.startsWith('/uploads/') 
-                  ? `http://localhost:4000${employeeData.image}` 
-                  : employeeData.image}
-                alt="employee"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div 
-              className={`w-full h-full ${employeeData?.image ? 'hidden' : 'flex'} items-center justify-center text-blue-600`}
-            >
-              <FaUser size={32} />
-            </div>
-          </div>
-          <div>
-            <p className="font-medium">{employeeData?.name || 'Employee'}</p>
-            <p className="text-sm text-gray-500">{employeeData?.email || 'No email set'}</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-600">Name</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="border rounded px-3 py-2 focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-600">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="border rounded px-3 py-2 focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-600">Contact</label>
-            <input
-              type="text"
-              value={formData.contact}
-              onChange={(e) => setFormData({...formData, contact: e.target.value})}
-              className="border rounded px-3 py-2 focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-600">Address</label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              className="border rounded px-3 py-2 focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
-            >
-              Save Changes
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-3 text-2xl leading-none text-gray-400 hover:text-red-500"
-        >
-          ×
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const EmployeeLayout = () => {
   const { setIsSeller, user, setUser } = useAppContext();
   const navigate = useNavigate();
 
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
   const [employeeData, setEmployeeData] = useState(null);
@@ -159,52 +28,106 @@ const EmployeeLayout = () => {
   const menuRef = useRef(null);
   const bellRef = useRef(null);
 
+  // API service for employee authentication
+  const apiService = {
+    getAuthToken: () => {
+      return localStorage.getItem('token') || localStorage.getItem('authToken');
+    },
+
+    getAuthHeaders: () => {
+      const token = apiService.getAuthToken();
+      return {
+        'Authorization': `Bearer ${token}`
+      };
+    },
+
+    async getEmployeeProfile() {
+      const response = await fetch('/api/employee-profile/profile/me', {
+        method: 'GET',
+        headers: apiService.getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    }
+  };
+
   // Check authentication and user type on mount
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       console.log('Employee Layout - Checking authentication...');
       console.log('Current user:', user);
 
-      // Check if user exists and has the correct type
-      if (!user) {
-        console.log('No user found, redirecting to login');
-        toast.error('Please log in to access the employee dashboard');
-        navigate('/');
-        return;
-      }
-
-      // Check if user type is employee or matches employee categories
-      const isValidEmployee = 
-        user.userType === 'employee' || 
-        (user.category && user.category.toLowerCase() === 'employee') ||
-        (user.empId && user.userType !== 'admin' && user.userType !== 'online_employee');
-
-      if (!isValidEmployee) {
-        console.log('User is not a regular employee:', user.userType, user.category);
-        toast.error('Access denied. This area is for employees only.');
-        
-        // Redirect based on actual user type
-        switch (user.userType) {
-          case 'admin':
-            navigate('/seller');
-            break;
-          case 'online_employee':
-            navigate('/online_employee');
-            break;
-          default:
-            navigate('/');
+      try {
+        // Check if user exists and has the correct type
+        if (!user || !user.token) {
+          console.log('No user or token found, redirecting to login');
+          toast.error('Please log in to access the employee dashboard');
+          navigate('/');
+          return;
         }
-        return;
-      }
 
-      // Set employee data from user context
-      setEmployeeData(user);
-      setLoading(false);
-      console.log('Employee authentication successful');
+        // Check if user type is employee
+        if (user.userType !== 'employee' && user.category !== 'employee' && user.category !== 'Employee') {
+          console.log('User is not a regular employee:', user.userType, user.category);
+          toast.error('Access denied. This area is for employees only.');
+          
+          // Redirect based on actual user type
+          switch (user.userType) {
+            case 'admin':
+              navigate('/seller');
+              break;
+            case 'online_employee':
+              navigate('/online_employee');
+              break;
+            default:
+              navigate('/');
+          }
+          return;
+        }
+
+        // Verify token validity by fetching profile
+        try {
+          const profileResponse = await apiService.getEmployeeProfile();
+          if (profileResponse.success && profileResponse.data) {
+            setEmployeeData(profileResponse.data);
+            console.log('Employee authentication successful');
+          } else {
+            throw new Error('Failed to load employee profile');
+          }
+        } catch (apiError) {
+          console.error('API authentication failed:', apiError);
+          
+          // Token might be invalid, clear auth data
+          if (apiError.message.includes('401') || apiError.message.includes('403')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            setUser(null);
+            toast.error('Your session has expired. Please log in again.');
+            navigate('/');
+            return;
+          }
+          
+          // Use user data as fallback
+          setEmployeeData(user);
+          console.log('Using user data as fallback');
+        }
+
+      } catch (error) {
+        console.error('Authentication check failed:', error);
+        toast.error('Authentication failed. Please log in again.');
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkAuth();
-  }, [user, navigate]);
+  }, [user, navigate, setUser]);
 
   const handleLogout = () => {
     console.log('Employee logging out...');
@@ -214,6 +137,7 @@ const EmployeeLayout = () => {
     setUser(null);
     localStorage.removeItem('userData');
     localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('adminToken');
     
     toast.success('Logged out successfully');
@@ -441,13 +365,6 @@ const EmployeeLayout = () => {
           </footer>
         </div>
       </div>
-
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        open={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        employeeData={employeeData}
-      />
     </>
   );
 };
