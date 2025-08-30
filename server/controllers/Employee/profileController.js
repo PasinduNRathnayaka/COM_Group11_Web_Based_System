@@ -1,25 +1,17 @@
+// controllers/Employee/profileController.js
 import Employee from '../../models/Seller/Employee.js';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 
-// @desc    Get employee profile by empId
-// @route   GET /api/employees/:empId
-// @access  Private (Employee)
+// Get employee profile
 export const getEmployeeProfile = async (req, res) => {
   try {
-    const { empId } = req.params;
+    const employeeId = req.user.id;
     
-    // Verify that the requesting employee can only access their own profile
-    // or if they have admin privileges
-    if (req.empId !== empId && req.employee.role !== 'admin' && req.employee.category !== 'seller') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only view your own profile.'
-      });
-    }
-
-    const employee = await Employee.findOne({ empId })
-      .select('-password -__v'); // Exclude sensitive fields
-
+    const employee = await Employee.findById(employeeId).select('-password -resetPasswordCode -resetPasswordToken');
+    
     if (!employee) {
       return res.status(404).json({
         success: false,
@@ -27,139 +19,42 @@ export const getEmployeeProfile = async (req, res) => {
       });
     }
 
-    // Format response to match frontend expectations
-    const employeeData = {
-      empid: employee.empId,
-      employeeId: employee.empId,
-      name: employee.name,
-      firstName: employee.firstName || employee.name?.split(' ')[0],
-      lastName: employee.lastName || employee.name?.split(' ').slice(1).join(' '),
-      email: employee.email,
-      mobile: employee.mobile || employee.phone,
-      phone: employee.mobile || employee.phone,
-      department: employee.department,
-      position: employee.position || employee.role,
-      bio: employee.bio || `${employee.name} is a dedicated employee in the ${employee.department || 'company'} department.`,
-      profileImage: employee.profileImage || employee.image,
-      image: employee.profileImage || employee.image,
-      category: employee.category,
-      role: employee.role,
-      joinDate: employee.createdAt || employee.joinDate,
-      status: employee.status || 'active'
-    };
-
-    res.status(200).json({
+    res.json({
       success: true,
-      data: employeeData
+      data: {
+        _id: employee._id,
+        empId: employee.empId,
+        name: employee.name,
+        email: employee.email,
+        contact: employee.contact,
+        address: employee.address,
+        about: employee.about,
+        category: employee.category,
+        role: employee.role,
+        rate: employee.rate,
+        image: employee.image,
+        qrCode: employee.qrCode,
+        createdAt: employee.createdAt,
+        updatedAt: employee.updatedAt
+      }
     });
-
   } catch (error) {
     console.error('Error fetching employee profile:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching employee profile',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Server error while fetching profile'
     });
   }
 };
 
-// @desc    Get current employee's own profile
-// @route   GET /api/employees/profile/me
-// @access  Private (Employee)
-// @desc    Get current employee's own profile
-// @route   GET /api/employees/profile/me
-// @access  Private (Employee)
-// @desc    Get current employee's own profile
-// @route   GET /api/employees/profile/me
-// @access  Private (Employee)
-export const getMyProfile = async (req, res) => {
-  try {
-    console.log('🔍 getMyProfile called');
-    console.log('🔍 req.empId:', req.empId);
-    console.log('🔍 req.employee:', req.employee ? 'exists' : 'missing');
-    
-    // Import Employee model dynamically - correct path
-    const Employee = (await import('../../models/Seller/Employee.js')).default;
-    console.log('🔍 Employee model imported successfully');
-    
-    const employee = await Employee.findOne({ empId: req.empId })
-      .select('-password -__v');
-
-    console.log('🔍 Database query result:', employee ? 'found' : 'not found');
-    console.log('🔍 Employee data:', employee);
-
-    if (!employee) {
-      console.log('❌ Employee not found in database');
-      return res.status(404).json({
-        success: false,
-        message: 'Employee profile not found',
-        debug: {
-          searchedEmpId: req.empId,
-          requestEmployee: req.employee
-        }
-      });
-    }
-
-    // Format response to match frontend expectations
-    const employeeData = {
-      empid: employee.empId,
-      employeeId: employee.empId,
-      name: employee.name,
-      firstName: employee.firstName || employee.name?.split(' ')[0],
-      lastName: employee.lastName || employee.name?.split(' ').slice(1).join(' '),
-      email: employee.email,
-      mobile: employee.mobile || employee.phone,
-      phone: employee.mobile || employee.phone,
-      department: employee.department,
-      position: employee.position || employee.role,
-      bio: employee.bio || `${employee.name} is a dedicated employee in the ${employee.department || 'company'} department.`,
-      profileImage: employee.profileImage || employee.image,
-      image: employee.profileImage || employee.image,
-      category: employee.category,
-      role: employee.role,
-      joinDate: employee.createdAt || employee.joinDate,
-      status: employee.status || 'active'
-    };
-
-    console.log('✅ Sending employee data:', employeeData);
-
-    res.status(200).json({
-      success: true,
-      data: employeeData
-    });
-
-  } catch (error) {
-    console.error('❌ Error fetching my profile:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching profile',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      debug: {
-        empId: req.empId,
-        hasEmployee: !!req.employee,
-        errorName: error.name,
-        errorMessage: error.message
-      }
-    });
-  }
-};
+// Update employee profile
 export const updateEmployeeProfile = async (req, res) => {
   try {
-    const { 
-      name, 
-      firstName, 
-      lastName, 
-      email, 
-      mobile, 
-      phone, 
-      bio, 
-      department, 
-      position 
-    } = req.body;
+    const employeeId = req.user.id;
+    const { name, email, contact, address, about, password, confirmPassword } = req.body;
 
-    // Find current employee
-    const employee = await Employee.findOne({ empId: req.empId });
-
+    // Find employee
+    const employee = await Employee.findById(employeeId);
     if (!employee) {
       return res.status(404).json({
         success: false,
@@ -167,13 +62,30 @@ export const updateEmployeeProfile = async (req, res) => {
       });
     }
 
-    // Check if email is being changed and if it already exists
-    if (email && email !== employee.email) {
-      const existingEmployee = await Employee.findOne({ 
-        email: email.toLowerCase(),
-        empId: { $ne: req.empId } // Exclude current employee
+    // Validate required fields
+    if (!name || !contact || !address) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, contact, and address are required'
       });
+    }
 
+    // Validate email format if provided
+    if (email) {
+      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid email address'
+        });
+      }
+
+      // Check if email already exists for another employee
+      const existingEmployee = await Employee.findOne({ 
+        email: email.toLowerCase().trim(),
+        _id: { $ne: employeeId }
+      });
+      
       if (existingEmployee) {
         return res.status(400).json({
           success: false,
@@ -182,64 +94,100 @@ export const updateEmployeeProfile = async (req, res) => {
       }
     }
 
-    // Update fields
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (firstName) updateData.firstName = firstName;
-    if (lastName) updateData.lastName = lastName;
-    if (email) updateData.email = email.toLowerCase();
-    if (mobile || phone) updateData.mobile = mobile || phone;
-    if (bio) updateData.bio = bio;
-    if (department) updateData.department = department;
-    if (position) updateData.position = position;
+    // Validate contact number
+    const contactRegex = /^\+?[\d\s-()]{10,15}$/;
+    if (!contactRegex.test(contact)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid contact number'
+      });
+    }
 
-    // Update employee
-    const updatedEmployee = await Employee.findOneAndUpdate(
-      { empId: req.empId },
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-password -__v');
+    // Handle password update if provided
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
 
-    // Format response
-    const employeeData = {
-      empid: updatedEmployee.empId,
-      employeeId: updatedEmployee.empId,
-      name: updatedEmployee.name,
-      firstName: updatedEmployee.firstName || updatedEmployee.name?.split(' ')[0],
-      lastName: updatedEmployee.lastName || updatedEmployee.name?.split(' ').slice(1).join(' '),
-      email: updatedEmployee.email,
-      mobile: updatedEmployee.mobile || updatedEmployee.phone,
-      phone: updatedEmployee.mobile || updatedEmployee.phone,
-      department: updatedEmployee.department,
-      position: updatedEmployee.position || updatedEmployee.role,
-      bio: updatedEmployee.bio,
-      profileImage: updatedEmployee.profileImage || updatedEmployee.image,
-      image: updatedEmployee.profileImage || updatedEmployee.image,
-      category: updatedEmployee.category,
-      role: updatedEmployee.role
-    };
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Passwords do not match'
+        });
+      }
 
-    res.status(200).json({
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      employee.password = hashedPassword;
+    }
+
+    // Update profile fields
+    employee.name = name.trim();
+    employee.email = email ? email.toLowerCase().trim() : employee.email;
+    employee.contact = contact.trim();
+    employee.address = address.trim();
+    employee.about = about ? about.trim() : employee.about;
+
+    // Handle image upload if provided
+    if (req.file) {
+      // Delete old image if exists
+      if (employee.image) {
+        const oldImagePath = path.join(process.cwd(), employee.image.replace(/^\//, ''));
+        if (fs.existsSync(oldImagePath)) {
+          try {
+            fs.unlinkSync(oldImagePath);
+          } catch (err) {
+            console.error('Error deleting old image:', err);
+          }
+        }
+      }
+      
+      employee.image = `/uploads/employees/${req.file.filename}`;
+    }
+
+    await employee.save();
+
+    // Return updated profile (excluding sensitive data)
+    const updatedEmployee = await Employee.findById(employeeId).select('-password -resetPasswordCode -resetPasswordToken');
+
+    res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: employeeData
+      data: {
+        _id: updatedEmployee._id,
+        empId: updatedEmployee.empId,
+        name: updatedEmployee.name,
+        email: updatedEmployee.email,
+        contact: updatedEmployee.contact,
+        address: updatedEmployee.address,
+        about: updatedEmployee.about,
+        category: updatedEmployee.category,
+        role: updatedEmployee.role,
+        rate: updatedEmployee.rate,
+        image: updatedEmployee.image,
+        qrCode: updatedEmployee.qrCode,
+        createdAt: updatedEmployee.createdAt,
+        updatedAt: updatedEmployee.updatedAt
+      }
     });
 
   } catch (error) {
     console.error('Error updating employee profile:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while updating profile',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Server error while updating profile'
     });
   }
 };
 
-// @desc    Upload employee profile image
-// @route   POST /api/employees/profile/upload-image
-// @access  Private (Employee)
-export const uploadProfileImage = async (req, res) => {
+// Upload profile image only
+export const updateProfileImage = async (req, res) => {
   try {
+    const employeeId = req.user.id;
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -247,40 +195,166 @@ export const uploadProfileImage = async (req, res) => {
       });
     }
 
-    const imageUrl = `/uploads/${req.file.filename}`;
-
-    // Update employee profile image
-    const updatedEmployee = await Employee.findOneAndUpdate(
-      { empId: req.empId },
-      { 
-        profileImage: imageUrl,
-        image: imageUrl // For backward compatibility
-      },
-      { new: true }
-    ).select('-password -__v');
-
-    if (!updatedEmployee) {
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
       return res.status(404).json({
         success: false,
         message: 'Employee not found'
       });
     }
 
-    res.status(200).json({
+    // Delete old image if exists
+    if (employee.image) {
+      const oldImagePath = path.join(process.cwd(), employee.image.replace(/^\//, ''));
+      if (fs.existsSync(oldImagePath)) {
+        try {
+          fs.unlinkSync(oldImagePath);
+        } catch (err) {
+          console.error('Error deleting old image:', err);
+        }
+      }
+    }
+
+    // Update with new image
+    employee.image = `/uploads/employees/${req.file.filename}`;
+    await employee.save();
+
+    res.json({
       success: true,
-      message: 'Profile image uploaded successfully',
+      message: 'Profile image updated successfully',
       data: {
-        profileImage: updatedEmployee.profileImage,
-        image: updatedEmployee.profileImage
+        image: employee.image
       }
     });
 
   } catch (error) {
-    console.error('Error uploading profile image:', error);
+    console.error('Error updating profile image:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while uploading image',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Server error while updating profile image'
+    });
+  }
+};
+
+// Change password only
+export const changePassword = async (req, res) => {
+  try {
+    const employeeId = req.user.id;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'All password fields are required'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long'
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New passwords do not match'
+      });
+    }
+
+    // Find employee with password
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, employee.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Hash and save new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    employee.password = hashedPassword;
+    await employee.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while changing password'
+    });
+  }
+};
+
+// Get dashboard statistics for employee
+export const getEmployeeDashboard = async (req, res) => {
+  try {
+    const employeeId = req.user.id;
+    
+    const employee = await Employee.findById(employeeId).select('-password -resetPasswordCode -resetPasswordToken');
+    
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    // Calculate days since joining
+    const daysSinceJoining = Math.floor((new Date() - new Date(employee.createdAt)) / (1000 * 60 * 60 * 24));
+    
+    // Calculate profile completion percentage
+    let completionPercentage = 0;
+    const fields = ['name', 'email', 'contact', 'address', 'about', 'image'];
+    const completedFields = fields.filter(field => employee[field] && employee[field].toString().trim() !== '');
+    completionPercentage = Math.round((completedFields.length / fields.length) * 100);
+
+    res.json({
+      success: true,
+      data: {
+        employee: {
+          _id: employee._id,
+          empId: employee.empId,
+          name: employee.name,
+          email: employee.email,
+          category: employee.category,
+          image: employee.image,
+          rate: employee.rate
+        },
+        statistics: {
+          daysSinceJoining,
+          profileCompletion: completionPercentage,
+          lastUpdated: employee.updatedAt,
+          accountStatus: 'Active'
+        },
+        profileTips: completionPercentage < 100 ? [
+          !employee.email && 'Add your email address',
+          !employee.about && 'Add information about yourself',
+          !employee.image && 'Upload a profile photo'
+        ].filter(Boolean) : []
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching employee dashboard:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching dashboard'
     });
   }
 };
