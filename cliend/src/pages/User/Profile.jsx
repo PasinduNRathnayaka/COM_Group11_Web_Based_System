@@ -16,6 +16,10 @@ const Profile = () => {
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState(new Set());
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [deletedOrderIds, setDeletedOrderIds] = useState(() => {
+  const saved = localStorage.getItem('deletedOrderIds');
+  return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   // ✅ Helper function to get the correct image URL
   const getImageUrl = (profilePic) => {
@@ -59,74 +63,54 @@ const Profile = () => {
     }
   }, [user]);
 
-  // Check if user just placed an order and switch to orders tab
-  useEffect(() => {
-    if (location.state?.orderPlaced) {
-      setActiveTab("orders");
-      if (location.state?.orderId && !location.state?.skipToast) {
-        toast.success(`Order ${location.state.orderId} placed successfully!`);
+  const fetchOrders = useCallback(async () => {
+  if (!user) return;
+  
+  setOrdersLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get('/api/user-orders/user', {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    }
-  }, [location.state]);
+    });
 
-  // Fetch user orders
-  const fetchOrders = async () => {
-    if (!user) return;
-    
-    setOrdersLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/user-orders/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        // Map the orders and ensure status is included
-        const ordersWithStatus = response.data.orders.map(order => ({
+    if (response.data.success) {
+      // Map the orders and ensure status is included
+      const ordersWithStatus = response.data.orders
+        .filter(order => !deletedOrderIds.has(order.id)) // Filter out deleted orders
+        .map(order => ({
           ...order,
           status: order.status || 'pending' // Default to pending if no status
         }));
-        setOrders(ordersWithStatus);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching orders:', error);
-      toast.error('Failed to load order history');
-    } finally {
-      setOrdersLoading(false);
+      setOrders(ordersWithStatus);
     }
-  };
+  } catch (error) {
+    console.error('⚠ Error fetching orders:', error);
+    toast.error('Failed to load order history');
+  } finally {
+    setOrdersLoading(false);
+  }
+}, [user, deletedOrderIds]); // Add deletedOrderIds as dependency
 
-  // Fetch orders when orders tab is active
-  useEffect(() => {
-    if (activeTab === "orders" && user) {
-      fetchOrders();
+
+  // Check if user just placed an order and switch to orders tab
+  // Handle order loading - both for new orders and initial tab visit
+useEffect(() => {
+  if (location.state?.orderPlaced) {
+    setActiveTab("orders");
+    if (location.state?.orderId && !location.state?.skipToast) {
+      toast.success(`Order ${location.state.orderId} placed successfully!`);
     }
-  }, [activeTab, user]);
-
-  // Refresh orders when page becomes visible or gets focus
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && activeTab === "orders" && user) {
-        fetchOrders();
-      }
-    };
-
-    const handleFocus = () => {
-      if (activeTab === "orders" && user) {
-        fetchOrders();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [activeTab, user]);
+  }
+  
+  // Load orders when orders tab is active
+  if (activeTab === "orders" && user) {
+    fetchOrders();
+  }
+}, [location.state, activeTab, user, fetchOrders]);
+  // Fetch user orders
+  // Fetch user orders
 
   // Delete order function
   const deleteOrder = (orderId) => {
@@ -134,12 +118,18 @@ const Profile = () => {
       return;
     }
 
-    // Just update the local state without calling the backend
+  // Track deleted order ID and save to localStorage
+    setDeletedOrderIds(prev => {
+      const newSet = new Set([...prev, orderId]);
+      localStorage.setItem('deletedOrderIds', JSON.stringify([...newSet]));
+      return newSet;
+    });
+  
+    // Update the local state
     setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
 
     toast.success('Order History removed');
   };
-
   const toggleOrderExpansion = (orderId) => {
     setExpandedOrders(prev => {
       const newSet = new Set(prev);
@@ -409,28 +399,6 @@ case "orders":
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">My Orders</h2>
-        <button
-          onClick={fetchOrders}
-          disabled={ordersLoading}
-          className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 ${
-            ordersLoading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          <svg 
-            className={`w-4 h-4 ${ordersLoading ? 'animate-spin' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-            />
-          </svg>
-          {ordersLoading ? 'Refreshing...' : 'Refresh'}
-        </button>
       </div>
       {ordersLoading ? (
         <div className="flex justify-center items-center py-8">
