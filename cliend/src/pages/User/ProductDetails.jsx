@@ -26,7 +26,7 @@ const ProductDetails = () => {
   const [userExistingReview, setUserExistingReview] = useState(null);
 
   const getImageUrl = (path) => {
-    if (!path) return assets.wheel1;
+    //if (!path) return assets.wheel1;
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
   };
 
@@ -210,7 +210,7 @@ const ProductDetails = () => {
           images: [
             getImageUrl(foundProduct.image),
             ...(foundProduct.gallery?.map(getImageUrl) || []),
-            ...(foundProduct.gallery?.length < 2 ? [assets.wheel2, assets.wheel3] : [])
+            //...(foundProduct.gallery?.length < 2 ? [assets.wheel2, assets.wheel3] : [])
           ],
           description: foundProduct.description || 'No description available',
           specs: [
