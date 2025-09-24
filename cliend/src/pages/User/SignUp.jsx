@@ -153,7 +153,7 @@ const SignUp = () => {
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Minimum 8 characters with at least one uppercase, one lowercase, one special character and a number
+              Minimum 6 characters with at least one uppercase, one lowercase, one special character and a number
             </p>
           </div>
 

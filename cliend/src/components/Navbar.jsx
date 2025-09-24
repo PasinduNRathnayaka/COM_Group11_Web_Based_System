@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [open, setOpen] = React.useState(false);
-  const { user, setUser, setShowUserLogin, navigate } = useAppContext();
+  const { user, setUser, setShowUserLogin, navigate, cartItems } = useAppContext();
 
   const logout = async () => {
     setUser(null);
@@ -72,7 +72,7 @@ const Navbar = () => {
       {/* 🛒 Cart Icon */}
       <div onClick={() => navigate("/cart")} className="relative cursor-pointer -right-5">
         <img src={assets.cart} alt='cart' className='w-6 opacity-80' />
-        <button className="absolute -top-2 -right-3 text-xs text-white bg-primary w-[18px] h-[18px] rounded-full">3</button>
+        <button className="absolute -top-2 -right-3 text-xs text-white bg-primary w-[18px] h-[18px] rounded-full"> {cartItems.length}</button>
       </div>
 
     </div>
@@ -85,11 +85,11 @@ const Navbar = () => {
 
       {/* ✅ Mobile Menu */}
       {open && (
-        <div className="absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-2 px-5 text-sm md:hidden text-black">
+        <div className="absolute top-[60px] left-[80px] bg-white shadow-md py-4 px-5 inline-flex flex-row items-center gap-8 text-sm md:hidden text-black rounded-lg">
           <NavLink to="/" onClick={() => setOpen(false)}>Home</NavLink>
-          <NavLink to="/product" onClick={() => setOpen(false)}>All Products</NavLink>
+          <NavLink to="/allproducts" onClick={() => setOpen(false)}>All Products</NavLink>
 
-          {user && <NavLink to="/my-orders" onClick={() => setOpen(false)}>My Orders</NavLink>}
+          {/*{user && <NavLink to="/my-orders" onClick={() => setOpen(false)}>My Orders</NavLink>} */}
           <NavLink to="/contact" onClick={() => setOpen(false)}>Contact</NavLink>
 
 
@@ -117,7 +117,7 @@ const Navbar = () => {
                   logout();
                   setOpen(false);
                 }}
-                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full"
+                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full"
               >
                 Logout
               </button>

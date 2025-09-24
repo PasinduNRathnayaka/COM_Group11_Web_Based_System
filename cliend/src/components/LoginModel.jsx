@@ -22,7 +22,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
 
   // Function to handle redirect based on user type
   const handleUserRedirect = (userType, userData) => {
-    console.log('Redirecting user:', userType, userData);
+  //console.log('Redirecting user:', userType, userData);
     
     switch (userType) {
       case 'admin':
@@ -59,7 +59,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
       
       // First, try employee login to avoid conflicts
       try {
-        console.log('Attempting employee login...');
+        //console.log('Attempting employee login...');
         const response = await axios.post('/api/employees/login', {
           email,
           password
@@ -67,9 +67,9 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         
         loginResponse = response.data;
         
-        console.log('Employee login successful:', loginResponse);
-        console.log('Employee category:', loginResponse.category);
-        console.log('Employee role:', loginResponse.role);
+        //console.log('Employee login successful:', loginResponse);
+        //console.log('Employee category:', loginResponse.category);
+        //console.log('Employee role:', loginResponse.role);
         
         // Create a mapping for categories to user types
         const categoryMapping = {
@@ -83,17 +83,17 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         
         // Determine user type based on category or role
         userType = categoryMapping[loginResponse.category] || 
-                  categoryMapping[loginResponse.role] || 
-                  categoryMapping['default'];
+                   categoryMapping[loginResponse.role] || 
+                   categoryMapping['default'];
         
-        console.log('Determined user type:', userType);
+        //console.log('Determined user type:', userType);
         
       } catch (employeeError) {
-        console.log('Employee login failed, trying admin login...');
+        //console.log('Employee login failed, trying admin login...');
         
         // Try admin login
         try {
-          console.log('Attempting admin login...');
+          //console.log('Attempting admin login...');
           const response = await axios.post('/api/admin/login', {
             email,
             password
@@ -101,14 +101,14 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           
           loginResponse = response.data;
           userType = 'admin';
-          console.log('Admin login successful:', loginResponse);
+          //console.log('Admin login successful:', loginResponse);
           
         } catch (adminError) {
-          console.log('Admin login failed, trying user login...');
+          //console.log('Admin login failed, trying user login...');
           
           // If admin login fails, try user login
           try {
-            console.log('Attempting user login...');
+            //console.log('Attempting user login...');
             const response = await axios.post('/api/user/login', {
               email,
               password
@@ -116,10 +116,10 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
             
             loginResponse = response.data;
             userType = 'user';
-            console.log('User login successful:', loginResponse);
+           // console.log('User login successful:', loginResponse);
             
           } catch (userError) {
-            console.log('All login attempts failed');
+            //console.log('All login attempts failed');
             const errorMessage = userError.response?.data?.message || 
                                 adminError.response?.data?.message ||
                                 employeeError.response?.data?.message || 
@@ -147,7 +147,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         about: loginResponse.about
       };
 
-      console.log('Final user data being stored:', userData);
+      //console.log('Final user data being stored:', userData);
 
       // Save user in context
       setUser(userData);
@@ -187,8 +187,8 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
 
   // Add useEffect to debug state changes
   useEffect(() => {
-    console.log('📄 State updated - resetAccountType:', resetAccountType);
-    console.log('📄 State updated - displayAccountType:', displayAccountType);
+   //console.log('📄 State updated - resetAccountType:', resetAccountType);
+    //console.log('📄 State updated - displayAccountType:', displayAccountType);
   }, [resetAccountType, displayAccountType]);
 
   // FIXED: Enhanced forgot password with proper account type detection
@@ -201,7 +201,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
     setIsLoading(true);
 
     try {
-      console.log('🔍 Starting forgot password for email:', email);
+     // console.log('🔍 Starting forgot password for email:', email);
       
       let accountType = null;
       let displayType = '';
@@ -210,9 +210,9 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
       // Try each endpoint one by one to properly identify account type
       // First try admin
       try {
-        console.log('🔍 Trying admin endpoint...');
+        //console.log('🔍 Trying admin endpoint...');
         const adminResponse = await axios.post('/api/admin/forgot-password', { email });
-        console.log('🔍 Admin response:', adminResponse.data);
+        //console.log('🔍 Admin response:', adminResponse.data);
         
         if (adminResponse.data?.success === true) {
           // Check if response has admin-specific data or message
@@ -230,19 +230,19 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
             accountType = 'admin';
             displayType = 'Admin';
             successResponse = adminData;
-            console.log('✅ Confirmed admin account');
+            //console.log('✅ Confirmed admin account');
           }
         }
       } catch (adminError) {
-        console.log('❌ Admin endpoint failed:', adminError.response?.status);
+        //console.log('❌ Admin endpoint failed:', adminError.response?.status);
       }
 
       // If not admin, try employee
       if (!accountType) {
         try {
-          console.log('🔍 Trying employee endpoint...');
+          //console.log('🔍 Trying employee endpoint...');
           const employeeResponse = await axios.post('/api/employees/forgot-password', { email });
-          console.log('🔍 Employee response:', employeeResponse.data);
+          //console.log('🔍 Employee response:', employeeResponse.data);
           
           if (employeeResponse.data?.success === true) {
             const empData = employeeResponse.data;
@@ -263,8 +263,8 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
               const category = empData.employeeCategory || empData.category || empData.userCategory || '';
               const role = empData.role || '';
               
-              console.log('Employee category:', category);
-              console.log('Employee role:', role);
+             // console.log('Employee category:', category);
+             // console.log('Employee role:', role);
               
               if (
                 category.toLowerCase().includes('e-com') ||
@@ -277,20 +277,20 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
                 displayType = 'Employee';
               }
               successResponse = empData;
-              console.log('✅ Confirmed employee account');
+             // console.log('✅ Confirmed employee account');
             }
           }
         } catch (employeeError) {
-          console.log('❌ Employee endpoint failed:', employeeError.response?.status);
+          //console.log('❌ Employee endpoint failed:', employeeError.response?.status);
         }
       }
 
       // If neither admin nor employee, try user
       if (!accountType) {
         try {
-          console.log('🔍 Trying user endpoint...');
+         // console.log('🔍 Trying user endpoint...');
           const userResponse = await axios.post('/api/user/forgot-password', { email });
-          console.log('🔍 User response:', userResponse.data);
+          //console.log('🔍 User response:', userResponse.data);
           
           if (userResponse.data?.success === true) {
             accountType = 'user';
@@ -299,25 +299,25 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
             console.log('✅ Confirmed user account');
           }
         } catch (userError) {
-          console.log('❌ User endpoint failed:', userError.response?.status);
+          //console.log('❌ User endpoint failed:', userError.response?.status);
         }
       }
 
       if (accountType && successResponse) {
-        console.log('✅ Final account type determined:', accountType);
-        console.log('✅ Final display type:', displayType);
+        //console.log('✅ Final account type determined:', accountType);
+        //console.log('✅ Final display type:', displayType);
         
         setResetAccountType(accountType);
         setDisplayAccountType(displayType);
         toast.success(`Reset code sent to ${displayType} account`);
         setStep(2);
       } else {
-        console.log('❌ No account found for email:', email);
+        //console.log('❌ No account found for email:', email);
         toast.error('Email not found in our system');
       }
 
     } catch (error) {
-      console.error('❌ Forgot password error:', error);
+      //console.error('❌ Forgot password error:', error);
       toast.error('Failed to send reset code. Please try again.');
     } finally {
       setIsLoading(false);
@@ -351,39 +351,39 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           break;
       }
         
-      console.log('=== CODE VERIFICATION DEBUG ===');
-      console.log(`🔍 Using endpoint: ${endpoint}`);
-      console.log(`🔍 Account type: ${resetAccountType}`);
-      console.log(`🔍 Display type: ${displayAccountType}`);
-      console.log(`🔍 Email: ${email}`);
-      console.log(`🔍 Code: ${codeString}`);
-      
+      //console.log('=== CODE VERIFICATION DEBUG ===');
+      //console.log(`🔍 Using endpoint: ${endpoint}`);
+      //console.log(`🔍 Account type: ${resetAccountType}`);
+     // console.log(`🔍 Display type: ${displayAccountType}`);
+     // console.log(`🔍 Email: ${email}`);
+      //console.log(`🔍 Code: ${codeString}`);
+
       const requestData = {
         email,
         resetCode: codeString,
       };
       
-      console.log('🔍 Request data:', requestData);
+      //console.log('🔍 Request data:', requestData);
         
       const { data } = await axios.post(endpoint, requestData);
       
-      console.log('✅ Code verification response:', data);
-      console.log('✅ Success field:', data.success);
+      //console.log('✅ Code verification response:', data);
+     // console.log('✅ Success field:', data.success);
       
       if (data.success === true) {
         toast.success('Code verified successfully!');
         setStep(3);
       } else {
-        console.log('❌ Backend returned success: false');
+        //console.log('❌ Backend returned success: false');
         toast.error(data.message || 'Invalid verification code');
       }
     } catch (err) {
-      console.error('❌ Code verification error:', err);
-      console.error('❌ Error response:', err.response?.data);
-      console.error('❌ Error status:', err.response?.status);
+      //console.error('❌ Code verification error:', err);
+      //console.error('❌ Error response:', err.response?.data);
+      //console.error('❌ Error status:', err.response?.status);
       
       const errorMessage = err.response?.data?.message || 'Code verification failed';
-      console.log('❌ Showing error message:', errorMessage);
+      //console.log('❌ Showing error message:', errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -425,7 +425,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
           break;
       }
         
-      console.log(`🔍 Using password reset endpoint: ${endpoint} for account type: ${resetAccountType}`);
+      //console.log(`🔍 Using password reset endpoint: ${endpoint} for account type: ${resetAccountType}`);
         
       const { data } = await axios.post(endpoint, {
         email,
@@ -433,7 +433,7 @@ const LoginModal = ({ isOpen, onClose, onSignInClick }) => {
         newPassword: newPwd,
       });
       
-      console.log('✅ Password reset response:', data);
+      //console.log('✅ Password reset response:', data);
       
       if (data.success) {
         toast.success('Password updated successfully!');

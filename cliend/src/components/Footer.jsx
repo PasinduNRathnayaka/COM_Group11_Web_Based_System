@@ -5,10 +5,10 @@ import { useNavigate } from "react-router-dom";
 const Footer = () => {
   const navigate = useNavigate();
   const [shopDetails, setShopDetails] = useState({
-    address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
-    email: "kamalautolg@gmail.com",
-    phone: "0777819999",
-    name: "Kamal Auto"
+    //address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
+   // email: "kamalautolg@gmail.com",
+   // phone: "0777819999",
+    //name: "Kamal Auto"
   });
   const [loading, setLoading] = useState(true);
 
@@ -27,14 +27,14 @@ const Footer = () => {
         
         if (data.success && data.shopDetails) {
           setShopDetails({
-            address: data.shopDetails.address || "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
-            email: data.shopDetails.email || "kamalautolg@gmail.com",
-            phone: data.shopDetails.phone || "0777819999",
-            name: data.shopDetails.name || "Kamal Auto"
+            address: data.shopDetails.address ,
+            email: data.shopDetails.email ,
+            phone: data.shopDetails.phone,
+            name: data.shopDetails.name
           });
         }
       } catch (error) {
-        console.error('Error fetching shop details:', error);
+        //console.error('Error fetching shop details:', error);
         // Keep default values if fetch fails
       } finally {
         setLoading(false);
@@ -111,7 +111,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="text-center text-xs text-gray-500 py-4 border-t border-gray-200">
-          © Copyright 2024. All Rights Reserved.
+          © Copyright 2025. All Rights Reserved.
         </div>
       </footer>
     );
@@ -256,7 +256,7 @@ const Footer = () => {
       </div>
 
       <div className="text-center text-xs text-gray-500 py-4 border-t border-gray-200">
-        © Copyright 2024. All Rights Reserved.
+        © Copyright 2025. All Rights Reserved.
       </div>
     </footer>
   );
