@@ -342,7 +342,7 @@ app.use('/api/attendance', viewAttendanceRoutes);
 app.use('/api/bills', billRoutes);
 
 app.use('/api/contact', contactRoutes);
-app.use('/api/message', messageRoutes);
+app.use('/api/employee', messageRoutes);
 
 // Default route
 app.get('/', (req, res) => {
