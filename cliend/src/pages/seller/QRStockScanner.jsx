@@ -212,7 +212,7 @@ const QRStockScanner = ({ onStockUpdate }) => {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(110vh-200px)]">
               {/* QR Scanner */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900">Step 1: Scan Product QR Code</h3>
