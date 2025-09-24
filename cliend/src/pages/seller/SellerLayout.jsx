@@ -1015,9 +1015,9 @@ const SellerLayout = () => {
               <div className="flex items-center gap-4">
                 <span>Logged in as: {adminData?.name || user?.name}</span>
                 <div className="flex gap-6">
-                  <a href="#" className="hover:text-gray-700 transition-colors duration-200">About</a>
+                  {/* <a href="#" className="hover:text-gray-700 transition-colors duration-200">About</a>
                   <a href="#" className="hover:text-gray-700 transition-colors duration-200">Contact</a>
-                  <a href="#" className="hover:text-gray-700 transition-colors duration-200">Support</a>
+                  <a href="#" className="hover:text-gray-700 transition-colors duration-200">Support</a> */}
                 </div>
               </div>
             </div>

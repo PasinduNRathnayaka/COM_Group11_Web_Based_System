@@ -460,4 +460,99 @@ router.post('/recycle-bin/clear', async (req, res) => {
   }
 });
 
+// Update stock quantity via QR scanner
+router.put('/products/:id/stock', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantityToAdd, reason, addedBy } = req.body;
+
+    if (!quantityToAdd || quantityToAdd <= 0) {
+      return res.status(400).json({ 
+        error: 'Invalid quantity. Must be greater than 0.' 
+      });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Update stock
+    const oldStock = product.stock || 0;
+    const newStock = oldStock + parseInt(quantityToAdd);
+    
+    product.stock = newStock;
+    
+    // Optional: Add to stock history/log
+    if (!product.stockHistory) {
+      product.stockHistory = [];
+    }
+    
+    product.stockHistory.push({
+      date: new Date(),
+      action: 'stock_added',
+      quantity: parseInt(quantityToAdd),
+      oldStock,
+      newStock,
+      reason: reason || 'Stock added via QR scanner',
+      addedBy: addedBy || 'System'
+    });
+
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      product: {
+        _id: product._id,
+        productName: product.productName,
+        oldStock,
+        newStock,
+        quantityAdded: parseInt(quantityToAdd)
+      },
+      newStock
+    });
+
+  } catch (error) {
+    console.error('Error updating stock:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update stock quantity via QR scanner - FIXED PATH
+router.put('/:id/stock', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantityToAdd } = req.body;
+
+    if (!quantityToAdd || quantityToAdd <= 0) {
+      return res.status(400).json({ 
+        error: 'Invalid quantity. Must be greater than 0.' 
+      });
+    }
+
+    const product = await Product.findById(id);
+    if (!product || product.isDeleted) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const oldStock = product.stock || 0;
+    const newStock = oldStock + parseInt(quantityToAdd);
+    
+    product.stock = newStock;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      newStock: newStock,
+      quantityAdded: parseInt(quantityToAdd)
+    });
+
+  } catch (error) {
+    console.error('Error updating stock:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

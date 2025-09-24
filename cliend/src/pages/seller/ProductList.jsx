@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom"; // Add this import
 import { Search, Filter, RefreshCw, Package, Plus, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Settings, Edit, Trash2, X, ImageIcon } from "lucide-react";
 import ProductCard from "./ProductCard";
+import QRStockScanner from "./QRStockScanner";
 
 const ProductGrid = () => {
   const [products, setProducts] = useState([]);
@@ -499,28 +500,29 @@ const ProductGrid = () => {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={handleRefresh}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
-              <button
-                onClick={() => setShowCategoryModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-                Manage Categories
-              </button>
-              <button
-                onClick={() => navigate("/seller/add-product")}
-                className="flex items-center gap-2 bg-black text-white rounded-lg px-6 py-2 font-semibold hover:bg-gray-800 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Product
-              </button>
-            </div>
+            <button
+              onClick={handleRefresh}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+            <button
+              onClick={() => setShowCategoryModal(true)}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              Manage Categories
+            </button>
+            <QRStockScanner onStockUpdate={handleRefresh} />
+            <button
+              onClick={() => navigate("/seller/add-product")}
+              className="flex items-center gap-2 bg-black text-white rounded-lg px-6 py-2 font-semibold hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Product
+            </button>
+          </div>
           </div>
         </div>
 
