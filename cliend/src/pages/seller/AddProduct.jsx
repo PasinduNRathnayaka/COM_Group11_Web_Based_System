@@ -361,18 +361,18 @@ const AddProductForm = () => {
                               {cat.name}
                             </option>
                           ))}
-                          <option value="__add__">+ Add new category</option>
+                          {/* <option value="__add__">+ Add new category</option> */}
                         </select>
                         {form.category && (
                           <button
                             type="button"
-                            onClick={() => {
-                              const catToDelete = categories.find((c) => c.name === form.category);
-                              if (catToDelete) handleDeleteCategory(catToDelete._id);
-                            }}
+                            // onClick={() => {
+                            //   const catToDelete = categories.find((c) => c.name === form.category);
+                            //   if (catToDelete) handleDeleteCategory(catToDelete._id);
+                            // }}
                             className="px-3 py-3 text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors duration-200"
                           >
-                            <Trash2 size={16} />
+                            {/* <Trash2 size={16} /> */}
                           </button>
                         )}
                       </div>
@@ -403,7 +403,7 @@ const AddProductForm = () => {
                   </h2>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Product Code
                       </label>
@@ -414,7 +414,7 @@ const AddProductForm = () => {
                         placeholder="Enter product code"
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       />
-                    </div>
+                    </div> */}
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">

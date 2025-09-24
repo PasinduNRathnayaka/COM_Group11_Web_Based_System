@@ -5,39 +5,36 @@ import { useNavigate } from "react-router-dom";
 const Footer = () => {
   const navigate = useNavigate();
   const [shopDetails, setShopDetails] = useState({
-    address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
-    email: "kamalautolg@gmail.com",
-    phone: "0777819999",
-    name: "Kamal Auto"
+    //address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
+   // email: "kamalautolg@gmail.com",
+   // phone: "0777819999",
+    //name: "Kamal Auto"
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch shop details from backend
+  // Fetch shop details from admin backend
   useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        // Fetch seller/admin details from employee collection
-        const response = await fetch('/api/employees');
-        const employees = await response.json();
+        // 🔥 Updated: Fetch admin details from the new endpoint
+        const response = await fetch('/api/admin/shop-details');
         
-        // Find seller or admin employee
-        const seller = employees.find(emp => 
-          emp.category === 'seller' || 
-          emp.category === 'admin' || 
-          emp.role === 'seller' || 
-          emp.role === 'admin'
-        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch shop details');
+        }
+
+        const data = await response.json();
         
-        if (seller) {
+        if (data.success && data.shopDetails) {
           setShopDetails({
-            address: seller.address || "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
-            email: seller.email || "kamalautolg@gmail.com",
-            phone: seller.contact || "0777819999",
-            name: seller.name || "Kamal Auto"
+            address: data.shopDetails.address ,
+            email: data.shopDetails.email ,
+            phone: data.shopDetails.phone,
+            name: data.shopDetails.name
           });
         }
       } catch (error) {
-        console.error('Error fetching shop details:', error);
+        //console.error('Error fetching shop details:', error);
         // Keep default values if fetch fails
       } finally {
         setLoading(false);
@@ -65,9 +62,6 @@ const Footer = () => {
         break;
       case 'Return Policy':
         navigate('/return-policy');
-        break;
-      case 'Delivery Grid':
-        navigate('/delivery');
         break;
       default:
         break;
@@ -117,7 +111,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="text-center text-xs text-gray-500 py-4 border-t border-gray-200">
-          © Copyright 2024. All Rights Reserved.
+          © Copyright 2025. All Rights Reserved.
         </div>
       </footer>
     );
@@ -178,14 +172,6 @@ const Footer = () => {
                   className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   Return Policy
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => handleLinkClick('Delivery Grid')}
-                  className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  Delivery Grid
                 </button>
               </li>
             </ul>
@@ -270,7 +256,7 @@ const Footer = () => {
       </div>
 
       <div className="text-center text-xs text-gray-500 py-4 border-t border-gray-200">
-        © Copyright 2024. All Rights Reserved.
+        © Copyright 2025. All Rights Reserved.
       </div>
     </footer>
   );

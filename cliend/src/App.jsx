@@ -1,4 +1,4 @@
-// App.jsx
+// App.jsx - Add RecycleBin import and route
 import React from 'react';
 import Navbar from './components/Navbar';
 import { Route, Routes, useLocation } from 'react-router-dom';
@@ -6,7 +6,6 @@ import { useAppContext } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 
 // import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import EmployeeScanner from './pages/QRScanner/EmployeeScanner';
@@ -20,11 +19,14 @@ import Checkout from './pages/User/Checkout';
 import ProductDetails from './pages/User/ProductDetails';
 import AllProducts from './pages/User/AllProducts';
 import Contact from './pages/User/Contact';
+import About from './pages/User/About';
+import Privacy from './pages/User/Privacy';
+import Terms from './pages/User/Terms';
+import ReturnPolicy from './pages/User/ReturnPolicy';
 
 //import MyOrders from './pages/User/MyOrders'
 //import OrderHistory from './pages/User/OrderHistory'
 import Profile from './pages/User/Profile'
-
 
 import SellerLogin from './pages/seller/SellerLogin';
 import SellerLayout from './pages/seller/SellerLayout';
@@ -43,6 +45,9 @@ import ViewAttendance from './pages/seller/AttendancePage';
 import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
 import BillingScanner from "./pages/QRScanner/BillingScanner";
 import MonthlySalary from './pages/seller/MonthlySalary';
+
+// NEW: Import RecycleBin component
+import RecycleBin from './pages/seller/RecycleBin'; // Adjust path as needed
 
 // DEF01
 //new
@@ -65,13 +70,10 @@ import Attendance from "./pages/Employee/Attendance";
 
 import CheckPayment from "./pages/Employee/CheckPayment";
 
-
 import ApplyLeave from "./pages/Employee/ApplyLeave";
 
 import DownloadID from "./pages/Employee/DownloadID";
 //import Messages from './pages/OnlineEmployee/Messages';
-
-
 
 //main
 
@@ -85,7 +87,6 @@ const handleSignInClick = () => {
     setShowUserLogin(false)  // Close login modal
     navigate('/signup')      // Redirect to /signup page
   }
-
 
   useEffect(() => {
   // Delay logout if invalid user is on "/" — prevent interfering with initial login redirects
@@ -134,6 +135,14 @@ const handleSignInClick = () => {
 
           <Route path="/product-scanner" element={<BillingScanner />} />
 
+          <Route path="/about" element={<About />} />
+
+          <Route path="/privacy" element={<Privacy />} />
+
+          <Route path="/terms" element={<Terms />} />
+
+          <Route path="/return-policy" element={<ReturnPolicy />} />
+
         </Routes>
       </div>
 {/* new  */}
@@ -160,6 +169,9 @@ const handleSignInClick = () => {
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
             <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
             <Route path="monthly-salary" element={<MonthlySalary />} />
+            
+            {/* NEW: Add Recycle Bin Route */}
+            <Route path="recycle-bin" element={<RecycleBin />} />
 
             {/* ✅ Category Page */}
             <Route path="category/:categoryName" element={<CategoryProductList />} />
@@ -172,7 +184,7 @@ const handleSignInClick = () => {
         <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           <Route path="/employee" element={<EmployeeLayout />}>
-          <Route index element={<Attendance />} />
+          <Route index element={<EmployeeProfile />} />
 
           <Route path="/employee/profile" element={<EmployeeProfile />} />
           <Route path="/employee/edit-profile" element={<EditProfile />} />
@@ -202,7 +214,6 @@ const handleSignInClick = () => {
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
 
-
           <Route path="employee/profile" element={<EmployeeProfile />} />
           <Route path="employee/edit-profile" element={<EditProfile />} />
        
@@ -216,9 +227,7 @@ const handleSignInClick = () => {
 
           <Route path="download-id" element={<DownloadID />} />
 
-
           <Route path="salary" element={<CheckPayment />} />
-
 
         </Route>
         </Routes>

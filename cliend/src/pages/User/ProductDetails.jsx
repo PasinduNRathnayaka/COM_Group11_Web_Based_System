@@ -26,7 +26,7 @@ const ProductDetails = () => {
   const [userExistingReview, setUserExistingReview] = useState(null);
 
   const getImageUrl = (path) => {
-    if (!path) return assets.wheel1;
+    //if (!path) return assets.wheel1;
     return path.startsWith('http') ? path : `http://localhost:5000${path}`;
   };
 
@@ -51,7 +51,15 @@ const ProductDetails = () => {
             <span key={`full-${i}`}>★</span>
           ))}
           {/* Half star */}
-          {hasHalfStar && <span>★</span>}
+          {hasHalfStar && (<span key="half" className="relative inline-block w-3">
+            {/* Gray star behind */}
+            <span className="absolute inset-0 text-gray-300">★</span>
+            {/* Yellow star clipped to half */}
+            <span className="absolute inset-0 overflow-hidden text-yellow-500" style={{ width: '50%' }}>
+              ★
+            </span>
+          </span>
+        )}
           {/* Empty stars */}
           {Array(emptyStars).fill().map((_, i) => (
             <span key={`empty-${i}`} className="text-gray-300">★</span>
@@ -210,7 +218,7 @@ const ProductDetails = () => {
           images: [
             getImageUrl(foundProduct.image),
             ...(foundProduct.gallery?.map(getImageUrl) || []),
-            ...(foundProduct.gallery?.length < 2 ? [assets.wheel2, assets.wheel3] : [])
+            //...(foundProduct.gallery?.length < 2 ? [assets.wheel2, assets.wheel3] : [])
           ],
           description: foundProduct.description || 'No description available',
           specs: [

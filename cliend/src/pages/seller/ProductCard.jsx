@@ -1,12 +1,68 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowUp, Download, Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const ProductCard = ({ product, onDelete }) => {
   const navigate = useNavigate();
+  const [realSales, setRealSales] = useState(0);
+  const [loadingSales, setLoadingSales] = useState(true);
 
   const imageUrl = product.image || "/placeholder.png";
   const qrUrl = product.qrPath || null;
+
+  // Fetch real sales data when component mounts
+  useEffect(() => {
+    const fetchRealSalesData = async () => {
+      try {
+        setLoadingSales(true);
+        
+        // Fetch bills data
+        const billsResponse = await fetch('http://localhost:4000/api/bills');
+        const billsData = billsResponse.ok ? await billsResponse.json() : { bills: [] };
+        
+        // Fetch orders data
+        const ordersResponse = await fetch('http://localhost:4000/api/seller/orders');
+        const ordersData = ordersResponse.ok ? await ordersResponse.json() : { orders: [] };
+        
+        const bills = billsData.bills || [];
+        const orders = ordersData.success ? ordersData.orders : [];
+        
+        // Calculate total items sold for this specific product
+        let totalItemsSold = 0;
+        
+        // Count from bills
+        bills.forEach(bill => {
+          bill.items?.forEach(item => {
+            if (item.productId === product.productId || 
+                item.productName === product.productName) {
+              totalItemsSold += item.quantity || 0;
+            }
+          });
+        });
+        
+        // Count from orders
+        orders.forEach(order => {
+          order.items?.forEach(item => {
+            if (item.productId === product.productId || 
+                item.productName === product.productName) {
+              totalItemsSold += item.quantity || 0;
+            }
+          });
+        });
+        
+        setRealSales(totalItemsSold);
+        
+      } catch (error) {
+        console.error('Error fetching sales data for product:', product.productName, error);
+        setRealSales(0);
+      } finally {
+        setLoadingSales(false);
+      }
+    };
+
+    fetchRealSalesData();
+  }, [product.productId, product.productName]);
 
   const handleQRDownload = async () => {
     try {
@@ -26,6 +82,34 @@ const ProductCard = ({ product, onDelete }) => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading QR code:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to move "${product.productName}" to recycle bin?\n\nThis item can be restored later from the recycle bin.`
+    );
+    
+    if (!confirmDelete) return;
+
+    try {
+      // Soft delete - move to recycle bin
+      await axios.delete(`http://localhost:4000/api/products/${product._id}`, {
+        data: {
+          deletedBy: 'Admin', // You can get this from context/auth
+          reason: 'Moved to recycle bin via product management'
+        }
+      });
+      
+      alert("✅ Product moved to recycle bin successfully!");
+      
+      // Call the onDelete callback to refresh the list
+      if (onDelete) {
+        onDelete(product._id);
+      }
+    } catch (error) {
+      console.error("Error moving product to recycle bin:", error);
+      alert("❌ Failed to move product to recycle bin");
     }
   };
 
@@ -78,7 +162,13 @@ const ProductCard = ({ product, onDelete }) => {
           <span className="flex items-center gap-1">
             Sales <ArrowUp className="w-3 h-3 text-orange-500" />
           </span>
-          <span className="text-gray-700">{product.sales || 1269}</span>
+          <span className="text-gray-700">
+            {loadingSales ? (
+              <div className="inline-block w-8 h-3 bg-gray-300 animate-pulse rounded"></div>
+            ) : (
+              `${realSales} sold`
+            )}
+          </span>
         </div>
 
         <div className="flex justify-between text-xs font-medium text-gray-600">
@@ -91,7 +181,7 @@ const ProductCard = ({ product, onDelete }) => {
             className="h-full bg-orange-400"
             style={{
               width: `${Math.min(
-                (product.stock / (product.sales || product.stock || 1)) * 100,
+                (product.stock / (realSales + product.stock || 1)) * 100,
                 100
               )}%`,
             }}
@@ -116,10 +206,11 @@ const ProductCard = ({ product, onDelete }) => {
           <Pencil className="w-4 h-4" /> Edit
         </button>
         <button
-          onClick={() => onDelete(product._id)}
-          className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-full shadow flex items-center gap-1"
+          onClick={handleDelete}
+          className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-3 py-1 rounded-full shadow flex items-center gap-1"
+          title="Move to Recycle Bin"
         >
-          <Trash className="w-4 h-4" /> Delete
+          <Trash className="w-4 h-4" /> Move to Bin
         </button>
       </div>
     </div>

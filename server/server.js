@@ -27,6 +27,12 @@ import messageRoutes from './routes/OnlineEmployee/message.routes.js';
 
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
+// Employee Profile Routes
+import employeeProfileRoutes from './routes/Employee/profile.routes.js';
+
+// 🆕 Admin Routes
+import adminRoutes from './routes/Admin/admin.routes.js';
+
 import { sendPasswordResetEmail } from './utils/emailService.js';
 
 const app = express();
@@ -35,6 +41,32 @@ dotenv.config();
 // Setup __dirname (for ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Create necessary directories
+const createDirectories = () => {
+  const directories = [
+    'uploads',
+    'uploads/profiles',
+    'uploads/admin', // 🆕 Admin uploads directory
+    'controllers',
+    'controllers/Employee',
+    'controllers/Admin', // 🆕 Admin controllers directory
+    'routes/Employee',
+    'routes/Admin', // 🆕 Admin routes directory
+    'models/Admin', // 🆕 Admin models directory
+    'middlewares'
+  ];
+
+  directories.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`✅ Created directory: ${dir}`);
+    }
+  });
+};
+
+// Create directories on startup
+createDirectories();
 
 // Middlewares
 app.use(cors());
@@ -50,7 +82,6 @@ app.use(
     },
   })
 );
-
 
 // 🔑 ADD TEST EMAIL ROUTE - REMOVE AFTER TESTING
 app.get('/test-email', async (req, res) => {
@@ -204,8 +235,6 @@ app.post('/test-employee-email', async (req, res) => {
   }
 });
 
-// ✅ ADD THESE ROUTES TO server.js AFTER EXISTING TEST ROUTES
-
 // Update employee email (Admin function)
 app.put('/admin/employee/:empId/email', async (req, res) => {
   try {
@@ -325,7 +354,51 @@ app.post('/admin/employees/bulk-update-emails', async (req, res) => {
   }
 });
 
-// Routes
+// 🆕 Admin initialization endpoint
+app.post('/api/admin/init', async (req, res) => {
+  try {
+    const Admin = (await import('./models/Admin/Admin.js')).default;
+    
+    // Check if any admin exists
+    const existingAdmin = await Admin.findOne();
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin already exists. Please use login endpoint.'
+      });
+    }
+
+    // Create default admin
+    const defaultAdmin = await Admin.create({
+      name: 'Administrator',
+      email: 'admin@kamalautoparts.com',
+      password: 'admin123',
+      mobile: '+94771234567',
+      role: 'super_admin'
+    });
+
+    console.log('✅ Default admin initialized successfully');
+
+    res.json({
+      success: true,
+      message: 'Default admin initialized successfully',
+      admin: defaultAdmin.getPublicProfile(),
+      credentials: {
+        email: 'admin@kamalautoparts.com',
+        password: 'admin123'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Admin initialization failed:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// Existing Routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -344,14 +417,35 @@ app.use('/api/bills', billRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/employee', messageRoutes);
 
+// Employee Profile Routes - using different path to avoid conflicts
+app.use('/api/employee-profile', employeeProfileRoutes);
+
+// 🆕 Admin Routes
+app.use('/api/admin', adminRoutes);
+
 // Default route
 app.get('/', (req, res) => {
-  res.send('✅ API is Working');
+  res.send('✅ API is Working - Admin System Ready');
+});
+
+// 🆕 Health check route
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    services: {
+      database: 'connected',
+      server: 'running',
+      adminSystem: 'active'
+    }
+  });
 });
 
 // Start Server
 connectDB();
 
 app.listen(process.env.PORT || 4000, () => {
-  console.log('Server started on port 4000');
+  console.log('🚀 Server started on port 4000');
+  console.log('🔐 Admin system initialized');
+  console.log('📊 Visit /health for system status');
 });

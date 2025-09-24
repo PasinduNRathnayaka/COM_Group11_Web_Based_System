@@ -153,9 +153,18 @@ const SignUp = () => {
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Minimum 8 characters with at least one uppercase, one lowercase, one special character and a number
+              Minimum 6 characters with at least one uppercase, one lowercase, one special character and a number
             </p>
           </div>
+
+            <input
+              type="checkbox"
+              id="select"
+              className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-black focus:ring-2"
+              required
+               />
+              <p className="block mb-1 font-medium">I Agree to the Terms and Conditions</p>
+           
 
           <button
             type="submit"

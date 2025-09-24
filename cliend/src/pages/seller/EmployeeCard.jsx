@@ -10,15 +10,30 @@ const EmployeeCard = ({ employee, onDelete }) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDelete = async () => {
-    const confirm = window.confirm(`Are you sure you want to delete ${employee.name}?`);
-    if (!confirm) return;
+    const confirmDelete = window.confirm(
+      `Are you sure you want to move "${employee.name}" to recycle bin?\n\nThis employee can be restored later from the recycle bin.`
+    );
+    
+    if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:4000/api/employees/${employee._id}`);
-      onDelete(employee._id);
-    } catch (err) {
-      alert("❌ Failed to delete employee.");
-      console.error(err);
+      // Soft delete - move to recycle bin
+      await axios.delete(`http://localhost:4000/api/employees/${employee._id}`, {
+        data: {
+          deletedBy: 'Admin', // You can get this from context/auth
+          reason: 'Moved to recycle bin via employee management'
+        }
+      });
+      
+      alert("✅ Employee moved to recycle bin successfully!");
+      
+      // Call the onDelete callback to refresh the list
+      if (onDelete) {
+        onDelete(employee._id);
+      }
+    } catch (error) {
+      console.error("Error moving employee to recycle bin:", error);
+      alert("❌ Failed to move employee to recycle bin");
     }
   };
 
@@ -363,7 +378,6 @@ const EmployeeCard = ({ employee, onDelete }) => {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
-  
         <button
           onClick={handlePrintCard}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
@@ -380,9 +394,10 @@ const EmployeeCard = ({ employee, onDelete }) => {
         
         <button
           onClick={handleDelete}
-          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+          title="Move to Recycle Bin"
         >
-          Delete
+          Move to Bin
         </button>
       </div>
     </div>

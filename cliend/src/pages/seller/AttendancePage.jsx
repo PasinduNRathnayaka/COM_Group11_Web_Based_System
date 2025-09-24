@@ -133,6 +133,21 @@ const AttendancePage = () => {
     }
   };
 
+  // New function to check if hours are less than 8
+  const isUnderEightHours = (checkIn, checkOut) => {
+    const hours = calculateHours(checkIn, checkOut);
+    if (hours === "--") return false;
+    return parseFloat(hours) < 8;
+  };
+
+  // New function to get hours styling based on 8-hour threshold
+  const getHoursStyle = (checkIn, checkOut) => {
+    if (isUnderEightHours(checkIn, checkOut)) {
+      return "text-red-600 font-semibold bg-red-50 px-2 py-1 rounded";
+    }
+    return "text-gray-900 font-medium";
+  };
+
   const getAttendanceStatus = (checkIn, checkOut) => {
     if (!checkIn && !checkOut) return "absent";
     if (checkIn && !checkOut) return "present";
@@ -164,6 +179,7 @@ const AttendancePage = () => {
     const present = attendanceData.filter(att => att.checkIn).length;
     const completed = attendanceData.filter(att => att.checkIn && att.checkOut).length;
     const absent = total - present;
+    const underEightHours = attendanceData.filter(att => isUnderEightHours(att.checkIn, att.checkOut)).length;
     const avgHours = attendanceData.reduce((sum, att) => {
       const hours = parseFloat(calculateHours(att.checkIn, att.checkOut));
       return sum + (isNaN(hours) ? 0 : hours);
@@ -174,6 +190,7 @@ const AttendancePage = () => {
       present,
       completed,
       absent,
+      underEightHours,
       avgHours: avgHours.toFixed(1)
     };
   }, [attendanceData]);
@@ -198,7 +215,7 @@ const AttendancePage = () => {
 
   const handleExport = () => {
     const csvContent = [
-      ["Employee ID", "Employee Name", "Category", "Date", "Check In", "Check Out", "Total Hours", "Status"],
+      ["Employee ID", "Employee Name", "Category", "Date", "Check In", "Check Out", "Total Hours", "Status", "Under 8 Hours"],
       ...filteredAttendanceData.map(att => [
         att.employee.empId,
         att.employee.name,
@@ -207,7 +224,8 @@ const AttendancePage = () => {
         att.checkIn || "--",
         att.checkOut || "--",
         calculateHours(att.checkIn, att.checkOut),
-        getAttendanceStatus(att.checkIn, att.checkOut)
+        getAttendanceStatus(att.checkIn, att.checkOut),
+        isUnderEightHours(att.checkIn, att.checkOut) ? "Yes" : "No"
       ])
     ].map(row => row.join(",")).join("\n");
 
@@ -379,7 +397,11 @@ const AttendancePage = () => {
                         <td className="py-3 px-4">{new Date(record.date).toLocaleDateString()}</td>
                         <td className="py-3 px-4">{record.checkIn || "--"}</td>
                         <td className="py-3 px-4">{record.checkOut || "--"}</td>
-                        <td className="py-3 px-4 font-medium">{calculateHours(record.checkIn, record.checkOut)}</td>
+                        <td className="py-3 px-4">
+                          <span className={getHoursStyle(record.checkIn, record.checkOut)}>
+                            {calculateHours(record.checkIn, record.checkOut)}
+                          </span>
+                        </td>
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
                             {getStatusIcon(status)}
@@ -410,7 +432,7 @@ const AttendancePage = () => {
       ) : (
         <>
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
@@ -443,6 +465,18 @@ const AttendancePage = () => {
                 </div>
                 <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                   <XCircle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Under 8 Hours</p>
+                  <p className="text-2xl font-bold text-red-600">{attendanceStats.underEightHours}</p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-red-600" />
                 </div>
               </div>
             </div>
@@ -544,8 +578,13 @@ const AttendancePage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {filteredAttendanceData.map((att, index) => {
                     const status = getAttendanceStatus(att.checkIn, att.checkOut);
+                    const isUnderEight = isUnderEightHours(att.checkIn, att.checkOut);
                     return (
-                      <div key={index} className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+                      <div key={index} className={`rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow ${
+                        isUnderEight 
+                          ? 'bg-red-50 border-red-200 hover:bg-red-100' 
+                          : 'bg-white hover:bg-gray-50'
+                      }`}>
                         <div className="text-center">
                           <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden">
                             <img
@@ -557,22 +596,30 @@ const AttendancePage = () => {
                               }}
                             />
                           </div>
-                          <h3 className="font-semibold text-gray-900 mb-1">{att.employee.name}</h3>
-                          <p className="text-xs text-gray-500 mb-3">{att.employee.category}</p>
+                          <h3 className={`font-semibold mb-1 ${isUnderEight ? 'text-red-900' : 'text-gray-900'}`}>
+                            {att.employee.name}
+                          </h3>
+                          <p className={`text-xs mb-3 ${isUnderEight ? 'text-red-600' : 'text-gray-500'}`}>
+                            {att.employee.category}
+                          </p>
                           
                           <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mb-3 ${getStatusColor(status)}`}>
                             {getStatusIcon(status)}
                             {status.charAt(0).toUpperCase() + status.slice(1)}
                           </div>
                           
-                          <div className="space-y-1 text-xs text-gray-600 mb-3">
+                          <div className={`space-y-1 text-xs mb-3 ${isUnderEight ? 'text-red-700' : 'text-gray-600'}`}>
                             <div>In: {att.checkIn || "--"}</div>
                             <div>Out: {att.checkOut || "--"}</div>
-                            <div className="font-medium">Hours: {calculateHours(att.checkIn, att.checkOut)}</div>
+                            <div className={`font-medium ${isUnderEight ? 'text-red-800' : ''}`}>
+                              Hours: {calculateHours(att.checkIn, att.checkOut)}
+                            </div>
                           </div>
                           
                           <button
-                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mx-auto"
+                            className={`flex items-center gap-1 text-xs hover:text-blue-800 mx-auto ${
+                              isUnderEight ? 'text-red-600' : 'text-blue-600'
+                            }`}
                             onClick={() => handleViewAttendance(att.employee)}
                           >
                             <Eye className="w-3 h-3" />
@@ -603,8 +650,11 @@ const AttendancePage = () => {
                       <tbody>
                         {filteredAttendanceData.map((att, index) => {
                           const status = getAttendanceStatus(att.checkIn, att.checkOut);
+                          const isUnderEight = isUnderEightHours(att.checkIn, att.checkOut);
                           return (
-                            <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                            <tr key={index} className={`border-b border-gray-100 hover:bg-gray-50 ${
+                              isUnderEight ? 'bg-red-50' : ''
+                            }`}>
                               <td className="py-4 px-6">
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
@@ -617,23 +667,31 @@ const AttendancePage = () => {
                                       }}
                                     />
                                   </div>
-                                  <span className="font-medium text-gray-900">{att.employee.name}</span>
+                                  <span className={`font-medium ${isUnderEight ? 'text-red-900' : 'text-gray-900'}`}>
+                                    {att.employee.name}
+                                  </span>
                                 </div>
                               </td>
-                              <td className="py-4 px-6 text-gray-600">{att.employee.empId}</td>
-                              <td className="py-4 px-6 text-gray-600">{att.employee.category}</td>
+                              <td className={`py-4 px-6 ${isUnderEight ? 'text-red-700' : 'text-gray-600'}`}>
+                                {att.employee.empId}
+                              </td>
+                              <td className={`py-4 px-6 ${isUnderEight ? 'text-red-700' : 'text-gray-600'}`}>
+                                {att.employee.category}
+                              </td>
                               <td className="py-4 px-6">
-                                <span className={att.checkIn ? 'text-gray-900 font-medium' : 'text-gray-400'}>
+                                <span className={att.checkIn ? (isUnderEight ? 'text-red-900 font-medium' : 'text-gray-900 font-medium') : 'text-gray-400'}>
                                   {att.checkIn || "--"}
                                 </span>
                               </td>
                               <td className="py-4 px-6">
-                                <span className={att.checkOut ? 'text-gray-900 font-medium' : 'text-gray-400'}>
+                                <span className={att.checkOut ? (isUnderEight ? 'text-red-900 font-medium' : 'text-gray-900 font-medium') : 'text-gray-400'}>
                                   {att.checkOut || "--"}
                                 </span>
                               </td>
-                              <td className="py-4 px-6 font-medium text-gray-900">
-                                {calculateHours(att.checkIn, att.checkOut)}
+                              <td className="py-4 px-6">
+                                <span className={getHoursStyle(att.checkIn, att.checkOut)}>
+                                  {calculateHours(att.checkIn, att.checkOut)}
+                                </span>
                               </td>
                               <td className="py-4 px-6">
                                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
@@ -643,7 +701,9 @@ const AttendancePage = () => {
                               </td>
                               <td className="py-4 px-6">
                                 <button
-                                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                  className={`flex items-center gap-1 text-sm hover:text-blue-800 font-medium ${
+                                    isUnderEight ? 'text-red-600' : 'text-blue-600'
+                                  }`}
                                   onClick={() => handleViewAttendance(att.employee)}
                                 >
                                   <Eye className="w-4 h-4" />
