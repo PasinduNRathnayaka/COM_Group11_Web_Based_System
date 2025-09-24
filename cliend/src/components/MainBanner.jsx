@@ -45,7 +45,15 @@ const renderCompactStarRating = (rating, reviewCount) => {
           <span key={`full-${i}`}>★</span>
         ))}
         {/* Half star */}
-        {hasHalfStar && <span>★</span>}
+        {hasHalfStar && ( <span key="half" className="relative inline-block w-3">
+            {/* Gray star behind */}
+            <span className="absolute inset-0 text-gray-300">★</span>
+            {/* Yellow star clipped to half */}
+            <span className="absolute inset-0 overflow-hidden text-yellow-500" style={{ width: '50%' }}>
+              ★
+            </span>
+          </span>
+        )}
         {/* Empty stars */}
         {Array(emptyStars).fill().map((_, i) => (
           <span key={`empty-${i}`} className="text-gray-300">★</span>
@@ -239,11 +247,11 @@ const fetchProductReviews = async (productId) => {
     { name: 'Exhaust', image: assets.exhaust, category: 'exhaust', _id: 'static-exhaust' },
   ];*/}
 
-  const renderStarRating = (rating = 4) => {
-    return Array.from({ length: 5 }, (_, i) =>
-      i < rating ? '★' : '☆'
-    ).join('');
-  };
+  //const renderStarRating = (rating = 4) => {
+    //return Array.from({ length: 5 }, (_, i) =>
+     // i < rating ? '★' : '☆'
+    //).join('');
+  //};
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-LK').format(price);
