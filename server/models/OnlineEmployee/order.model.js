@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+{/*import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
   product: { type: String, required: true },
@@ -9,4 +9,4 @@ const orderSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
 });
 
-export default mongoose.model('Order', orderSchema);
+export default mongoose.model('Order', orderSchema);*/}
