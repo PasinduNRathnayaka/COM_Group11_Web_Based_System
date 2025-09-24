@@ -415,7 +415,7 @@ app.use('/api/attendance', viewAttendanceRoutes);
 app.use('/api/bills', billRoutes);
 
 app.use('/api/contact', contactRoutes);
-app.use('/api/message', messageRoutes);
+app.use('/api/employee', messageRoutes);
 
 // Employee Profile Routes - using different path to avoid conflicts
 app.use('/api/employee-profile', employeeProfileRoutes);

@@ -52,10 +52,10 @@ import RecycleBin from './pages/seller/RecycleBin'; // Adjust path as needed
 // DEF01
 //new
 import SidebarLayout from "./components/SidebarLayout";
-import CustomerReplies from "./pages/OnlineEmployee/CustomerReplies";
+import Messages from "./pages/OnlineEmployee/Messages";
 import OrderDetails from "./pages/OnlineEmployee/OrderDetails";
 import OrderList from "./pages/OnlineEmployee/OrderList";
-import ChatBox from "./components/ChatBox"
+//import ChatBox from "./components/ChatBox"
 
 import EmployeeProfile from "./pages/Employee/Profile";
 import EditProfile from "./pages/Employee/EditProfile";
@@ -73,6 +73,7 @@ import CheckPayment from "./pages/Employee/CheckPayment";
 import ApplyLeave from "./pages/Employee/ApplyLeave";
 
 import DownloadID from "./pages/Employee/DownloadID";
+//import Messages from './pages/OnlineEmployee/Messages';
 
 //main
 
@@ -209,7 +210,7 @@ const handleSignInClick = () => {
         <Routes>
           <Route path="/online_employee" element={<OnlineEmloyeeLayout />}>
           <Route index element={<Attendance />} />
-          <Route path="replies" element={<CustomerReplies />} />
+          <Route path="messages" element={<Messages />} />
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
 
@@ -232,9 +233,9 @@ const handleSignInClick = () => {
         </Routes>
       </div>
 
-      <div className="App">
+     {/* <div className="App">
       <ChatBox />
-    </div>
+    </div>*/}
 
       {/* new online Employee */}
 

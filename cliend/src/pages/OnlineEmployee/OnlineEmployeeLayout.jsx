@@ -242,15 +242,17 @@ const OnlineEmployeeLayout = () => {
   }, []);
 
   const sidebarLinks = [
-    { name: "Profile", path: "/online_employee/profile", icon: <FaUser /> },
-    { name: "View Attendance", path: "/online_employee/attendance", icon: <FaCalendarCheck /> },
-    { name: "Check Payment", path: "/online_employee/salary", icon: <FaMoneyCheckAlt /> },
-    { name: "Apply For Leave", path: "/online_employee/leave", icon: <FaPaperPlane /> },
-    { name: "Download ID", path: "/online_employee/download-id", icon: <FaFileDownload /> },
-    { name: "Customer Replies", path: "/online_employee/replies", icon: <FaComments /> },
-    { name: "Order List", path: "/online_employee/order-list", icon: <FaList /> },
-    { name: "Order Details", path: "/online_employee/order-details", icon: <FaInfoCircle /> },
-  ];
+
+  { name: "Profile", path: "/online_employee/profile", icon: <FaUser /> },
+  { name: "View Attendance", path: "/online_employee/attendance", icon: <FaCalendarCheck /> },
+  { name: "Check Payment", path: "/online_employee/salary", icon: <FaMoneyCheckAlt /> },
+  { name: "Apply For Leave", path: "/online_employee/leave", icon: <FaPaperPlane /> },
+  { name: "Download ID", path: "/online_employee/download-id", icon: <FaFileDownload /> },
+  { name: "Messages", path: "/online_employee/messages", icon: <FaComments /> },
+  { name: "Order List", path: "/online_employee/order-list", icon: <FaList /> },
+  { name: "Order Details", path: "/online_employee/order-details", icon: <FaInfoCircle /> },
+  
+];
 
   // Show loading state
   if (loading) {
