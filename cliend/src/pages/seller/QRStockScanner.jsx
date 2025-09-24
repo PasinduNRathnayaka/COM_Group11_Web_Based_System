@@ -14,6 +14,47 @@ const QRStockScanner = ({ onStockUpdate }) => {
 
   const videoRef = useRef(null);
 
+  // Camera setup for mirror preview
+  useEffect(() => {
+    if (!showScanner) {
+      // Stop camera when modal is closed
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+      return;
+    }
+
+    const enableCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false,
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera for mirror preview:', error);
+        setMessage('Unable to access camera. Please check camera permissions.');
+        setMessageType('error');
+      }
+    };
+
+    if (showScanner) {
+      enableCamera();
+    }
+
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [showScanner]);
+
   // Clear message after 5 seconds
   useEffect(() => {
     if (message) {
@@ -217,7 +258,8 @@ const QRStockScanner = ({ onStockUpdate }) => {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900">Step 1: Scan Product QR Code</h3>
                 
-                <div className="relative bg-black rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '300px' }}>
+                {/* Hidden QR Reader for actual scanning */}
+                <div style={{ visibility: 'hidden', opacity: 0, pointerEvents: 'none', position: 'absolute', height: 0, width: 0 }}>
                   <QrReader
                     constraints={{ 
                       facingMode: 'environment',
@@ -234,6 +276,18 @@ const QRStockScanner = ({ onStockUpdate }) => {
                     }}
                     containerStyle={{ width: '100%', height: '100%' }}
                     videoStyle={{ width: '100%', height: '100%' }}
+                  />
+                </div>
+
+                {/* Mirror Preview with QR Frame */}
+                <div className="relative bg-black rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '300px' }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{ transform: 'scaleX(-1)' }} // Mirror effect
                   />
                   
                   {/* Scanning Overlay */}
