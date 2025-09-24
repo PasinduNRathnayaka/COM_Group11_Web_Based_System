@@ -203,293 +203,428 @@ const MonthlySalary = () => {
     }
   };
 
-  const downloadIndividualPDF = (employee) => {
-    const monthYear = new Date(selectedMonth + "-01").toLocaleDateString("en-US", { 
-      month: "long", 
-      year: "numeric" 
-    });
+const downloadIndividualPDF = (employee) => {
+  const monthYear = new Date(selectedMonth + "-01").toLocaleDateString("en-US", { 
+    month: "long", 
+    year: "numeric" 
+  });
 
-    // Build allowances section
-    const allowancesEntries = employee.salaryAdjustments?.allowances ? 
-      Object.entries(employee.salaryAdjustments.allowances)
-        .filter(([key, value]) => Number(value) > 0)
-        .map(([key, value]) => `
-          <div class="breakdown-item">
-            <span>${key.charAt(0).toUpperCase() + key.slice(1)}</span>
-            <span>Rs. ${Number(value).toLocaleString()}</span>
-          </div>
-        `).join('') : '';
+  // Build allowances section with non-zero values only
+  const allowancesEntries = employee.salaryAdjustments?.allowances ? 
+    Object.entries(employee.salaryAdjustments.allowances)
+      .filter(([key, value]) => Number(value) > 0)
+      .map(([key, value]) => `
+        <tr>
+          <td class="item-label">${key.charAt(0).toUpperCase() + key.slice(1)}</td>
+          <td class="item-value">Rs. ${Number(value).toLocaleString()}</td>
+        </tr>
+      `).join('') : '';
 
-    // Build deductions section
-    const deductionsEntries = employee.salaryAdjustments?.deductions ? 
-      Object.entries(employee.salaryAdjustments.deductions)
-        .filter(([key, value]) => Number(value) > 0)
-        .map(([key, value]) => `
-          <div class="breakdown-item">
-            <span>${key.toUpperCase()}</span>
-            <span>Rs. ${Number(value).toLocaleString()}</span>
-          </div>
-        `).join('') : '';
+  // Build deductions section with non-zero values only
+  const deductionsEntries = employee.salaryAdjustments?.deductions ? 
+    Object.entries(employee.salaryAdjustments.deductions)
+      .filter(([key, value]) => Number(value) > 0)
+      .map(([key, value]) => `
+        <tr>
+          <td class="item-label">${key.toUpperCase()}</td>
+          <td class="item-value">Rs. ${Number(value).toLocaleString()}</td>
+        </tr>
+      `).join('') : '';
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Individual Salary Report - ${employee.name || 'Unknown'}</title>
-        <style>
-          body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-            color: #333;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #2c5aa0;
-            padding-bottom: 20px;
-          }
-          .company-name {
-            font-size: 28px;
-            font-weight: bold;
-            color: #2c5aa0;
-            margin-bottom: 5px;
-          }
-          .report-title {
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 5px;
-          }
-          .report-meta {
-            font-size: 14px;
-            color: #888;
-          }
-          .employee-details {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            border-left: 5px solid #2c5aa0;
-          }
-          .employee-details h2 {
-            margin: 0 0 15px 0;
-            color: #2c5aa0;
-            font-size: 22px;
-          }
-          .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-          }
-          .detail-item {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          }
-          .detail-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 5px;
-          }
-          .detail-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-          }
-          .salary-breakdown {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 25px;
-          }
-          .breakdown-section {
-            background: white;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          }
-          .breakdown-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
-          }
-          .earnings-title {
-            color: #28a745;
-          }
-          .deductions-title {
-            color: #dc3545;
-          }
-          .breakdown-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-          }
-          .breakdown-item:last-child {
-            border-bottom: none;
-          }
-          .breakdown-item.total {
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 10px;
-            padding-top: 15px;
-            border-top: 2px solid #eee;
-            border-bottom: none;
-          }
-          .total-section {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a6f 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            margin: 25px 0;
-            box-shadow: 0 6px 12px rgba(44, 90, 160, 0.3);
-          }
-          .final-salary {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 5px;
-          }
-          .salary-label {
-            font-size: 14px;
-            opacity: 0.9;
-          }
-          .notes-section {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-          }
-          .notes-title {
-            font-weight: bold;
-            color: #856404;
-            margin-bottom: 10px;
-          }
-          .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-          }
-          .status-draft {
-            background: #ffeaa7;
-            color: #856404;
-          }
-          .status-approved {
-            background: #d4edda;
-            color: #155724;
-          }
-          .status-paid {
-            background: #cce5ff;
-            color: #004085;
-          }
-          @media print {
-            body { margin: 0; }
-            .breakdown-section { break-inside: avoid; }
-          }
-        </style>
-      </head>
-      <body>
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Salary Sheet - ${employee.name || 'Employee'}</title>
+      <style>
+        @page { 
+          size: A4; 
+          margin: 15mm; 
+        }
+        
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: 'Arial', sans-serif;
+          font-size: 12px;
+          line-height: 1.4;
+          color: #333;
+          background: white;
+        }
+        
+        .container {
+          max-width: 100%;
+          margin: 0 auto;
+        }
+        
+        .header {
+          text-align: center;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #2c5aa0;
+        }
+        
+        .company-name {
+          font-size: 20px;
+          font-weight: bold;
+          color: #2c5aa0;
+          margin-bottom: 3px;
+        }
+        
+        .document-title {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 2px;
+        }
+        
+        .period {
+          font-size: 11px;
+          color: #888;
+        }
+        
+        .employee-header {
+          background: #f8f9fa;
+          padding: 12px;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          border-left: 4px solid #2c5aa0;
+        }
+        
+        .emp-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .emp-details h2 {
+          font-size: 16px;
+          color: #2c5aa0;
+          margin-bottom: 2px;
+        }
+        
+        .emp-meta {
+          font-size: 10px;
+          color: #666;
+        }
+        
+        .emp-stats {
+          text-align: right;
+          font-size: 10px;
+        }
+        
+        .stat-item {
+          margin-bottom: 1px;
+        }
+        
+        .content-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .section {
+          border: 1px solid #e0e0e0;
+          border-radius: 6px;
+          overflow: hidden;
+        }
+        
+        .section-header {
+          padding: 8px 12px;
+          font-weight: bold;
+          font-size: 13px;
+        }
+        
+        .earnings-header {
+          background: #e8f5e8;
+          color: #2d5a2d;
+          border-bottom: 1px solid #d0e7d0;
+        }
+        
+        .deductions-header {
+          background: #fce8e8;
+          color: #5a2d2d;
+          border-bottom: 1px solid #e7d0d0;
+        }
+        
+        .section-content {
+          padding: 8px 0;
+        }
+        
+        .breakdown-table {
+          width: 100%;
+        }
+        
+        .breakdown-table tr {
+          border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .breakdown-table tr:last-child {
+          border-bottom: none;
+        }
+        
+        .item-label {
+          padding: 4px 12px;
+          font-size: 11px;
+          color: #555;
+        }
+        
+        .item-value {
+          padding: 4px 12px;
+          text-align: right;
+          font-weight: 500;
+          font-size: 11px;
+        }
+        
+        .basic-salary {
+          background: #f8f9fa !important;
+          font-weight: bold;
+        }
+        
+        .section-total {
+          background: #f5f5f5 !important;
+          font-weight: bold;
+          border-top: 2px solid #ddd !important;
+        }
+        
+        .section-total .item-label {
+          font-weight: bold;
+          color: #333;
+        }
+        
+        .section-total .item-value {
+          font-weight: bold;
+          font-size: 12px;
+        }
+        
+        .final-summary {
+          background: linear-gradient(135deg, #2c5aa0 0%, #1e3a6f 100%);
+          color: white;
+          padding: 15px;
+          border-radius: 6px;
+          text-align: center;
+          margin: 15px 0;
+        }
+        
+        .net-amount {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 3px;
+        }
+        
+        .net-label {
+          font-size: 11px;
+          opacity: 0.9;
+        }
+        
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-bottom: 15px;
+          padding: 10px;
+          background: #f8f9fa;
+          border-radius: 6px;
+        }
+        
+        .summary-item {
+          text-align: center;
+          padding: 8px;
+          background: white;
+          border-radius: 4px;
+          border: 1px solid #e0e0e0;
+        }
+        
+        .summary-label {
+          font-size: 9px;
+          color: #666;
+          margin-bottom: 2px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .summary-value {
+          font-size: 13px;
+          font-weight: bold;
+          color: #333;
+        }
+        
+        .notes-section {
+          background: #fff8e1;
+          border: 1px solid #ffcc02;
+          border-radius: 4px;
+          padding: 10px;
+          margin: 10px 0;
+        }
+        
+        .notes-title {
+          font-size: 11px;
+          font-weight: bold;
+          color: #856404;
+          margin-bottom: 5px;
+        }
+        
+        .notes-content {
+          font-size: 10px;
+          color: #856404;
+          line-height: 1.3;
+        }
+        
+        .footer {
+          margin-top: 20px;
+          padding-top: 10px;
+          border-top: 1px solid #e0e0e0;
+          text-align: center;
+          font-size: 9px;
+          color: #666;
+        }
+        
+        .status-badge {
+          display: inline-block;
+          padding: 2px 6px;
+          border-radius: 10px;
+          font-size: 9px;
+          font-weight: bold;
+          text-transform: uppercase;
+          margin-left: 5px;
+        }
+        
+        .status-draft {
+          background: #fff3cd;
+          color: #856404;
+        }
+        
+        .status-approved {
+          background: #d4edda;
+          color: #155724;
+        }
+        
+        .status-paid {
+          background: #cce5ff;
+          color: #004085;
+        }
+        
+        .no-break {
+          page-break-inside: avoid;
+        }
+        
+        @media print {
+          body { font-size: 11px; }
+          .container { max-width: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
         <div class="header">
           <div class="company-name">KAMAL AUTO PARTS</div>
-          <div class="report-title">Individual Salary Report - ${monthYear}</div>
-          <div class="report-meta">Generated on: ${new Date().toLocaleDateString()}</div>
+          <div class="document-title">Monthly Salary Statement</div>
+          <div class="period">${monthYear} | Generated: ${new Date().toLocaleDateString()}</div>
         </div>
 
-        <div class="employee-details">
-          <h2>${employee.name || 'Unknown Employee'}</h2>
-          <div class="detail-grid">
-            <div class="detail-item">
-              <div class="detail-label">Employee ID</div>
-              <div class="detail-value">${employee.empId || 'N/A'}</div>
+        <div class="employee-header no-break">
+          <div class="emp-info">
+            <div class="emp-details">
+              <h2>${employee.name || 'Unknown Employee'}</h2>
+              <div class="emp-meta">
+                ID: ${employee.empId || 'N/A'} | Category: ${employee.category || 'N/A'}
+              </div>
             </div>
-            <div class="detail-item">
-              <div class="detail-label">Category</div>
-              <div class="detail-value">${employee.category || 'N/A'}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Daily Rate</div>
-              <div class="detail-value">Rs. ${(Number(employee.dailyRate) || 0).toLocaleString()}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Total Hours</div>
-              <div class="detail-value">${Number(employee.totalHours) || 0} hrs</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Present Days</div>
-              <div class="detail-value">${Number(employee.presentDays) || 0} days</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Complete Days</div>
-              <div class="detail-value">${Number(employee.completeDays) || 0} days</div>
+            <div class="emp-stats">
+              <div class="stat-item">Daily Rate: <strong>Rs. ${(Number(employee.dailyRate) || 0).toLocaleString()}</strong></div>
+              <div class="stat-item">Hours: <strong>${Number(employee.totalHours) || 0}</strong> | Days: <strong>${Number(employee.presentDays) || 0}</strong></div>
             </div>
           </div>
         </div>
 
-        <div class="salary-breakdown">
-          <div class="breakdown-section">
-            <div class="breakdown-title earnings-title">💰 Earnings</div>
-            <div class="breakdown-item">
-              <span>Basic Salary</span>
-              <span>Rs. ${(Number(employee.calculatedSalary) || 0).toLocaleString()}</span>
-            </div>
-            ${allowancesEntries}
-            <div class="breakdown-item total">
-              <span>Total Earnings</span>
-              <span>Rs. ${((Number(employee.calculatedSalary) || 0) + (Number(employee.totalAllowances) || 0)).toLocaleString()}</span>
+        <div class="summary-grid no-break">
+          <div class="summary-item">
+            <div class="summary-label">Gross Earnings</div>
+            <div class="summary-value">Rs. ${((Number(employee.calculatedSalary) || 0) + (Number(employee.totalAllowances) || 0)).toLocaleString()}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Deductions</div>
+            <div class="summary-value">Rs. ${(Number(employee.totalDeductions) || 0).toLocaleString()}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Net Payable</div>
+            <div class="summary-value" style="color: #2c5aa0;">Rs. ${(Number(employee.finalSalary) || 0).toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div class="content-grid no-break">
+          <div class="section">
+            <div class="section-header earnings-header">Earnings</div>
+            <div class="section-content">
+              <table class="breakdown-table">
+                <tr class="basic-salary">
+                  <td class="item-label">Basic Salary</td>
+                  <td class="item-value">Rs. ${(Number(employee.calculatedSalary) || 0).toLocaleString()}</td>
+                </tr>
+                ${allowancesEntries}
+                ${!allowancesEntries ? '<tr><td class="item-label" style="text-align: center; padding: 8px; color: #888;">No additional allowances</td></tr>' : ''}
+                <tr class="section-total">
+                  <td class="item-label">Total Earnings</td>
+                  <td class="item-value">Rs. ${((Number(employee.calculatedSalary) || 0) + (Number(employee.totalAllowances) || 0)).toLocaleString()}</td>
+                </tr>
+              </table>
             </div>
           </div>
 
-          <div class="breakdown-section">
-            <div class="breakdown-title deductions-title">💸 Deductions</div>
-            ${deductionsEntries || '<div class="breakdown-item"><span>No deductions applied</span><span>Rs. 0</span></div>'}
-            <div class="breakdown-item total">
-              <span>Total Deductions</span>
-              <span>Rs. ${(Number(employee.totalDeductions) || 0).toLocaleString()}</span>
+          <div class="section">
+            <div class="section-header deductions-header">Deductions</div>
+            <div class="section-content">
+              <table class="breakdown-table">
+                ${deductionsEntries || '<tr><td class="item-label" style="text-align: center; padding: 8px; color: #888;">No deductions applied</td></tr>'}
+                <tr class="section-total">
+                  <td class="item-label">Total Deductions</td>
+                  <td class="item-value">Rs. ${(Number(employee.totalDeductions) || 0).toLocaleString()}</td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>
 
-        <div class="total-section">
-          <div class="final-salary">Rs. ${(Number(employee.finalSalary) || 0).toLocaleString()}</div>
-          <div class="salary-label">Net Salary for ${monthYear}</div>
+        <div class="final-summary no-break">
+          <div class="net-amount">Rs. ${(Number(employee.finalSalary) || 0).toLocaleString()}</div>
+          <div class="net-label">Net Salary - ${monthYear}</div>
         </div>
 
         ${employee.salaryAdjustments?.notes ? `
-        <div class="notes-section">
-          <div class="notes-title">📝 Additional Notes</div>
-          <p>${employee.salaryAdjustments.notes}</p>
+        <div class="notes-section no-break">
+          <div class="notes-title">Additional Notes</div>
+          <div class="notes-content">${employee.salaryAdjustments.notes}</div>
         </div>
         ` : ''}
 
-        <div style="text-align: center; margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-          <p style="margin: 0; color: #666; font-size: 12px;">
-            This is a computer-generated report. No signature required.<br>
-            Report Status: <span class="status-badge ${employee.status ? `status-${employee.status}` : 'status-draft'}">${employee.status || 'Draft'}</span>
+        <div class="footer">
+          <p>
+            This is a computer-generated salary statement. No signature required.
+            <span class="status-badge ${employee.status ? `status-${employee.status}` : 'status-draft'}">
+              ${employee.status || 'Draft'}
+            </span>
+          </p>
+          <p style="margin-top: 5px;">
+            For queries, contact HR Department | Document ID: SAL-${employee.empId || 'XXX'}-${selectedMonth.replace('-', '')}
           </p>
         </div>
-      </body>
-      </html>
-    `;
+      </div>
+    </body>
+    </html>
+  `;
 
-    const printWindow = window.open('', '_blank');
+  // Create and trigger download
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
     printWindow.document.write(htmlContent);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
+  }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
