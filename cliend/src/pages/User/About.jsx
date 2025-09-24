@@ -6,37 +6,37 @@ import { Navigate } from 'react-router-dom';
 const About = () => {
   const { user } = useAppContext();
   const [shopDetails, setShopDetails] = useState({
-    name: "KAMAL AUTO PARTS",
-    address: "No 128, Wewurukannala Road, Kekanadura, Sri Lanka",
-    email: "kamalautoparts@gmail.com",
-    phone: "+94 0777 555 919"
+    //name: "KAMAL AUTO PARTS",
+   // address: "No 128, Wewurukannala Road, Kekanadura, Sri Lanka",
+    //email: "kamalautoparts@gmail.com",
+    //phone: "+94 0777 555 919"
   });
   const [loading, setLoading] = useState(true);
 
   // Fetch shop details from backend
-  useEffect(() => {
+ useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        const response = await fetch('/api/employees');
-        const employees = await response.json();
+        // 🔥 Updated: Fetch admin details from the new endpoint
+        const response = await fetch('/api/admin/shop-details');
+         
+        if (!response.ok) {
+          throw new Error('Failed to fetch shop details');
+        }
+
+        const data = await response.json();
         
-        const seller = employees.find(emp => 
-          emp.category === 'seller' || 
-          emp.category === 'admin' || 
-          emp.role === 'seller' || 
-          emp.role === 'admin'
-        );
-        
-        if (seller) {
+        if (data.success && data.shopDetails) {
           setShopDetails({
-            name: "KAMAL AUTO PARTS",
-            address: seller.address || "No 128, Wewurukannala Road, Kekanadura, Sri Lanka",
-            email: seller.email || "kamalautoparts@gmail.com",
-            phone: seller.contact || "+94 0777 555 919"
+            address: data.shopDetails.address ,
+            email: data.shopDetails.email ,
+            phone: data.shopDetails.phone,
+            name: data.shopDetails.name
           });
         }
       } catch (error) {
-        console.error('Error fetching shop details:', error);
+        //console.error('Error fetching shop details:', error);
+        // Keep default values if fetch fails
       } finally {
         setLoading(false);
       }
