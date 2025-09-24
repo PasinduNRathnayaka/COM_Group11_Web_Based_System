@@ -224,7 +224,7 @@ const SalesGraph = () => {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h4 className="font-semibold text-lg">Sales Graph</h4>
-          <p className="text-sm text-gray-600 capitalize">{timeRange} Overview (Real Data)</p>
+          <p className="text-sm text-gray-600 capitalize">{timeRange} Overview</p>
         </div>
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
           {['weekly', 'monthly', 'yearly'].map((range) => (
@@ -1340,7 +1340,7 @@ const AttendanceTable = () => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow p-4 overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold">Today's Attendance (Real Data)</h4>
+        <h4 className="font-semibold">Today's Attendance </h4>
         <span className="text-sm text-gray-500">
           {new Date().toLocaleDateString()}
         </span>
