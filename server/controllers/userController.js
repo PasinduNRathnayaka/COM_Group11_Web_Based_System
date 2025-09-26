@@ -13,6 +13,7 @@ import {
   generateResetCode, 
   generateResetToken 
 } from '../utils/emailService.js';
+import Cart from '../models/Cart.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -465,158 +466,280 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// Get user's cart
+// Get user's cart from database
 export const getCart = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('cart');
+    const userId = req.user.id;
     
-    if (!user) {
-      res.status(404);
-      throw new Error('User not found');
-    }
-
+    const cart = await Cart.getCartByUserId(userId);
+    
+    const cartItems = cart.items.map(item => ({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity,
+      description: item.description
+    }));
+    
     res.json({
       success: true,
-      cart: user.cart || []
+      cartItems,
+      totalAmount: cart.totalAmount,
+      totalItems: cart.totalItems
     });
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message || 'Failed to get cart');
+    console.error('Get cart error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get cart',
+      error: error.message
+    });
   }
 });
 
-// Add item to cart
+// Add item to cart in database
 export const addToCart = asyncHandler(async (req, res) => {
   try {
-    const { productId, name, price, image, quantity = 1, description } = req.body;
+    const userId = req.user.id;
+    const { productId, name, price, image, quantity = 1, description = '' } = req.body;
     
-    if (!productId || !name || !price) {
-      res.status(400);
-      throw new Error('Product ID, name, and price are required');
+    if (!productId || !name || !price || !image) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required product information'
+      });
     }
-
-    const user = await User.findById(req.user.id);
     
-    if (!user) {
-      res.status(404);
-      throw new Error('User not found');
-    }
-
-    // Check if item already exists in cart
-    const existingItemIndex = user.cart.findIndex(item => item.productId === productId);
+    const cart = await Cart.getCartByUserId(userId);
     
-    if (existingItemIndex > -1) {
-      // Update quantity if item exists
-      user.cart[existingItemIndex].quantity += quantity;
+    const existingItemIndex = cart.items.findIndex(
+      item => item.productId.toString() === productId.toString()
+    );
+
+    if (existingItemIndex !== -1) {
+      cart.items[existingItemIndex].quantity += parseInt(quantity);
     } else {
-      // Add new item to cart
-      user.cart.push({
+      cart.items.push({
         productId,
         name,
-        price,
+        price: parseFloat(price),
         image,
-        quantity,
+        quantity: parseInt(quantity),
         description
       });
     }
-
-    await user.save();
-
+    
+    await cart.save();
+    
+    const cartItems = cart.items.map(item => ({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity,
+      description: item.description
+    }));
+    
     res.json({
       success: true,
       message: 'Item added to cart',
-      cart: user.cart
+      cartItems,
+      totalAmount: cart.totalAmount,
+      totalItems: cart.totalItems
     });
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message || 'Failed to add item to cart');
+    console.error('Add to cart error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add item to cart',
+      error: error.message
+    });
   }
 });
 
-// Update cart item quantity
+// Update cart item quantity in database
 export const updateCartItem = asyncHandler(async (req, res) => {
   try {
+    const userId = req.user.id;
     const { productId, quantity } = req.body;
     
-    if (!productId || !quantity || quantity < 1) {
-      res.status(400);
-      throw new Error('Valid product ID and quantity are required');
+    if (!productId || quantity === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product ID and quantity are required'
+      });
     }
-
-    const user = await User.findById(req.user.id);
     
-    if (!user) {
-      res.status(404);
-      throw new Error('User not found');
-    }
-
-    const itemIndex = user.cart.findIndex(item => item.productId === productId);
+    const cart = await Cart.getCartByUserId(userId);
+    const itemIndex = cart.items.findIndex(
+      item => item.productId.toString() === productId.toString()
+    );
     
     if (itemIndex === -1) {
-      res.status(404);
-      throw new Error('Item not found in cart');
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found in cart'
+      });
     }
-
-    user.cart[itemIndex].quantity = quantity;
-    await user.save();
-
+    
+    if (parseInt(quantity) <= 0) {
+      cart.items.splice(itemIndex, 1);
+    } else {
+      cart.items[itemIndex].quantity = parseInt(quantity);
+    }
+    
+    await cart.save();
+    
+    const cartItems = cart.items.map(item => ({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity,
+      description: item.description
+    }));
+    
     res.json({
       success: true,
       message: 'Cart updated',
-      cart: user.cart
+      cartItems,
+      totalAmount: cart.totalAmount,
+      totalItems: cart.totalItems
     });
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message || 'Failed to update cart');
+    console.error('Update cart error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update cart',
+      error: error.message
+    });
   }
 });
 
-// Remove item from cart
+// Remove item from cart in database
 export const removeFromCart = asyncHandler(async (req, res) => {
   try {
+    const userId = req.user.id;
     const { productId } = req.params;
     
-    const user = await User.findById(req.user.id);
-    
-    if (!user) {
-      res.status(404);
-      throw new Error('User not found');
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product ID is required'
+      });
     }
-
-    user.cart = user.cart.filter(item => item.productId !== productId);
-    await user.save();
-
+    
+    const cart = await Cart.getCartByUserId(userId);
+    cart.items = cart.items.filter(
+      item => item.productId.toString() !== productId.toString()
+    );
+    
+    await cart.save();
+    
+    const cartItems = cart.items.map(item => ({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity,
+      description: item.description
+    }));
+    
     res.json({
       success: true,
       message: 'Item removed from cart',
-      cart: user.cart
+      cartItems,
+      totalAmount: cart.totalAmount,
+      totalItems: cart.totalItems
     });
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message || 'Failed to remove item from cart');
+    console.error('Remove from cart error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove item from cart',
+      error: error.message
+    });
   }
 });
 
-// Clear entire cart
+// Clear entire cart in database
 export const clearCart = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const userId = req.user.id;
     
-    if (!user) {
-      res.status(404);
-      throw new Error('User not found');
-    }
-
-    user.cart = [];
-    await user.save();
-
+    const cart = await Cart.getCartByUserId(userId);
+    cart.items = [];
+    await cart.save();
+    
     res.json({
       success: true,
       message: 'Cart cleared',
-      cart: []
+      cartItems: [],
+      totalAmount: 0,
+      totalItems: 0
     });
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message || 'Failed to clear cart');
+    console.error('Clear cart error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to clear cart',
+      error: error.message
+    });
+  }
+});
+
+// Sync local cart with database cart
+export const syncCart = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { localCartItems = [] } = req.body;
+    
+    const cart = await Cart.getCartByUserId(userId);
+    
+    for (const localItem of localCartItems) {
+      const existingItemIndex = cart.items.findIndex(
+        item => item.productId.toString() === localItem.id.toString()
+      );
+
+      if (existingItemIndex !== -1) {
+        cart.items[existingItemIndex].quantity += parseInt(localItem.quantity);
+      } else {
+        cart.items.push({
+          productId: localItem.id,
+          name: localItem.name,
+          price: parseFloat(localItem.price),
+          image: localItem.image,
+          quantity: parseInt(localItem.quantity),
+          description: localItem.description || ''
+        });
+      }
+    }
+    
+    await cart.save();
+    
+    const cartItems = cart.items.map(item => ({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity,
+      description: item.description
+    }));
+    
+    res.json({
+      success: true,
+      message: 'Cart synced successfully',
+      cartItems,
+      totalAmount: cart.totalAmount,
+      totalItems: cart.totalItems
+    });
+  } catch (error) {
+    console.error('Sync cart error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to sync cart',
+      error: error.message
+    });
   }
 });
