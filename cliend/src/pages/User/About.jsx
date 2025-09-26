@@ -31,7 +31,7 @@ const About = () => {
             address: data.shopDetails.address ,
             email: data.shopDetails.email ,
             phone: data.shopDetails.phone,
-            name: data.shopDetails.name
+            name: "KAMAL AUTO PARTS"
           });
         }
       } catch (error) {

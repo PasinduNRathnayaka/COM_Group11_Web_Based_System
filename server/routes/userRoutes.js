@@ -17,7 +17,8 @@ import {
   addToCart,
   updateCartItem,
   removeFromCart,
-  clearCart
+  clearCart,
+  syncCart
 } from '../controllers/userController.js';
 
 import { protect, handleMulterError } from '../middlewares/authMiddleware.js';
@@ -50,5 +51,6 @@ router.post('/cart', protect, addToCart);
 router.put('/cart', protect, updateCartItem);
 router.delete('/cart/:productId', protect, removeFromCart);
 router.delete('/cart', protect, clearCart);
+router.post('/cart/sync', protect, syncCart);
 
 export default router;

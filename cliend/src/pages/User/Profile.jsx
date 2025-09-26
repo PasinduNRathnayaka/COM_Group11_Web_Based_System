@@ -366,6 +366,7 @@ useEffect(() => {
                   onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2"
                   required
+                  maxLength={12}
                 />
               </div>
               <div>

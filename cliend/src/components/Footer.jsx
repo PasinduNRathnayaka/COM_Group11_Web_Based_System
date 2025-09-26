@@ -4,19 +4,14 @@ import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const navigate = useNavigate();
-  const [shopDetails, setShopDetails] = useState({
-    //address: "100/1 Wanarathuduwa Road, Katukurunda, Sri Lanka",
-   // email: "kamalautolg@gmail.com",
-   // phone: "0777819999",
-    //name: "Kamal Auto"
-  });
+  const [shopDetails, setShopDetails] = useState();
   const [loading, setLoading] = useState(true);
 
   // Fetch shop details from admin backend
   useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        // 🔥 Updated: Fetch admin details from the new endpoint
+       
         const response = await fetch('/api/admin/shop-details');
         
         if (!response.ok) {
@@ -34,7 +29,7 @@ const Footer = () => {
           });
         }
       } catch (error) {
-        //console.error('Error fetching shop details:', error);
+        console.error('Error fetching shop details:', error);
         // Keep default values if fetch fails
       } finally {
         setLoading(false);

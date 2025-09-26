@@ -113,6 +113,7 @@ const SignUp = () => {
               onChange={handleChange}
               className="w-full border px-4 py-2 rounded"
               required
+              maxLength={12}
             />
           </div>
 

@@ -17,15 +17,55 @@ export const AppContextProvider = ({ children }) => {
 
   // Wrapped setter: keeps localStorage in sync
   const setUser = (newUser) => {
-    _setUser(newUser);
-    if (newUser) {
-      localStorage.setItem('user', JSON.stringify(newUser));
-      localStorage.setItem('token', newUser.token);
-    } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+  _setUser(newUser);
+  if (newUser) {
+    localStorage.setItem('user', JSON.stringify(newUser));
+    localStorage.setItem('token', newUser.token);
+    // Load cart from database when user logs in
+    loadCartFromDatabase(newUser.token);
+  } else {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    // Clear cart when user logs out
+    _setCartItems([]);
+    localStorage.removeItem('cartItems');
+  }
+};
+
+// Load cart from database for logged-in users
+const loadCartFromDatabase = async (userToken) => {
+  try {
+    if (!userToken) return;
+    
+    setIsCartLoading(true);
+    
+    // Sync local cart with database first (if there are local items)
+    const localCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    if (localCartItems.length > 0) {
+      await axios.post('/api/user/cart/sync', 
+        { localCartItems },
+        { headers: { Authorization: `Bearer ${userToken}` } }
+      );
+      localStorage.removeItem('cartItems');
     }
-  };
+    
+    // Load cart from database
+    const response = await axios.get('/api/user/cart', {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    
+    if (response.data.success) {
+      _setCartItems(response.data.cartItems || []);
+    }
+    
+  } catch (error) {
+    console.error('Error loading cart from database:', error);
+    const localCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    _setCartItems(localCartItems);
+  } finally {
+    setIsCartLoading(false);
+  }
+ };
 
   // Validate token whenever user changes
   useEffect(() => {
@@ -57,6 +97,7 @@ export const AppContextProvider = ({ children }) => {
           };
           _setUser(updatedUser); // Use _setUser to avoid localStorage loop
           localStorage.setItem('user', JSON.stringify(updatedUser));
+          await loadCartFromDatabase(updatedUser.token);
         }
 
       } catch (err) {
@@ -81,18 +122,23 @@ export const AppContextProvider = ({ children }) => {
   useEffect(() => {
     const loadCartFromStorage = () => {
       try {
-        const savedCartItems = localStorage.getItem('cartItems');
-        if (savedCartItems) {
+  // Only load from localStorage if user is not logged in
+  if (!user) {
+    const savedCartItems = localStorage.getItem('cartItems');
+    if (savedCartItems) {
           const parsedItems = JSON.parse(savedCartItems);
           if (Array.isArray(parsedItems)) {
             _setCartItems(parsedItems);
           }
         }
+      }
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
         localStorage.removeItem('cartItems');
       } finally {
-        setIsCartLoading(false);
+        if (!user) {
+  setIsCartLoading(false);
+  }
       }
     };
 
@@ -104,21 +150,51 @@ export const AppContextProvider = ({ children }) => {
     if (typeof newCartItems === 'function') {
       _setCartItems(prevItems => {
         const updatedItems = newCartItems(prevItems);
-        if (!isCartLoading) {
+        if (!isCartLoading && !user) {
           localStorage.setItem('cartItems', JSON.stringify(updatedItems));
         }
         return updatedItems;
       });
     } else {
       _setCartItems(newCartItems);
-      if (!isCartLoading) {
-        localStorage.setItem('cartItems', JSON.stringify(newCartItems));
+      if (!isCartLoading && !user) {
+        localStorage.setItem('cartItems', JSON.stringify(updatedItems));
       }
     }
   };
 
-  // Enhanced addToCart function
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = async (product, quantity = 1) => {
+  try {
+    if (user?.token) {
+      const response = await axios.post('/api/user/cart', {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: quantity,
+        description: product.description || product.desc || ''
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      
+      if (response.data.success) {
+        _setCartItems(response.data.cartItems);
+      }
+    } else {
+      setCartItems((prev) => {
+        const existing = prev.find((item) => item.id === product.id);
+        if (existing) {
+          return prev.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + quantity }
+              : item
+          );
+        }
+        return [...prev, { ...product, quantity }];
+      });
+    }
+  } catch (error) {
+    console.error('Error adding to cart:', error);
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -130,20 +206,57 @@ export const AppContextProvider = ({ children }) => {
       }
       return [...prev, { ...product, quantity }];
     });
-  };
+  }
+};
 
-  // Remove item from cart function
-  const removeFromCart = (productId) => {
+  const removeFromCart = async (productId) => {
+  try {
+    if (user?.token) {
+      const response = await axios.delete(`/api/user/cart/${productId}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      
+      if (response.data.success) {
+        _setCartItems(response.data.cartItems);
+      }
+    } else {
+      setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+    }
+  } catch (error) {
+    console.error('Error removing from cart:', error);
     setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
-  };
+  }
+};
 
-  // Update item quantity function
-  const updateQuantity = (productId, newQuantity) => {
+const updateQuantity = async (productId, newQuantity) => {
+  try {
     if (newQuantity <= 0) {
-      removeFromCart(productId);
+      await removeFromCart(productId);
       return;
     }
 
+    if (user?.token) {
+      const response = await axios.put('/api/user/cart', {
+        productId: productId,
+        quantity: newQuantity
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      
+      if (response.data.success) {
+        _setCartItems(response.data.cartItems);
+      }
+    } else {
+      setCartItems(prevItems =>
+        prevItems.map(item =>
+          item.id === productId 
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    }
+  } catch (error) {
+    console.error('Error updating cart quantity:', error);
     setCartItems(prevItems =>
       prevItems.map(item =>
         item.id === productId 
@@ -151,13 +264,29 @@ export const AppContextProvider = ({ children }) => {
           : item
       )
     );
-  };
+  }
+};
 
-  // Clear entire cart function
-  const clearCart = () => {
+const clearCart = async () => {
+  try {
+    if (user?.token) {
+      const response = await axios.delete('/api/user/cart', {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      
+      if (response.data.success) {
+        _setCartItems([]);
+      }
+    } else {
+      setCartItems([]);
+      localStorage.removeItem('cartItems');
+    }
+  } catch (error) {
+    console.error('Error clearing cart:', error);
     setCartItems([]);
     localStorage.removeItem('cartItems');
-  };
+  }
+};
 
   // Get cart total function
   const getCartTotal = () => {
@@ -195,6 +324,7 @@ export const AppContextProvider = ({ children }) => {
         isInCart,
         isCartLoading,
         backendUrl,
+        loadCartFromDatabase,
       }}
     >
       {children}

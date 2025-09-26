@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const Checkout = () => {
-  const { user, cartItems, setCartItems } = useAppContext();
+  const { user, cartItems, setCartItems, clearCart, removeFromCart } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -130,19 +130,32 @@ const Checkout = () => {
     return checkoutItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  // Helper function to remove checked out items from cart
-  const removeCheckedOutItemsFromCart = () => {
+ // Helper function to remove checked out items from cart
+const removeCheckedOutItemsFromCart = async () => {
+  try {
     if (isSelectedItemsCheckout) {
-      // Remove only the selected items that were checked out
+      // Remove only the selected items that were checked out from database
+      const checkedOutItemIds = checkoutItems.map(item => item.id);
+      for (const itemId of checkedOutItemIds) {
+        await removeFromCart(itemId);
+      }
+    } else if (isCartCheckout && !isBuyNow) {
+      // Clear entire cart from database
+      await clearCart();
+    }
+    // For buy now, don't modify cart at all
+  } catch (error) {
+    console.error('Error removing items from cart:', error);
+    // Fallback: update frontend only
+    if (isSelectedItemsCheckout) {
       const checkedOutItemIds = new Set(checkoutItems.map(item => item.id));
       const remainingCartItems = cartItems.filter(item => !checkedOutItemIds.has(item.id));
       setCartItems(remainingCartItems);
     } else if (isCartCheckout && !isBuyNow) {
-      // Clear entire cart for full cart checkout
       setCartItems([]);
     }
-    // For buy now, don't modify cart at all
-  };
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -215,7 +228,7 @@ const Checkout = () => {
         orderPlacedRef.current = true;
 
         // Remove checked out items from cart
-        removeCheckedOutItemsFromCart();
+        await removeCheckedOutItemsFromCart();
         
         toast.dismiss();
 
