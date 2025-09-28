@@ -24,7 +24,7 @@ const Navbar = () => {
         </div> 
       </NavLink>
 
-      {/* ✅ Desktop Menu */}
+      {/* Desktop Menu */}
       <div className="hidden sm:flex flex-1 absolute -left-0.01 gap-12 text-white font-medium pl-100">
         <NavLink to='/'>Home</NavLink>
         <Link to="/allproducts" className="font-medium">
@@ -44,7 +44,7 @@ const Navbar = () => {
        
       <div className="hidden sm:flex items-center gap-6">
 
-  {/* 👤 Auth Buttons */}
+  {/* Auth Buttons */}
   {!user ? (
     <button
       onClick={() => setShowUserLogin(true)}
@@ -69,7 +69,7 @@ const Navbar = () => {
     </>
       )}
 
-      {/* 🛒 Cart Icon */}
+      {/*Cart Icon */}
       <div onClick={() => navigate("/cart")} className="relative cursor-pointer -right-5">
         <img src={assets.cart} alt='cart' className='w-6 opacity-80' />
         <button className="absolute -top-2 -right-3 text-xs text-white bg-primary w-[18px] h-[18px] rounded-full"> {cartItems.length}</button>
@@ -83,7 +83,7 @@ const Navbar = () => {
         <img src={assets.menu} alt='menu' className='w-6 h-6' />
       </button>
 
-      {/* ✅ Mobile Menu */}
+      {/* Mobile Menu */}
       {open && (
         <div className="absolute top-[60px] left-[80px] bg-white shadow-md py-4 px-5 inline-flex flex-row items-center gap-8 text-sm md:hidden text-black rounded-lg">
           <NavLink to="/" onClick={() => setOpen(false)}>Home</NavLink>
@@ -93,7 +93,7 @@ const Navbar = () => {
           <NavLink to="/contact" onClick={() => setOpen(false)}>Contact</NavLink>
 
 
-          {/* ✅ Updated mobile login/logout/profile buttons */}
+          {/* Updated mobile login/logout/profile buttons */}
           {!user ? (
             <button
               onClick={() => setShowUserLogin(true)}

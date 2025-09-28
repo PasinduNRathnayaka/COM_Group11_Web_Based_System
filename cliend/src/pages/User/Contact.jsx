@@ -32,7 +32,7 @@ const Contact = () => {
   useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        // 🔥 Updated: Fetch admin details from the new endpoint
+        // admin details from the new endpoint
         const response = await fetch('/api/admin/shop-details');
         
         if (!response.ok) {
@@ -64,12 +64,11 @@ const Contact = () => {
   useEffect(() => {
     if (user) {
       // Extract first and last name from user object
-      // Adjust these field names based on your user object structure
       const firstName = user.firstName || user.first_name || '';
       const lastName = user.lastName || user.last_name || '';
       const email = user.email || '';
       
-      // Alternative: If user has a full name field, split it
+      // If user has a full name field, split it
       let extractedFirstName = firstName;
       let extractedLastName = lastName;
       
@@ -147,7 +146,7 @@ const Contact = () => {
 
   return (
     <div>
-      {/* 🔷 Top Blue Section with Contact Info */}
+      {/* Top Blue Section with Contact Info */}
       <div className="bg-blue-500 text-white py-10 px-4 sm:px-6 md:px-12 lg:px-20 xl:px-28 rounded-b-2xl">
         {shopLoading ? (
           // Loading skeleton for shop details
@@ -202,7 +201,7 @@ const Contact = () => {
         )}
       </div>
 
-      {/* 🔘 Contact Form + Image Section */}
+      {/* Contact Form + Image Section */}
       <div className="bg-white py-10 px-4 md:px-20">
         <div className="grid md:grid-cols-2 gap-10">
           {/* Left Side: Form */}

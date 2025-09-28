@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAppContext } from '../../context/AppContext'; // ✅ NEW
-import { useNavigate } from 'react-router-dom'; // ✅ NEW
-import { assets } from '../../assets/assets'; // ✅ NEW
+import { useAppContext } from '../../context/AppContext'; 
+import { useNavigate } from 'react-router-dom'; 
+import { assets } from '../../assets/assets'; 
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -32,7 +32,7 @@ const SignUp = () => {
     e.preventDefault();
 
     try {
-      // 1️⃣  send to backend
+      //send to backend
       const { data } = await axios.post('/api/user/register', {
         name     : `${formData.firstName} ${formData.lastName}`,
         email    : formData.email,
@@ -41,14 +41,14 @@ const SignUp = () => {
         number  : formData.number,
       });
 
-      // 2️⃣  store user + token
+      //store user + token
       setUser({
         _id       : data._id,
         name      : data.name,
         email     : data.email,
         number  : formData.number,
         address: formData.address,
-        profilePic: assets.profile2,  // backend can return real pic later
+        profilePic: assets.profile2, 
         token     : data.token,
       });
       localStorage.setItem('user', JSON.stringify({
@@ -63,7 +63,7 @@ const SignUp = () => {
 
       toast.success('Account created!');
 
-      // 3️⃣  redirect
+      //redirect
       navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
