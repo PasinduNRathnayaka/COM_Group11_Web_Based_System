@@ -21,7 +21,7 @@ const Profile = () => {
   return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  // ✅ Helper function to get the correct image URL
+  //Helper function to get the correct image URL
   const getImageUrl = (profilePic) => {
     if (!profilePic) {
       return "https://i.ibb.co/vzvY0kQ/user.png"; // Default image
@@ -38,7 +38,7 @@ const Profile = () => {
 
   const [profileImage, setProfileImage] = useState(getImageUrl(user?.profilePic));
 
-  // ✅ Update profile image when user data changes (important for login)
+  //Update profile image when user data changes (important for login)
   useEffect(() => {
     setProfileImage(getImageUrl(user?.profilePic));
   }, [user?.profilePic]);
@@ -51,7 +51,7 @@ const Profile = () => {
     address: user?.address || ""
   });
 
-  // ✅ Update form data when user changes
+  //Update form data when user changes
   useEffect(() => {
     if (user) {
       setFormData({
@@ -109,7 +109,6 @@ useEffect(() => {
     fetchOrders();
   }
 }, [location.state, activeTab, user, fetchOrders]);
-  // Fetch user orders
   // Fetch user orders
 
   // Delete order function
@@ -188,10 +187,10 @@ useEffect(() => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // ✅ FIXED: Use correct loading state variable
+  //Use correct loading state variable
   const handleCropSave = async () => {
     try {
-      setLoading(true); // ✅ Use the existing loading state
+      setLoading(true); //Use the existing loading state
       
       // Get cropped image blob
       const croppedImageBlob = await getCroppedImg(croppingImage, croppedAreaPixels);
@@ -213,9 +212,9 @@ useEffect(() => {
       if (response.data.success) {
         // Update local state with server response
         const newProfilePic = response.data.profilePic;
-        setProfileImage(getImageUrl(newProfilePic)); // ✅ Use helper function
+        setProfileImage(getImageUrl(newProfilePic)); //Use helper function
         
-        // ✅ Update user context with the new profilePic
+        //Update user context with the new profilePic
         setUser({ ...user, profilePic: newProfilePic });
         
         setShowCropper(false);
@@ -226,7 +225,7 @@ useEffect(() => {
       console.error('Image upload error:', error);
       toast.error(error.response?.data?.message || "Failed to upload image");
     } finally {
-      setLoading(false); // ✅ Use the existing loading state
+      setLoading(false); //Use the existing loading state
     }
   };
 
@@ -270,7 +269,7 @@ useEffect(() => {
       });
 
       if (response.data.success) {
-        // ✅ Update user context with new data
+        // Update user context with new data
         const updatedUserData = { ...user, ...formData };
         setUser(updatedUserData);
         toast.success("Profile updated successfully!");
@@ -392,9 +391,6 @@ useEffect(() => {
         );
         // Replace the orders case in your renderMainContent function with this updated version:
 
-      // Replace the orders case in your renderMainContent function with this version:
-// This only DISPLAYS the status (read-only) and fetches updates from database
-
 case "orders":
   return (
     <div>
@@ -422,7 +418,7 @@ case "orders":
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* ✅ READ-ONLY Status Display - Updated from Database */}
+                  {/* READ-ONLY Status Display - Updated from Database */}
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
