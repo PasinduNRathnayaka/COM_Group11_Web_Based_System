@@ -497,18 +497,13 @@ const removeCheckedOutItemsFromCart = async () => {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Country *</label>
-              <select
+               <input
                 name="country"
                 value={formData.country}
                 onChange={handleInputChange}
                 required
                 className="w-full p-3 rounded border border-gray-300 focus:border-primary focus:outline-none"
-              >
-                <option value="">Select Country</option>
-                <option value="Sri Lanka">Sri Lanka</option>
-                <option value="India">India</option>
-                <option value="Other">Other</option>
-              </select>
+             />
             </div>
 
             <div className="md:col-span-2">
