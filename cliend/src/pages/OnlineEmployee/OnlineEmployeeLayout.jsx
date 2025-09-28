@@ -250,7 +250,7 @@ const OnlineEmployeeLayout = () => {
   { name: "Download ID", path: "/online_employee/download-id", icon: <FaFileDownload /> },
   { name: "Messages", path: "/online_employee/messages", icon: <FaComments /> },
   { name: "Order List", path: "/online_employee/order-list", icon: <FaList /> },
-  { name: "Order Details", path: "/online_employee/order-details", icon: <FaInfoCircle /> },
+  //{ name: "Order Details", path: "/online_employee/order-details", icon: <FaInfoCircle /> },
   
 ];
 
