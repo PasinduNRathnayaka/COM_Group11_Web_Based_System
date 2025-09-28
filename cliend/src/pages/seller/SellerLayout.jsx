@@ -834,8 +834,8 @@ const SellerLayout = () => {
     { name: "Dashboard", path: "/seller", icon: addProductIcon },
     { name: "Product List", path: "/seller/product-list", icon: productListIcon },
     { name: "Employee List", path: "/seller/employee-list", icon: employeeListIcon },
-    { name: "View Attendance", path: "/seller/view-attendence", icon: attendanceIcon },
-    { name: "View Salary", path: "/seller/monthly-salary", icon: employeeListIcon },
+    { name: "Manage Attendance", path: "/seller/view-attendence", icon: attendanceIcon },
+    { name: "Manage Salary", path: "/seller/monthly-salary", icon: employeeListIcon },
     { name: "Orders", path: "/seller/orders", icon: ordersIcon },
 
     { name: "Leave Management", path: "/seller/leave-management", icon: ordersIcon },

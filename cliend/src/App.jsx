@@ -197,7 +197,7 @@ const handleSignInClick = () => {
 
           <Route path="/employee/download_id" element={<DownloadID />} />
           
-          <Route path="attendance" element={<Viewattendance />} />
+          <Route path="/employee/attendance" element={<Viewattendance />} />
 
         </Route>
 
@@ -211,7 +211,7 @@ const handleSignInClick = () => {
         <div className={`${isSellerPath ? "" : "px-6 md:px-16 lg:px-24 xl:px-32"}`}>
         <Routes>
           <Route path="/online_employee" element={<OnlineEmloyeeLayout />}>
-          <Route index element={<Attendance />} />
+          <Route index element={<EmployeeProfile/>} />
           <Route path="messages" element={<Messages />} />
           <Route path="order-details" element={<OrderDetails />} />
           <Route path="order-list" element={<OrderList />} />
