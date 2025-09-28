@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import OrderDetails from "./OrderDetails"; // Import the OrderDetails component
+import { Eye } from 'lucide-react';
+import EmployeeOrderDetails from './EmployeeOrderDetails';
 
-const OrderList = () => {
+const EmployeeOrderListPage = () => {
   const [orders, setOrders] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,21 +12,8 @@ const OrderList = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'orderDate', direction: 'desc' });
   
-  // State for OrderDetails modal
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
-
-  // Function to open OrderDetails modal
-  const handleOrderClick = (orderId) => {
-    setSelectedOrderId(orderId);
-    setIsOrderDetailsOpen(true);
-  };
-
-  // Function to close OrderDetails modal
-  const handleCloseOrderDetails = () => {
-    setIsOrderDetailsOpen(false);
-    setSelectedOrderId(null);
-  };
+  // New state for detail view
+  const [viewingOrderId, setViewingOrderId] = useState(null);
 
   // Generate month options for the last 12 months
   const generateMonthOptions = () => {
@@ -199,6 +187,17 @@ const OrderList = () => {
     }
   };
 
+  // Handle view details
+  const handleViewDetails = (orderId) => {
+    setViewingOrderId(orderId);
+  };
+
+  const handleBackToList = () => {
+    setViewingOrderId(null);
+    // Refresh orders when returning to list
+    fetchOrders();
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -239,6 +238,11 @@ const OrderList = () => {
     return counts;
   }, {});
 
+  // If viewing order details, show the details component
+  if (viewingOrderId) {
+    return <EmployeeOrderDetails orderId={viewingOrderId} onBack={handleBackToList} />;
+  }
+
   if (loading) {
     return (
       <div className="bg-[#f8fafc] min-h-screen p-6">
@@ -258,9 +262,11 @@ const OrderList = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Employee - Order Management</h1>
             <nav className="text-sm text-gray-500 mt-1">
-              <span>Home</span>
+              <span>Employee Dashboard</span>
+              <span className="mx-2">›</span>
+              <span>Orders</span>
               <span className="mx-2">›</span>
               <span className="text-gray-900">Order List</span>
             </nav>
@@ -529,12 +535,9 @@ const OrderList = () => {
                     />
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleOrderClick(order.id || order.orderId)}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                    >
+                    <div className="text-sm font-medium text-blue-600 hover:text-blue-800">
                       {order.orderId}
-                    </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
@@ -572,9 +575,10 @@ const OrderList = () => {
                   </td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => handleOrderClick(order.id || order.orderId)}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      onClick={() => handleViewDetails(order.id)}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
                     >
+                      <Eye size={14} />
                       View Details
                     </button>
                   </td>
@@ -597,15 +601,8 @@ const OrderList = () => {
           </div>
         )}
       </div>
-
-      {/* OrderDetails Modal */}
-      <OrderDetails
-        isOpen={isOrderDetailsOpen}
-        onClose={handleCloseOrderDetails}
-        orderId={selectedOrderId}
-      />
     </div>
   );
 };
 
-export default OrderList;
+export default EmployeeOrderListPage;
