@@ -1,11 +1,15 @@
 import { assets } from "../assets/assets";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
+import { useAppContext } from '../context/AppContext';
 
 const Footer = () => {
   const navigate = useNavigate();
   const [shopDetails, setShopDetails] = useState();
   const [loading, setLoading] = useState(true);
+
+  const { user } = useAppContext();
 
   // Fetch shop details from admin backend
   useEffect(() => {
@@ -177,7 +181,13 @@ const Footer = () => {
             <ul className="space-y-1">
               <li>
                 <button 
-                  onClick={handleContactClick}
+                  onClick={() => {
+                    if (user) {
+                      handleContactClick();
+                    } else {
+                      toast.error('Please login first to access contact page');
+                    }
+                  }}
                   className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   Contact Us
