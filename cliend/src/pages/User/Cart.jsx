@@ -52,7 +52,7 @@ const Cart = () => {
     }
     setSelectedItems(newSelected);
     
-    // Update select all state
+    // select all state
     setSelectAll(newSelected.size === cartItems.length);
   };
 
@@ -131,7 +131,7 @@ const renderCompactStarRating = (rating, reviewCount) => {
   );
 };
 
-// Add this function after the renderCompactStarRating function
+
 // Fetch reviews for a single product
 const fetchProductReviews = async (productId) => {
   try {
@@ -161,7 +161,7 @@ const fetchProductReviews = async (productId) => {
     const fetchRelatedProducts = async () => {
       try {
         setLoading(true);
-        // ✅ IMPROVED: Try to fetch all products first, then use random selection
+        //Try to fetch all products first, then use random selection
         const response = await fetch('/api/products');
 
         if (!response.ok) {
@@ -170,7 +170,7 @@ const fetchProductReviews = async (productId) => {
 
         const data = await response.json();
         
-        // ✅ IMPROVED: Transform products with proper image URLs and random selection
+        //Transform products with proper image URLs and random selection
        const transformedProducts = await Promise.all(
           (data.products || data).map(async (product) => {
             // Fetch ratings for each product

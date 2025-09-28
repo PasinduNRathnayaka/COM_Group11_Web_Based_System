@@ -55,7 +55,6 @@ const RateUsPopup = ({ onClose }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Include auth token if you have one
           ...(user?.token && { 'Authorization': `Bearer ${user.token}` })
         },
         body: JSON.stringify(reviewData)
@@ -72,7 +71,7 @@ const RateUsPopup = ({ onClose }) => {
       console.log('Response result:', result);
 
       if (result.success) {
-        // Show success message (you can add a toast notification here)
+        // Show success message
         console.log('Review submitted successfully:', result);
         
         // Reset form
@@ -85,7 +84,7 @@ const RateUsPopup = ({ onClose }) => {
           onClose();
         }, 500);
         
-        // Optional: Show success toast
+        //Show success toast
         toast.success('Thank you for your review!');
         
       } else {

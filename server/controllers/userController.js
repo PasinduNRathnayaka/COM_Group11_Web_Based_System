@@ -1,4 +1,4 @@
-// controllers/userController.js - Complete file with forgot password functionality
+// controllers/userController.js
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
@@ -114,7 +114,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// 🔑 NEW: Request password reset (send verification code)
+//Request password reset (send verification code)
 export const requestPasswordReset = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -159,8 +159,6 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
     res.json({
       success: true,
       message: 'Password reset code has been sent to your email.',
-      // In development, you might want to return the code for testing
-      // Remove this in production!
       ...(process.env.NODE_ENV === 'development' && { resetCode })
     });
 
@@ -176,7 +174,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
   }
 });
 
-// 🔑 NEW: Verify reset code and reset password
+//Verify reset code and reset password
 export const resetPassword = asyncHandler(async (req, res) => {
   const { email, resetCode, newPassword } = req.body;
 
@@ -256,7 +254,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   }
 });
 
-// 🔑 NEW: Verify reset code (without resetting password)
+//Verify reset code (without resetting password)
 export const verifyResetCode = asyncHandler(async (req, res) => {
   const { email, resetCode } = req.body;
 

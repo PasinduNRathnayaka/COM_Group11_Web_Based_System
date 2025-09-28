@@ -10,7 +10,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [showBankSandbox, setShowBankSandbox] = useState(false);
   
-  // ✅ Get checkout items (either from cart, selected items, or buy now)
+  //Get checkout items (either from cart, selected items, or buy now)
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [isBuyNow, setIsBuyNow] = useState(false);
   const [isCartCheckout, setIsCartCheckout] = useState(false);
@@ -34,7 +34,7 @@ const Checkout = () => {
     orderNotes: ''
   });
 
-  // ✅ Set checkout items based on the type of checkout
+  //Set checkout items based on the type of checkout
   useEffect(() => {
     if (location.state?.isBuyNow && location.state?.buyNowItem) {
       // Buy Now scenario
@@ -82,7 +82,7 @@ const Checkout = () => {
     }
   }, [user]);
 
-  // ✅ Updated redirect logic
+  //Updated redirect logic
   useEffect(() => {
     if (!user) {
       toast.error('Please log in to checkout');
@@ -224,7 +224,7 @@ const removeCheckedOutItemsFromCart = async () => {
       console.log('Server response:', result);
 
       if (result.success) {
-        // ✅ Handle cart updates based on checkout type
+        //Handle cart updates based on checkout type
         orderPlacedRef.current = true;
 
         // Remove checked out items from cart
@@ -413,7 +413,6 @@ const removeCheckedOutItemsFromCart = async () => {
     }
     
     // For cart checkout, if cart is empty, this should be handled by useEffect redirect
-    // But add a fallback just in case
     if (!location.state?.isBuyNow) {
       return (
         <div className="flex justify-center items-center h-64">
