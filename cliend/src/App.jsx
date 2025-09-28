@@ -45,7 +45,7 @@ import ViewAttendance from './pages/seller/AttendancePage';
 import AttendanceScanner from "./pages/QRScanner/AttendanceScanner";
 import BillingScanner from "./pages/QRScanner/BillingScanner";
 import MonthlySalary from './pages/seller/MonthlySalary';
-
+import AdminLeaveManagement from './pages/seller/AdminLeaveManagement';
 // NEW: Import RecycleBin component
 import RecycleBin from './pages/seller/RecycleBin'; // Adjust path as needed
 
@@ -169,6 +169,8 @@ const handleSignInClick = () => {
             <Route path="/seller/edit-employee/:id" element={<EditEmployeeForm />} />
             <Route path="/seller/edit-product/:id" element={<EditProductForm />} />
             <Route path="monthly-salary" element={<MonthlySalary />} />
+
+            <Route path="/seller/leave-management" element={<AdminLeaveManagement />} />
             
             {/* NEW: Add Recycle Bin Route */}
             <Route path="recycle-bin" element={<RecycleBin />} />
