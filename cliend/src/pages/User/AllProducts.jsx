@@ -27,15 +27,15 @@ const AllProducts = () => {
 
   const productsPerPage = 20;
 
-  // Helper functions from MainBanner (same style)
+  // Helper functions from MainBanner
   const renderStarRating = (rating = 4) => {
     return Array.from({ length: 5 }, (_, i) =>
       i < rating ? '★' : '☆'
     ).join('');
   };
 
-  // Add this function after the existing renderStarRating function (around line 30)
-// Render compact star rating for product cards (copied from ProductDetails.jsx)
+
+// Render compact star rating for product cards
 const renderCompactStarRating = (rating, reviewCount) => {
   if (reviewCount === 0) {
     return (
@@ -85,7 +85,7 @@ const renderCompactStarRating = (rating, reviewCount) => {
     return new Intl.NumberFormat('en-LK').format(price);
   };
 
-  // Add this function after the formatPrice function (around line 50)
+
 // Fetch reviews for a single product
 const fetchProductReviews = async (productId) => {
   try {

@@ -5,19 +5,14 @@ import { Navigate } from 'react-router-dom';
 
 const About = () => {
   const { user } = useAppContext();
-  const [shopDetails, setShopDetails] = useState({
-    //name: "KAMAL AUTO PARTS",
-   // address: "No 128, Wewurukannala Road, Kekanadura, Sri Lanka",
-    //email: "kamalautoparts@gmail.com",
-    //phone: "+94 0777 555 919"
-  });
+  const [shopDetails, setShopDetails] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Fetch shop details from backend
  useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        // 🔥 Updated: Fetch admin details from the new endpoint
+        //Fetch admin details from the endpoint
         const response = await fetch('/api/admin/shop-details');
          
         if (!response.ok) {
@@ -35,7 +30,7 @@ const About = () => {
           });
         }
       } catch (error) {
-        //console.error('Error fetching shop details:', error);
+        console.error('Error fetching shop details:', error);
         // Keep default values if fetch fails
       } finally {
         setLoading(false);
@@ -74,7 +69,7 @@ const About = () => {
                 accessories to keep you moving forward with confidence.
               </p>
               <p className="text-gray-600 leading-relaxed">
-                Located in the heart of Kekanadura, we've built our reputation on trust, quality, and 
+                Located in the heart of Katukurunda, we've built our reputation on trust, quality, and 
                 unmatched customer service. Every part we sell comes with our guarantee of authenticity and performance.
               </p>
             </div>
@@ -149,7 +144,7 @@ const About = () => {
                 <span className="text-2xl">🛒</span>
                 <div>
                   <h4 className="font-semibold text-lg">Online Shopping</h4>
-                  <p className="text-gray-600">Browse and purchase parts from the comfort of your home with our easy-to-use online platform.</p>
+                  <p className="text-gray-600">Browse and purchase parts from the comfort of your home with our easy to use online platform.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-4 p-4 bg-white border rounded-lg shadow-sm">
@@ -170,7 +165,7 @@ const About = () => {
                 <span className="text-2xl">🔄</span>
                 <div>
                   <h4 className="font-semibold text-lg">Easy Returns</h4>
-                  <p className="text-gray-600">Hassle-free return policy for your peace of mind when shopping with us.</p>
+                  <p className="text-gray-600">Hassle free return policy for your peace of mind when shopping with us.</p>
                 </div>
               </div>
             </div>

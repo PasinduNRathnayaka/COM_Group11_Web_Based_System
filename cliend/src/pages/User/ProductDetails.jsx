@@ -125,7 +125,7 @@ const ProductDetails = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('User review data:', data); // Debug log
+        console.log('User review data:', data);
         if (data.success && data.review) {
           setUserExistingReview(data.review);
         } else {
@@ -146,7 +146,7 @@ const ProductDetails = () => {
       const response = await fetch(`/api/product-reviews/product/${productId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched reviews data:', data); // Debug log
+        console.log('Fetched reviews data:', data); 
         if (data.success && data.reviews && Array.isArray(data.reviews)) {
           const formattedReviews = data.reviews.map(review => ({
             id: review._id,
@@ -159,7 +159,7 @@ const ProductDetails = () => {
               day: 'numeric',
             }),
           }));
-          console.log('Formatted reviews:', formattedReviews); // Debug log
+          console.log('Formatted reviews:', formattedReviews);
           setReviews(formattedReviews);
           return;
         }
@@ -248,7 +248,7 @@ const ProductDetails = () => {
           await fetchUserReview(foundProduct._id);
         }
         
-        console.log('Product loaded:', foundProduct._id); // Debug log
+        console.log('Product loaded:', foundProduct._id);
 
         // Fetch related products from the same category
         if (foundProduct.category) {
