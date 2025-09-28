@@ -13,6 +13,7 @@ import ordersIcon from "../../assets/orders.png";
 import recycleBinIcon from "../../assets/orders.png";
 import NotificationPopup from "../../components/seller/NotificationPopup";
 
+
 // API Configuration
 const API_BASE_URL = 'http://localhost:4000/api';
 
@@ -836,6 +837,9 @@ const SellerLayout = () => {
     { name: "View Attendance", path: "/seller/view-attendence", icon: attendanceIcon },
     { name: "View Salary", path: "/seller/monthly-salary", icon: employeeListIcon },
     { name: "Orders", path: "/seller/orders", icon: ordersIcon },
+
+    { name: "Leave Management", path: "/seller/leave-management", icon: ordersIcon },
+    
     { name: "Recycle Bin", path: "/seller/recycle-bin", icon: recycleBinIcon },
   ];
 
