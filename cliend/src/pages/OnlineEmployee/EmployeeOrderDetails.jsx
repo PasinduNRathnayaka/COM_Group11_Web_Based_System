@@ -567,13 +567,13 @@ const EmployeeOrderDetails = ({ orderId, onBack }) => {
                 Download Delivery PDF
               </button>
               
-              <button
+              {/* <button
                 onClick={() => window.print()}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Package size={18} />
                 Print Order Details
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

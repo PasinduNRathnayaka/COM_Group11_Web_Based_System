@@ -126,7 +126,7 @@ export const getOrderById = async (req, res) => {
 
     const order = await UserOrder.findById(id)
       .populate('userId', 'name email avatar phone')
-      .populate('items.productId', 'name price images description');
+      .populate('items.productId', 'productName brand images description');
 
     if (!order) {
       return res.status(404).json({
@@ -136,45 +136,62 @@ export const getOrderById = async (req, res) => {
     }
 
     const formattedOrder = {
-      _id: order._id,
-      orderId: `#${order._id.toString().slice(-5).toUpperCase()}`,
-      date: order.createdAt.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      }),
-      customer: {
-        name: order.userId?.name || 'Unknown Customer',
-        email: order.userId?.email || '',
-        phone: order.userId?.phone || '',
-        avatar: order.userId?.avatar || '/default-avatar.png'
-      },
-      status: order.status || 'pending',
+      id: order._id,
+      orderId: order.orderId,
+      customerName: `${order.firstName} ${order.lastName}`,
+      orderDate: order.orderDate,
+      status: order.status,
       totalAmount: order.totalAmount,
+      
+      // Complete customer information
+      firstName: order.firstName,
+      lastName: order.lastName,
+      companyName: order.companyName,
+      country: order.country,
+      streetAddress: order.streetAddress,
+      city: order.city,
+      zipCode: order.zipCode,
+      phone: order.phone,
+      email: order.email,
+      
+      // Payment and delivery info
+      paymentMethod: order.paymentMethod,
+      orderNotes: order.orderNotes,
+      estimatedDelivery: order.estimatedDelivery,
+      
+      // Items with detailed product information
       items: order.items.map(item => ({
         productId: item.productId?._id,
-        productName: item.productId?.name || 'Product Not Found',
-        productImage: item.productId?.images?.[0] || '/default-product.png',
-        quantity: item.quantity,
+        productName: item.productName || item.productId?.productName,
         price: item.price,
-        total: item.quantity * item.price
+        quantity: item.quantity,
+        image: item.image || item.productId?.images?.[0],
+        brand: item.productId?.brand,
+        total: item.price * item.quantity
       })),
-      shippingAddress: order.shippingAddress,
-      paymentMethod: order.paymentMethod,
+
+      // User information (if needed)
+      user: order.userId ? {
+        name: order.userId.name,
+        email: order.userId.email,
+        avatar: order.userId.avatar,
+        phone: order.userId.phone
+      } : null,
+      
       createdAt: order.createdAt,
       updatedAt: order.updatedAt
     };
 
     res.status(200).json({
       success: true,
-      data: formattedOrder
+      order: formattedOrder
     });
 
   } catch (error) {
-    console.error('Error fetching order:', error);
+    console.error('Error fetching order details:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching order',
+      message: 'Error fetching order details',
       error: error.message
     });
   }
