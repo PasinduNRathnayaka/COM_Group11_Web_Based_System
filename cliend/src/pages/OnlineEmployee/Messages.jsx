@@ -64,7 +64,7 @@ const Messages = () => {
 
       if (searchTerm) params.append('search', searchTerm);
       if (filterStatus !== 'all') params.append('status', filterStatus);
-      if (filterPriority !== 'all') params.append('priority', filterPriority);
+      //if (filterPriority !== 'all') params.append('priority', filterPriority);
       if (filterCategory !== 'all') params.append('category', filterCategory);
 
       const response = await fetch(`${API_BASE_URL}/api/employee/contact-messages?${params}`);
@@ -162,6 +162,7 @@ const Messages = () => {
     }
   };
 
+{/*
   // Update message priority
   const updatePriority = async (messageId, priority) => {
     try {
@@ -190,6 +191,7 @@ const Messages = () => {
       showNotification('Failed to update priority', 'error');
     }
   };
+  */}
 
   // Update message status
   const updateStatus = async (messageId, status) => {
@@ -399,10 +401,11 @@ const Messages = () => {
               <option value="read">Read</option>
               <option value="replied">Replied</option>
               <option value="new">New</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
+              {/*<option value="in_progress">In Progress</option> */}
+              {/*<option value="resolved">Resolved</option> */}
             </select>
 
+            {/*}
             <select
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={filterPriority}
@@ -414,6 +417,7 @@ const Messages = () => {
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
+            */}
 
             <select
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -455,9 +459,9 @@ const Messages = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Subject & Message
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/*<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Priority
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
@@ -497,6 +501,7 @@ const Messages = () => {
                         }
                       </p>
                     </td>
+                  {/*
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         className={`text-xs px-2 py-1 rounded-full font-medium border-0 focus:ring-2 focus:ring-blue-500 ${getPriorityColor(message.priority)}`}
@@ -508,7 +513,7 @@ const Messages = () => {
                         <option value="high">High</option>
                         <option value="urgent">Urgent</option>
                       </select>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -516,13 +521,20 @@ const Messages = () => {
                             ? 'bg-red-100 text-red-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {!message.isRead ? 'Unread' : 'Read'}
+                          {!message.isRead ? 'New' : 'Read'}
                         </span>
                         {message.isReplied && (
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                             Replied
                           </span>
                         )}
+                         {/*{message.isNew && (
+                          <span className="text-xs px-2 py-1 rounded-full font-medium border-0 focus:ring-2 focus:ring-blue-500">
+                            New
+                          </span>
+                        )}*/}
+
+                        {/*
                         <select
                           className={`text-xs px-2 py-1 rounded-full font-medium border-0 focus:ring-2 focus:ring-blue-500 ${getStatusColor(message.status)}`}
                           value={message.status}
@@ -532,7 +544,7 @@ const Messages = () => {
                           <option value="in_progress">In Progress</option>
                           <option value="resolved">Resolved</option>
                           <option value="closed">Closed</option>
-                        </select>
+                        </select> */}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
