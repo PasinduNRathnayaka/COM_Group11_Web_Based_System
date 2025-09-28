@@ -24,6 +24,7 @@ import salaryRoutes from './routes/Seller/salary.routes.js';
 
 import orderRoutes from './routes/OnlineEmployee/order.routes.js';
 import messageRoutes from './routes/OnlineEmployee/message.routes.js';
+import leaveRoutes from './routes/employee/leave.routes.js';
 
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
@@ -413,6 +414,9 @@ app.use('/api/product-reviews', productReviewRoutes);
 app.use('/api/user-orders', userOrderRoutes);
 app.use('/api/attendance', viewAttendanceRoutes);
 app.use('/api/bills', billRoutes);
+
+app.use('/api/leaves', leaveRoutes);
+
 
 app.use('/api/contact', contactRoutes);
 app.use('/api/employee', messageRoutes);
