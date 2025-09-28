@@ -24,7 +24,7 @@ import salaryRoutes from './routes/Seller/salary.routes.js';
 
 import orderRoutes from './routes/OnlineEmployee/order.routes.js';
 import messageRoutes from './routes/OnlineEmployee/message.routes.js';
-import leaveRoutes from './routes/employee/leave.routes.js';
+import leaveRoutes from './routes/Employee/leave.routes.js';
 
 import viewAttendanceRoutes from './routes/Employee/viewattendance.routes.js';
 
