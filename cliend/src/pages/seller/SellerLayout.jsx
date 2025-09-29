@@ -887,7 +887,7 @@ const SellerLayout = () => {
 
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <div className="relative" ref={bellRef}>
+          {/* <div className="relative" ref={bellRef}>
             <button
               onClick={() => setShowNotifications((prev) => !prev)}
               className="relative p-3 hover:bg-slate-700 rounded-lg transition-colors duration-200"
@@ -899,7 +899,7 @@ const SellerLayout = () => {
               isOpen={showNotifications}
               onClose={() => setShowNotifications(false)}
             />
-          </div>
+          </div> */}
 
           {/* Admin Dropdown */}
           <div className="relative" ref={menuRef}>
