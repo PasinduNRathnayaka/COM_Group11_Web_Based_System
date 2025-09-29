@@ -137,7 +137,7 @@ const Messages = () => {
       const result = await response.json();
 
       if (response.ok) {
-        showNotification(result.emailSent ? 'Reply sent successfully!' : 'Reply saved (email failed)', result.emailSent ? 'success' : 'warning');
+        showNotification(result.emailSent ? 'Reply saved (email failed)' : 'Reply sent successfully!', result.emailSent ? 'warning' : 'success');
         setMessages(prev => prev.map(msg => 
           msg._id === selectedMessage._id 
             ? { 
